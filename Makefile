@@ -24,6 +24,9 @@ all: do_build_inplace
 do_build_inplace: do_gen
 	$(PYTHON) setup.py build_ext -i
 
+do_test: do_gen
+	$(PYTHON) setup.py test
+
 clean: clean_gen
 	rm -rf $(BUILD_DIR)
 

@@ -34,6 +34,8 @@ setup(
     name = "bare68k",
     version = "0.1",
     packages = find_packages(),
+    setup_requires = ['pytest-runner'],
+    tests_require=['pytest'],
 #    use_scm_version=True,
 #    setup_requires=['setuptools_scm'],
     ext_modules = cythonize(extensions) #, output_dir="gen") #, gdb_debug=True)
