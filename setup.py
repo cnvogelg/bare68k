@@ -32,8 +32,14 @@ extensions = [Extension("bare68k.machine", sourcefiles, depends=depends, include
 
 setup(
     name = "bare68k",
-    version = "0.1",
-    packages = find_packages(),
+    description='A package to create m68k system emulators',
+    long_description=open("README.md").read(),
+    version = "0.1.0",
+    maintainer = "Christian Vogelgsang",
+    maintainer_email = "chris@vogelgsang.org",
+    url = "http://github.com/cnvogelg/bare68k",
+    packages = ['bare68k'],
+    zip_safe = False,
     setup_requires = ['pytest-runner'],
     tests_require=['pytest'],
 #    use_scm_version=True,
