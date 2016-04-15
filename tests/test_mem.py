@@ -1,7 +1,8 @@
 from __future__ import print_function
 
 import pytest
-from bare68k import *
+from bare68k.consts import *
+from bare68k.machine import *
 
 @pytest.fixture(params=[1,2,3],
                 ids=["@$1000", "@$2000","@$3000"])

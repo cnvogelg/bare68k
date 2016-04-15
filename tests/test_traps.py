@@ -1,7 +1,8 @@
 from __future__ import print_function
 
 import pytest
-from bare68k import *
+from bare68k.consts import *
+from bare68k.machine import *
 
 RESET_OPCODE = 0x4e70
 NOP_OPCODE = 0x8e71

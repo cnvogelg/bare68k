@@ -5,4 +5,5 @@ gen/
 .cache/
 machine.c
 machine.so
-
+*.egg
+*.egg-info

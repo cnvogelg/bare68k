@@ -1,5 +1,6 @@
 import pytest
-from bare68k import *
+from bare68k.consts import *
+from bare68k.machine import *
 
 @pytest.fixture(params=[M68K_CPU_TYPE_68000, M68K_CPU_TYPE_68020],
                 ids=["68000", "68020"])

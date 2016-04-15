@@ -1,4 +1,5 @@
 from bare68k.consts import *
+from bare68k.errors import *
 
 class CPUConfig(object):
   """Configuraiton class helper for CPU specific parameters of bare68k"""
@@ -10,8 +11,8 @@ class CPUConfig(object):
     M68K_CPU_TYPE_68EC020
   )
 
-  def __init__(self):
-    self.cpu_type = M68K_CPU_TYPE_68000
+  def __init__(self, cpu_type = M68K_CPU_TYPE_68000):
+    self.cpu_type = cpu_type
 
   def get_cpu_type(self):
     return self.cpu_type
@@ -27,6 +28,13 @@ class CPUConfig(object):
     elif ct == M68K_CPU_TYPE_68EC020:
       return "68EC020"
 
+  def get_addr_bus_width(self):
+    """get address bus width of selected CPU: either 24 or 32 bits"""
+    if self.cpu_type in (M68K_CPU_TYPE_68000, M68K_CPU_TYPE_68010):
+      return 24
+    else:
+      return 32
+
   def set_cpu_type(self, val):
     if type(val) is str:
       if val in ('68000', '000', '00'):
@@ -38,7 +46,7 @@ class CPUConfig(object):
       elif val.lower() in ('68ec020', 'ec020', 'ec20'):
         self.cpu_type = M68K_CPU_TYPE_68EC020
       else:
-        raise ValueError("Invalid CPU Type: " + val)
+        raise ConfigError("Invalid CPU Type: " + val)
     elif type(val) is int:
       if val in self.cpu_types:
         self.cpu_type = val
@@ -49,6 +57,6 @@ class CPUConfig(object):
       elif val in (68020, 20):
         self.cpu_type = M68K_CPU_TYPE_68020
       else:
-        raise ValueError("Invalid CPU Type: " + str(val))
+        raise ConfigError("Invalid CPU Type: " + str(val))
     else:
-      raise ValueError("Invalid CPU Type: " + str(val))
+      raise ConfigError("Invalid CPU Type: " + str(val))
