@@ -35,6 +35,12 @@ class CPUConfig(object):
     else:
       return 32
 
+  def get_max_pages(self):
+    if self.get_addr_bus_width() == 24:
+      return 256
+    else:
+      return 256 * 256
+
   def set_cpu_type(self, val):
     if type(val) is str:
       if val in ('68000', '000', '00'):
