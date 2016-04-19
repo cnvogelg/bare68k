@@ -22,15 +22,15 @@ def test_register_access(mach):
   w_reg(M68K_REG_D0, 0xffffffff)
   assert r_reg(M68K_REG_D0) == 0xffffffff
   # signed access
-  w_sreg(M68K_REG_D0, -1)
-  assert r_sreg(M68K_REG_D0) == -1
+  ws_reg(M68K_REG_D0, -1)
+  assert rs_reg(M68K_REG_D0) == -1
   assert r_reg(M68K_REG_D0) == 0xffffffff
   # signed limits
-  w_sreg(M68K_REG_D0, -2**31)
-  assert r_sreg(M68K_REG_D0) == -2**31
+  ws_reg(M68K_REG_D0, -2**31)
+  assert rs_reg(M68K_REG_D0) == -2**31
   assert r_reg(M68K_REG_D0) == 0x80000000
-  w_sreg(M68K_REG_D0, 2**31 - 1)
-  assert r_sreg(M68K_REG_D0) == 2**31 - 1
+  ws_reg(M68K_REG_D0, 2**31 - 1)
+  assert rs_reg(M68K_REG_D0) == 2**31 - 1
   assert r_reg(M68K_REG_D0) == 0x7fffffff
   # overflow: unsigned
   with pytest.raises(OverflowError):
@@ -39,9 +39,9 @@ def test_register_access(mach):
     w_reg(M68K_REG_D0, 0x100000000)
   # overflow: signed
   with pytest.raises(OverflowError):
-    w_sreg(M68K_REG_D0, -2**31 -1)
+    ws_reg(M68K_REG_D0, -2**31 -1)
   with pytest.raises(OverflowError):
-    w_sreg(M68K_REG_D0, 2**31)
+    ws_reg(M68K_REG_D0, 2**31)
 
 def test_memory_access(mach):
   w8(0,42)

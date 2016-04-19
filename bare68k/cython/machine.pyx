@@ -283,11 +283,11 @@ def r_reg(int reg):
 def w_reg(int reg, uint32_t val):
   cpu.cpu_w_reg(reg, val)
 
-def r_sreg(int reg):
+def rs_reg(int reg):
   cdef int32_t signed_val = <int32_t>cpu.cpu_r_reg(reg)
   return signed_val
 
-def w_sreg(int reg, int32_t val):
+def ws_reg(int reg, int32_t val):
   cdef uint32_t unsigned_val = <uint32_t>val
   cpu.cpu_w_reg(reg, unsigned_val)
 

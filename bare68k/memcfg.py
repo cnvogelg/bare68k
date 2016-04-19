@@ -218,7 +218,7 @@ class MemoryConfig(object):
     else:
       return rl[-1].next_page
 
-  def is_valid(self, ram_at_zero=True, max_pages=256):
+  def check(self, ram_at_zero=True, max_pages=256):
     """check if gurrent layout is valid"""
     rl = self.range_list
     n = len(rl)
