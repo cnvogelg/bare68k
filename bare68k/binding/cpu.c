@@ -270,7 +270,7 @@ void cpu_set_irq(int level)
   dont_clear = 1;
 }
 
-run_info_t *cpu_execute(int num_cycles)
+int cpu_execute(int num_cycles)
 {
   if(num_cycles == 0) {
     num_cycles = DEFAULT_CYCLES;
@@ -292,10 +292,10 @@ run_info_t *cpu_execute(int num_cycles)
   /* remove event func */
   event_func = NULL;
 
-  return &run_info;
+  return run_info.num_events;
 }
 
-run_info_t *cpu_execute_to_event(int cycles_per_run)
+int cpu_execute_to_event(int cycles_per_run)
 {
   if(cycles_per_run == 0) {
     cycles_per_run = DEFAULT_CYCLES;
@@ -324,5 +324,5 @@ run_info_t *cpu_execute_to_event(int cycles_per_run)
   /* no event happened. report cycles event */
   event_func = NULL;
 
-  return &run_info;
+  return run_info.num_events;
 }

@@ -16,7 +16,9 @@ def test_empty_trap(mach):
   # no trap was set. return event but callback is None
   w_pc(0x100)
   w16(0x100, 0xa000)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("TRAP", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -32,7 +34,9 @@ def test_empty_trap_def_handler(mach):
   assert event_handlers[CPU_EVENT_ALINE_TRAP] is huhu
   w_pc(0x100)
   w16(0x100, 0xa000)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("TRAP", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -47,7 +51,9 @@ def test_default_trap(mach):
   opcode = trap_setup(TRAP_DEFAULT, my_cb)
   w_pc(0x100)
   w16(0x100, opcode)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("TRAP", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -63,7 +69,9 @@ def test_default_trap(mach):
   # after trap: aline is empty again
   w_pc(0x100)
   w16(0x100, opcode)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("TRAP", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -78,7 +86,9 @@ def test_one_shot_trap(mach):
   opcode = trap_setup(TRAP_ONE_SHOT, my_cb)
   w_pc(0x100)
   w16(0x100, opcode)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("TRAP", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -92,7 +102,9 @@ def test_one_shot_trap(mach):
   # after trap: aline is empty again
   w_pc(0x100)
   w16(0x100, opcode)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("TRAP", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -117,7 +129,9 @@ def test_auto_rts_trap(mach):
   # set test code
   w_pc(0x100)
   w16(0x100, opcode)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("TRAP", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -129,7 +143,9 @@ def test_auto_rts_trap(mach):
   ev.handler()
 
   # check next steps: auto rts will be performed
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 1
+  ri = get_info()
   print("NEXT", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -145,7 +161,9 @@ def test_auto_rts_trap(mach):
   # after trap: aline is empty again
   w_pc(0x100)
   w16(0x100, opcode)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("TRAP", ri)
   assert ri.num_events == 1
   ev = ri.events[0]

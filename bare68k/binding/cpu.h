@@ -65,8 +65,8 @@ extern void cpu_set_int_ack_func(int_ack_func_t func);
 
 extern int cpu_default_instr_hook_func(uint32_t pc, void **data);
 
-extern run_info_t *cpu_execute(int num_cycles);
-extern run_info_t *cpu_execute_to_event(int cycles_per_run);
+extern int cpu_execute(int num_cycles);
+extern int cpu_execute_to_event(int cycles_per_run);
 extern void cpu_set_irq(int level);
 
 extern uint32_t cpu_r_reg(int reg);

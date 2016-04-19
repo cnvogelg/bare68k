@@ -211,16 +211,32 @@ def pulse_reset():
   cpu.cpu_reset()
 
 def execute(int num_cycles):
-  cdef cpu.run_info_t *raw_info = cpu.cpu_execute(num_cycles)
-  return create_run_info(raw_info)
+  return cpu.cpu_execute(num_cycles)
 
 def execute_to_event(int cycles_per_run):
-  cdef cpu.run_info_t *raw_info = cpu.cpu_execute_to_event(cycles_per_run)
-  return create_run_info(raw_info)
+  return cpu.cpu_execute_to_event(cycles_per_run)
 
 def get_info():
   cdef cpu.run_info_t *raw_info = cpu.cpu_get_info()
   return create_run_info(raw_info)
+
+def get_num_events():
+  cdef cpu.run_info_t *raw_info = cpu.cpu_get_info()
+  return raw_info.num_events
+
+def get_event(int idx):
+  cdef cpu.run_info_t *raw_info = cpu.cpu_get_info()
+  if idx < 0 or idx >= raw_info.num_events:
+    raise IndexError("Invalid event index")
+  return create_event(&raw_info.events[idx])
+
+def get_done_cycles():
+  cdef cpu.run_info_t *raw_info = cpu.cpu_get_info()
+  return raw_info.done_cycles
+
+def get_total_cycles():
+  cdef cpu.run_info_t *raw_info = cpu.cpu_get_info()
+  return raw_info.total_cycles
 
 def clear_info():
   cpu.cpu_clear_info()

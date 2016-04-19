@@ -58,22 +58,37 @@ def test_nop(mach):
   w16(0x106, NOP_OPCODE)
   assert r16(0x100) == NOP_OPCODE
   w_pc(0x100)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 0
+  ri = get_info()
   print("NOP", ri)
   assert ri.num_events == 0
   assert ri.done_cycles in (2, 4)
   assert ri.total_cycles == ri.done_cycles
-  ri = execute(2)
+  # check alternative access
+  assert get_num_events() == 0
+  assert get_done_cycles() in (2, 4)
+  assert get_total_cycles() == get_done_cycles()
+  # check increasing total cycles
+  ne = execute(2)
+  assert ne == 0
+  ri = get_info()
   print("NOP2", ri)
   assert ri.num_events == 0
   assert ri.done_cycles in (2, 4)
   assert ri.total_cycles == ri.done_cycles * 2
+  # check alternative access
+  assert get_num_events() == 0
+  assert get_done_cycles() in (2, 4)
+  assert get_total_cycles() == get_done_cycles() * 2
 
 def test_reset(mach):
   w16(0x100, RESET_OPCODE)
   assert r16(0x100) == RESET_OPCODE
   w_pc(0x100)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("RESET", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -81,6 +96,13 @@ def test_reset(mach):
   assert ev.addr == 0x102
   assert ev.data is None
   assert ev.handler is None
+  # check alternative access
+  assert get_num_events() == 1
+  ev2 = get_event(0)
+  assert ev2.ev_type == CPU_EVENT_RESET
+  assert ev2.addr == 0x102
+  assert ev2.data is None
+  assert ev2.handler is None
 
 def test_reset_def_handler(mach):
   def bla():
@@ -89,7 +111,9 @@ def test_reset_def_handler(mach):
   w16(0x100, RESET_OPCODE)
   assert r16(0x100) == RESET_OPCODE
   w_pc(0x100)
-  ri = execute(1000)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
   print("RESET", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -107,13 +131,17 @@ def test_execute_to_event(mach):
   w16(0x10a, RESET_OPCODE)
   w_pc(0x100)
   set_instr_hook_func(default=True)
-  ri = execute_to_event(0)
+  ne = execute_to_event(0)
+  assert ne == 1
+  ri = get_info()
   print("TO_EV", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_RESET
   assert ev.addr == 0x106
-  ri = execute_to_event(0)
+  ne = execute_to_event(0)
+  assert ne == 1
+  ri = get_info()
   print("TO_EV2", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -135,13 +163,17 @@ def test_instr_hook(mach):
   h = hook()
   set_instr_hook_func(h.func)
   w_pc(0x100)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 0
+  ri = get_info()
   print("INSTR_HOOK1", ri)
   assert ri.num_events == 0
   assert h.pcs == [0x100]
   # without hook
   set_instr_hook_func(None)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 0
+  ri = get_info()
   print("INSTR_HOOK2", ri)
   assert ri.num_events == 0
   assert h.pcs == [0x100]
@@ -159,13 +191,17 @@ def test_instr_hook_str(mach):
   h = hook()
   set_instr_hook_func(h.func, as_str=True)
   w_pc(0x100)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 0
+  ri = get_info()
   print("INSTR_HOOK1", ri)
   assert ri.num_events == 0
   assert h.pcs == ["00000100: nop"]
   # without hook
   set_instr_hook_func(None)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 0
+  ri = get_info()
   print("INSTR_HOOK2", ri)
   assert ri.num_events == 0
   assert h.pcs == ["00000100: nop"]
@@ -181,7 +217,9 @@ def test_instr_hook_exc(mach):
     raise e
   set_instr_hook_func(hook)
   w_pc(0x100)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 1
+  ri = get_info()
   print("INSTR_HOOK_EXC", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -198,7 +236,9 @@ def test_instr_hook_value(mach):
     return 42
   set_instr_hook_func(hook)
   w_pc(0x100)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 1
+  ri = get_info()
   print("INSTR_HOOK_EXC", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -225,19 +265,18 @@ def test_irq_autovec_nofunc(mach):
   w32(0x7c, 0x10000)
   w16(0x100, NOP_OPCODE)
   w_pc(0x100)
-  w_sp(0x10000)
+  w_sp(0x400)
   set_irq(7)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 1
+  ri = get_info()
   print("IRQ", ri)
-  return
+  ri = get_info()
   # check for memfault
-  assert ri.num_events == 2
+  assert ri.num_events == 1
   ev = ri.events[0]
-  assert ev.ev_type == CPU_EVENT_MEM_FAULT
+  assert ev.ev_type == CPU_EVENT_MEM_ACCESS
   assert ev.addr == 0x10000
-  ev2 = ri.events[1]
-  assert ev2.ev_type == CPU_EVENT_MEM_FAULT
-  assert ev2.addr == 0x10002
 
 def test_irq_autovec_func(mach):
   def func(pc):
@@ -256,7 +295,9 @@ def test_irq_autovec_func(mach):
   w_pc(0x100)
   set_int_ack_func(int_ack)
   set_irq(7)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 1
+  ri = get_info()
   print("IRQ", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -282,7 +323,9 @@ def test_irq_vec_func(mach):
   w_pc(0x100)
   set_int_ack_func(int_ack)
   set_irq(7)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 1
+  ri = get_info()
   print("IRQ", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -308,7 +351,9 @@ def test_irq_vec_exc(mach):
   w_pc(0x100)
   set_int_ack_func(int_ack)
   set_irq(7)
-  ri = execute(2)
+  ne = execute(2)
+  assert ne == 1
+  ri = get_info()
   print("IRQ_EX", ri)
   assert ri.num_events == 1
   ev = ri.events[0]
@@ -346,7 +391,9 @@ def test_mem_access(mach):
   w16(0x100, JMP_OP)
   w32(0x102, 0x30000) # invalid mem access (page not ram)
   w_pc(0x100)
-  ri = execute(100)
+  ne = execute(100)
+  assert ne >= 1
+  ri = get_info()
   print("MEM_ACCESS", ri)
   assert ri.num_events >= 1
   ev = ri.events[0]
@@ -359,7 +406,9 @@ def test_mem_bounds(mach):
   w16(0x100, JMP_OP)
   w32(0x102, 0x40000) # invalid mem access (page not ram)
   w_pc(0x100)
-  ri = execute(100)
+  ne = execute(100)
+  assert ne >= 1
+  ri = get_info()
   print("MEM_ACCESS", ri)
   assert ri.num_events >= 1
   ev = ri.events[0]

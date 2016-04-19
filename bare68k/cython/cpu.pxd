@@ -56,8 +56,8 @@ cdef extern from "binding/cpu.h":
 
   int cpu_default_instr_hook_func(uint32_t pc, void **data)
 
-  run_info_t *cpu_execute(int num_cycles)
-  run_info_t *cpu_execute_to_event(int cycles_per_run)
+  int cpu_execute(int num_cycles)
+  int cpu_execute_to_event(int cycles_per_run)
 
   void cpu_set_irq(int level)
 
