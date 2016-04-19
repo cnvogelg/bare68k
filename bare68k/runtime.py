@@ -56,7 +56,7 @@ def shutdown():
   _mem_cfg = None
   mach.shutdown()
 
-def run(init_pc, init_sp=0x400):
+def run(init_pc, init_sp=0x400, cycles_per_run=0):
   """run the CPU until emulation ends
 
   this is the main loop of your emulation. it starts by setting up initial
@@ -70,3 +70,7 @@ def run(init_pc, init_sp=0x400):
   mem.w32(4, init_pc)
   # now pulse reset
   mach.pulse_reset()
+  # main loop
+  while True:
+    num_events = mach.execute_to_event_checked(cycles_per_run)
+    print(num_events)

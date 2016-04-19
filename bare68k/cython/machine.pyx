@@ -2,6 +2,7 @@ from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint64_t, uint32_t, uint16_t, uint8_t, int8_t, int16_t, int32_t
 from cpython cimport Py_INCREF, Py_DECREF
 from cpython cimport bool
+from cpython.exc cimport PyErr_CheckSignals
 
 cimport musashi
 cimport cpu
@@ -213,8 +214,15 @@ def pulse_reset():
 def execute(int num_cycles):
   return cpu.cpu_execute(num_cycles)
 
-def execute_to_event(int cycles_per_run):
+def execute_to_event(int cycles_per_run=0):
   return cpu.cpu_execute_to_event(cycles_per_run)
+
+def execute_to_event_checked(int cycles_per_run=0):
+  cdef int num_events = 0
+  while num_events == 0:
+    num_events = cpu.cpu_execute(cycles_per_run)
+    PyErr_CheckSignals()
+  return num_events
 
 def get_info():
   cdef cpu.run_info_t *raw_info = cpu.cpu_get_info()

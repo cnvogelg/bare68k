@@ -5,7 +5,7 @@ from bare68k.consts import *
 from bare68k.machine import *
 
 RESET_OPCODE = 0x4e70
-NOP_OPCODE = 0x8e71
+NOP_OPCODE = 0x4e71
 
 def test_invalid_trap(mach):
   # callable must be given
