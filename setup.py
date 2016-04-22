@@ -1,26 +1,110 @@
 import os
+import subprocess
+
 from setuptools import setup, find_packages
 from Cython.Build import cythonize
 from distutils.extension import Extension
+from distutils.command.build_ext import build_ext
+from distutils.command.clean import clean
+import distutils.ccompiler as ccompiler
+from distutils.core import Command
+from distutils.dir_util import remove_tree
+from distutils import log
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 def read(*parts):
   return open(os.path.join(here, *parts), 'r').read()
 
+gen_src = [
+  'gen/m68kopac.c',
+  'gen/m68kopdm.c',
+  'gen/m68kopnz.c',
+  'gen/m68kops.c'
+]
 
-sourcefiles = [
+gen_tool = "build/m68kmake"
+gen_tool_src = "bare68k/musashi/m68kmake.c"
+gen_tool_obj = "build/bare68k/musashi/m68kmake.o"
+gen_input = "bare68k/musashi/m68k_in.c"
+gen_dir = "gen"
+build_dir = "build"
+
+
+class my_build_ext(build_ext):
+  """overwrite build_ext to generate code first"""
+  def run(self):
+    self.run_command('gen')
+    build_ext.run(self)
+
+
+class my_clean(clean):
+  """overwrite clean to clean_gen first"""
+  def run(self):
+    self.run_command('clean_gen')
+    clean.run(self)
+
+
+class GenCommand(Command):
+  """my custom code generation command"""
+  description = "generate code for Musashi CPU emulator"
+  user_options = []
+  def initialize_options(self):
+    pass
+  def finalize_options(self):
+    pass
+  def run(self):
+    # ensure dir exists
+    if not os.path.isdir(gen_dir):
+      log.info("creating '{}' dir".format(gen_dir))
+      os.mkdir(gen_dir)
+    if not os.path.isdir(build_dir):
+      log.info("creating '{}' dir".format(build_dir))
+      os.mkdir(build_dir)
+    # build tool first?
+    if not os.path.exists(gen_tool):
+      log.info("building '{}' tool".format(gen_tool))
+      cc = ccompiler.new_compiler()
+      cc.compile(sources=[gen_tool_src], output_dir=build_dir)
+      cc.link_executable(objects=[gen_tool_obj], output_progname=gen_tool)
+      os.remove(gen_tool_obj)
+    # generate source?
+    if not os.path.exists(gen_src[0]):
+      log.info("generating source files")
+      cmd = [gen_tool, gen_dir, gen_input]
+      subprocess.check_call(cmd)
+
+
+class CleanGenCommand(Command):
+  """my custom code generation cleanup command"""
+  description = "remove generated code for Musashi CPU emulator"
+  user_options = []
+  def initialize_options(self):
+    pass
+  def finalize_options(self):
+    pass
+  def run(self):
+    if os.path.exists(gen_dir):
+      remove_tree(gen_dir, dry_run=self.dry_run)
+    # remove tool
+    if os.path.exists(gen_tool):
+      os.remove(gen_tool)
+
+
+cmdclass = {
+  'gen' : GenCommand,
+  'clean_gen' : CleanGenCommand,
+  'build_ext' : my_build_ext,
+  'clean' : my_clean
+}
+
+sourcefiles = gen_src + [
   'bare68k/cython/machine.pyx',
   'bare68k/binding/cpu.c',
   'bare68k/binding/mem.c',
   'bare68k/binding/traps.c',
   'bare68k/musashi/m68kcpu.c',
   'bare68k/musashi/m68kdasm.c',
-  # gen src
-  'gen/m68kopac.c',
-  'gen/m68kopdm.c',
-  'gen/m68kopnz.c',
-  'gen/m68kops.c'
 ]
 depends = [
   'bare68k/cython/cpu.pxd',
@@ -61,6 +145,7 @@ setup(
     tests_require=['pytest'],
 #    use_scm_version=True,
 #    setup_requires=['setuptools_scm'],
-    ext_modules = cythonize(extensions) #, output_dir="gen") #, gdb_debug=True)
+    ext_modules = cythonize(extensions), #, output_dir="gen") #, gdb_debug=True)
+    cmdclass = cmdclass
 )
 
