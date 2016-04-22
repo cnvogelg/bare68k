@@ -1,0 +1,7 @@
+include MANIFEST.in
+include README.md
+recursive-include bare68k/cython *.pyx *.pxd
+exclude bare68k/cython/machine.c
+recursive-include bare68k/musashi *.c *.h readme.txt
+recursive-include bare68k/binding *.c *.h readme.txt
+recursive-include gen *.c *.h

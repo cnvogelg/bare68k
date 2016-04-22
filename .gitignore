@@ -7,3 +7,6 @@ machine.c
 machine.so
 *.egg
 *.egg-info
+.eggs
+.tox
+dist/

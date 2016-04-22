@@ -1,6 +1,13 @@
+import os
 from setuptools import setup, find_packages
 from Cython.Build import cythonize
 from distutils.extension import Extension
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+def read(*parts):
+  return open(os.path.join(here, *parts), 'r').read()
+
 
 sourcefiles = [
   'bare68k/cython/machine.pyx',
@@ -33,7 +40,7 @@ extensions = [Extension("bare68k.machine", sourcefiles, depends=depends, include
 setup(
     name = "bare68k",
     description='A package to create m68k system emulators',
-    long_description=open("README.md").read(),
+    long_description=read("README.md"),
     version = "0.1.0",
     maintainer = "Christian Vogelgsang",
     maintainer_email = "chris@vogelgsang.org",
