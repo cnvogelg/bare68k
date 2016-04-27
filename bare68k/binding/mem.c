@@ -467,7 +467,8 @@ memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
   page_entry_t *page = &pages[start_page];
   uint32_t offset = 0;
   uint32_t remain = byte_size;
-  for(int i=0;i<num_pages;i++) {
+  int i;
+  for(i=0;i<num_pages;i++) {
     /* setup read pointers */
     if((flags & MEM_FLAGS_READ) == MEM_FLAGS_READ) {
       page->r_func[0] = r8_mem;
@@ -538,7 +539,8 @@ special_entry_t *mem_add_special(uint start_page, uint num_pages,
 
   /* setup pages */
   page_entry_t *page = &pages[start_page];
-  for(int i=0;i<num_pages;i++) {
+  int i;
+  for(i=0;i<num_pages;i++) {
     /* setup read pointers */
     if(read_func != NULL) {
       page->r_func[0] = r8_special;
