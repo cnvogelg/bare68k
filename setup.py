@@ -1,8 +1,10 @@
+from __future__ import print_function
+
+import sys
 import os
 import subprocess
 
 from setuptools import setup, find_packages
-from Cython.Build import cythonize
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.clean import clean
@@ -10,6 +12,20 @@ import distutils.ccompiler as ccompiler
 from distutils.core import Command
 from distutils.dir_util import remove_tree
 from distutils import log
+
+# has cython?
+try:
+  from Cython.Build import cythonize
+  has_cython = True
+except ImportError:
+  has_cython = False
+
+# use cython?
+use_cython = has_cython
+if '--no-cython' in sys.argv:
+  use_cython = False
+  sys.argv.remove('--no-cython')
+print("use_cython:", use_cython)
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -98,8 +114,13 @@ cmdclass = {
   'clean' : my_clean
 }
 
+if use_cython:
+  cython_src = 'bare68k/cython/machine.pyx'
+else:
+  cython_src = 'bare68k/cython/machine.c'
+
 sourcefiles = gen_src + [
-  'bare68k/cython/machine.pyx',
+  cython_src,
   'bare68k/binding/cpu.c',
   'bare68k/binding/mem.c',
   'bare68k/binding/traps.c',
@@ -120,6 +141,8 @@ inc_dirs = [
 ]
 
 extensions = [Extension("bare68k.machine", sourcefiles, depends=depends, include_dirs=inc_dirs)]
+if use_cython:
+  extensions = cythonize(extensions)
 
 setup(
     name = "bare68k",
@@ -145,7 +168,7 @@ setup(
     tests_require=['pytest'],
 #    use_scm_version=True,
 #    setup_requires=['setuptools_scm'],
-    ext_modules = cythonize(extensions), #, output_dir="gen") #, gdb_debug=True)
+    ext_modules = extensions,
     cmdclass = cmdclass
 )
 
