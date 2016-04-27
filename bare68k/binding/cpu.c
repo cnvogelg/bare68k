@@ -84,13 +84,15 @@ int cpu_default_instr_hook_func(uint32_t pc, void **data)
 
 void cpu_init(unsigned int cpu_type_)
 {
+  int i;
+
   m68k_set_cpu_type(cpu_type_);
   m68k_init();
   m68k_set_reset_instr_callback(reset_instr_cb);
   m68k_set_fc_callback(set_fc_cb);
 
   /* clear regs */
-  for(int i=0;i<8;i++) {
+  for(i=0;i<8;i++) {
     m68k_set_reg(M68K_REG_D0+i, 0);
     m68k_set_reg(M68K_REG_A0+i, 0);
   }
@@ -155,7 +157,9 @@ uint32_t cpu_r_reg(int reg)
 
 void cpu_r_regs(registers_t *regs)
 {
-  for(int i=0;i<8;i++) {
+  int i;
+
+  for(i=0;i<8;i++) {
     regs->dx[i] = m68k_get_reg(NULL, M68K_REG_D0 + i);
     regs->ax[i] = m68k_get_reg(NULL, M68K_REG_A0 + i);
   }
@@ -165,7 +169,9 @@ void cpu_r_regs(registers_t *regs)
 
 void cpu_w_regs(const registers_t *regs)
 {
-  for(int i=0;i<8;i++) {
+  int i;
+
+  for(i=0;i<8;i++) {
     m68k_set_reg(M68K_REG_D0 + i, regs->dx[i]);
     m68k_set_reg(M68K_REG_A0 + i, regs->ax[i]);
   }
@@ -179,7 +185,9 @@ static char sr_str[17];
 const char *cpu_get_sr_str(uint32_t val)
 {
   uint32_t mask = 0x8000;
-  for(int i=0;i<16;i++) {
+  int i;
+
+  for(i=0;i<16;i++) {
     if((val & mask) == mask) {
       sr_str[i] = sr_prot[i];
     } else {
@@ -203,7 +211,8 @@ const char ** cpu_get_regs_str(const registers_t *regs)
 
   char *ax = ax_line;
   char *dx = dx_line;
-  for(int i=0;i<8;i++) {
+  int i;
+  for(i=0;i<8;i++) {
     sprintf(dx, "D%d=%08x ", i, regs->dx[i]);
     sprintf(ax, "A%d=%08x ", i, regs->ax[i]);
     dx += 12;
@@ -252,7 +261,8 @@ void cpu_clear_info(void)
 {
   if(cleanup_func != NULL) {
     int n = run_info.num_events;
-    for(int i = 0; i < n; i++) {
+    int i;
+    for(i = 0; i < n; i++) {
       event_t *e = &events[i];
       cleanup_func(e);
     }
