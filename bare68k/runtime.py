@@ -6,6 +6,8 @@ import bare68k.cpu as cpu
 import bare68k.mem as mem
 from bare68k.memcfg import *
 from bare68k.consts import *
+from bare68k.cpucfg import CPUConfig
+from bare68k.memcfg import MemoryConfig
 
 # globals
 _cpu_cfg = None
@@ -29,6 +31,17 @@ def init(cpu_cfg, mem_cfg):
   mach.init(cpu, num_pages)
   # realize mem config
   _setup_mem(mem_cfg)
+
+def init_quick(cpu_type=M68K_CPU_TYPE_68000, ram_pages=1):
+  """a simplified init.
+
+  In contrast to init() this call is simplified and uses a basic memory
+  setup with only a RAM region starting at 0 with given pages.
+  """
+  cpu_cfg = CPUConfig()
+  mem_cfg = MemoryConfig()
+  mem_cfg.add_ram_range(0, ram_pages)
+  init(cpu_cfg, mem_cfg)
 
 def _setup_mem(mem_cfg):
   """internal helper to realize the memory configuration"""
@@ -56,20 +69,26 @@ def shutdown():
   _mem_cfg = None
   mach.shutdown()
 
-def run(init_pc, init_sp=0x400, cycles_per_run=0):
-  """run the CPU until emulation ends
+def reset(init_pc, init_sp=0x400):
+  """reset the CPU
 
-  this is the main loop of your emulation. it starts by setting up initial
-  PC and stack pointer at addresses 4 and 0 and pulses a CPU reset to fetch
-  these values. Then the CPU runs code from the virtual system's memory
-  until an event happens. The event is processed and code execution is
-  coninued until a termination condition is reached.
+  before you can run the CPU you have to reset it. This will write the initial
+  SP and the initial PC to locations 0 and 4 in RAM and pulse a reset in the
+  CPU emulation. After this operation you are free to overwrite these values
+  again. Now proceed to call run().
   """
   # place SP and PC in memory
   mem.w32(0, init_sp)
   mem.w32(4, init_pc)
   # now pulse reset
   mach.pulse_reset()
+
+def run(cycles_per_run=0):
+  """run the CPU until emulation ends
+
+  this is the main loop of your emulation. The CPU emulation is run until an
+  event occurs.
+  """
   # main loop
   while True:
     num_events = mach.execute_to_event_checked(cycles_per_run)
