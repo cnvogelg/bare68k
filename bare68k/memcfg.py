@@ -134,6 +134,8 @@ class MemoryConfig(object):
       return res
 
   def _prepare_rom(self, data, pad):
+    if data is None:
+      return None
     n = len(data)
     rem = n % PAGE_BYTES
     if rem == 0:
@@ -154,7 +156,7 @@ class MemoryConfig(object):
   def add_ram_range(self, begin_page, num_pages, sparse=False):
     return self._store_page_range(begin_page, num_pages, MEM_RAM, sparse=sparse)
 
-  def add_rom_range(self, begin_page, num_pages, data, pad=False):
+  def add_rom_range(self, begin_page, num_pages, data=None, pad=False):
     rom = self._prepare_rom(data, pad)
     return self._store_page_range(begin_page, num_pages, MEM_ROM, opts=rom)
 
@@ -172,7 +174,7 @@ class MemoryConfig(object):
     num_pages = self._get_num_pages(size, units)
     return self.add_ram_range(begin_page, num_pages, sparse)
 
-  def add_rom_range_addr(self, begin_addr, size, data, units=1024, pad=False):
+  def add_rom_range_addr(self, begin_addr, size, data=None, units=1024, pad=False):
     begin_page = self._get_page_addr(begin_addr)
     num_pages = self._get_num_pages(size, units)
     return self.add_rom_range(begin_page, num_pages, data, pad)

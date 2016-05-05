@@ -2,6 +2,7 @@
 """
 
 import time
+import logging
 
 import bare68k.machine as mach
 import bare68k.cpu as cpu
@@ -16,20 +17,38 @@ from bare68k.memcfg import MemoryConfig
 _cpu_cfg = None
 _mem_cfg = None
 
+# logging setup
+_log = logging.getLogger(__name__)
+
+# return reasons
+RETURN_OK = 0
+RETURN_USER_ABORT = 1
+RETURN_MEM_ACCESS = 2
+RETURN_MEM_BOUNDS = 3
+
+# global vars to modify run() loop
+_reset_end_pc = None
+
+
 class RunInfo:
   """RunInfo returns information about the CPU run last performed"""
-  def __init__(self, total_time, cpu_time, total_cycles, aborted):
+  def __init__(self, total_time, cpu_time, total_cycles, results):
     self.total_time = total_time
     self.cpu_time = cpu_time
     self.total_cycles = total_cycles
-    self.aborted = aborted
+    self.results = results
     self.py_time = total_time - cpu_time
 
   def __repr__(self):
     return "RunInfo({},{},{},{})".format(
       self.total_time, self.cpu_time,
-      self.total_cycles, self.aborted)
+      self.total_cycles, repr(self.results))
 
+
+def log_setup(level=logging.DEBUG):
+  """setup logging of the runtime"""
+  FORMAT = '%(asctime)-15s %(name)10s:%(levelname)7s:  %(message)s'
+  logging.basicConfig(format=FORMAT, level=level)
 
 def init(cpu_cfg, mem_cfg):
   """setup runtime.
@@ -52,13 +71,21 @@ def init(cpu_cfg, mem_cfg):
   # setup machine event handlers
   _setup_handlers()
 
+def get_cpu_cfg():
+  """access the current CPU configuration"""
+  return _cpu_cfg
+
+def get_mem_cfg():
+  """access the current memory configuration"""
+  return _mem_cfg
+
 def init_quick(cpu_type=M68K_CPU_TYPE_68000, ram_pages=1):
   """a simplified init.
 
   In contrast to init() this call is simplified and uses a basic memory
-  setup with only a RAM region starting at 0 with given pages.
+  setup with only a RAM region starting at 0 with given number of pages.
   """
-  cpu_cfg = CPUConfig()
+  cpu_cfg = CPUConfig(cpu_type)
   mem_cfg = MemoryConfig()
   mem_cfg.add_ram_range(0, ram_pages)
   init(cpu_cfg, mem_cfg)
@@ -72,11 +99,15 @@ def _setup_mem(mem_cfg):
     size = mr.num_pages
     if mt == MEM_RAM:
       mach.add_memory(start, size, MEM_FLAGS_RW)
+      _log.info("memory: RAM @%04x +%04x", start, size)
     elif mt == MEM_ROM:
       mach.add_memory(start, size, MEM_FLAGS_READ)
+      _log.info("memory: ROM @%04x +%04x", start, size)
     elif mt == MEM_SPECIAL:
       r_func, w_func = mr.opts
       mach.add_special(start, size, r_func, w_func)
+      _log.info("memory: spc @%04x +%04x", start, size)
+  _log.info("memory: done")
 
 def shutdown():
   """shutdown runtime
@@ -88,6 +119,7 @@ def shutdown():
   _cpu_cfg = None
   _mem_cfg = None
   mach.shutdown()
+  _log.info("shutdown")
 
 def reset(init_pc, init_sp=0x400):
   """reset the CPU
@@ -104,6 +136,7 @@ def reset(init_pc, init_sp=0x400):
   mach.pulse_reset()
   # clear info to reset cycle counts
   mach.clear_info()
+  _log.info("reset: pc=%08x, sp=%08x", init_pc, init_sp)
 
 def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True):
   """run the CPU until emulation ends
@@ -114,23 +147,28 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True):
 
   Returns a RunInfo instance giving you timing information.
   """
+  global _reset_end_pc
+
   # timer function
   timer = time.time
 
   cpu_time = 0
-  aborted = False
-
-  total_start = timer()
+  _reset_end_pc = reset_end_pc
 
   # main loop
-  while True:
+  _log.debug("enter main loop")
+  total_start = timer()
+
+  results = []
+  stay = True
+  while stay:
     try:
       # execute CPU code until event occurs
       start = timer()
       num_events = mach.execute_to_event_checked(cycles_per_run)
     except KeyboardInterrupt as e:
       # either abort execution (default) or re-raise exception
-      aborted = True
+      results.append(RETURN_USER_ABORT)
       if not catch_kb_intr:
         raise e
       break
@@ -139,42 +177,60 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True):
       cpu_time += end - start
 
     # dispatch events
-    if not _dispatch_events(reset_end_pc):
-      break
+    run_info = mach.get_info()
+    results = []
+    for event in run_info.events:
+      handler = event.handler
+      if handler is not None:
+        result = handler(event)
+        # handler wants to
+        if result is not None:
+          results.append(result)
+          stay = False
+          _log.debug("leave run loop: reason=%d", result)
+      else:
+        _log.warning("no handler for event: %s", event)
+
+  total_end = timer()
+  _log.debug("leave main loop")
 
   # final timing
-  total_end = timer()
   total_time = total_end - total_start
-  return RunInfo(total_time, cpu_time, mach.get_total_cycles(), aborted)
-
-def _dispatch_events(reset_end_pc):
-  """internal event dispatcher"""
-  # get run info
-  run_info = mach.get_info()
-  for event in run_info.events:
-    et = event.ev_type
-
-    # check for reset event
-    if et == CPU_EVENT_RESET:
-      pc = event.addr
-      # end condition?
-      if reset_end_pc == pc or reset_end_pc is None:
-        return False
-
-    # execute a handler?
-    handler = event.handler
-    if handler is not None:
-      handler(event)
-    else:
-      raise InternalError("Unhandled Event: " + str(event))
-
-  return True
+  return RunInfo(total_time, cpu_time, mach.get_total_cycles(), results)
 
 def _setup_handlers():
   """internal setter for all machine event handlers"""
   eh = mach.event_handlers
-  eh[CPU_EVENT_RESET] = def_handler_reset
+  eh[CPU_EVENT_RESET] = handler_reset
+  eh[CPU_EVENT_MEM_ACCESS] = handler_mem_access
+  eh[CPU_EVENT_MEM_BOUNDS] = handler_mem_bounds
 
-def def_handler_reset(event):
+def set_handler(event_type, handler):
+  """set a custom handler for an event type and overwrite default handler"""
+  if event_type < 0 or event_type >= CPU_NUM_EVENTS:
+    raise ValueError("Invalid event type")
+  mach.event_handlers[event_type] = handler
+
+def handler_reset(event):
   """default handler for reset opcode"""
-  pass
+  global _reset_end_pc
+  pc = event.addr
+  _log.info("handle RESET @%08x", pc)
+  # check if final PC reached to end run loop
+  if _reset_end_pc is None or _reset_end_pc == pc:
+    # quit run loop:
+    return RETURN_OK
+
+def handler_mem_access(event):
+  """default handler for invalid memory accesses"""
+  mem_str = mach.get_cpu_mem_str(event.flags, event.addr, event.value)
+  _log.error("MEM ACCESS: %s", mem_str)
+  # quit run loop:
+  return RETURN_MEM_ACCESS
+
+def handler_mem_bounds(event):
+  """default handler for invalid memory accesses beyond max pages"""
+  mem_str = mach.get_cpu_mem_str(event.flags, event.addr, event.value)
+  _log.error("MEM BOUNDS: %s", mem_str)
+  # quit run loop:
+  return RETURN_MEM_BOUNDS
