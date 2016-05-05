@@ -205,6 +205,7 @@ def shutdown():
 
   cpu.cpu_free()
   mem.mem_free()
+  traps.traps_shutdown()
 
 # cpu control
 
@@ -785,14 +786,22 @@ def cpu_r32(uint32_t addr):
 # traps
 
 def trap_setup(int flags, object call not None):
-  Py_INCREF(call)
-  return traps.trap_setup(flags, <void *>call)
+  cdef uint16_t tid
+  tid = traps.trap_setup(flags, <void *>call)
+  if tid != traps.TRAP_INVALID:
+    Py_INCREF(call)
+    return tid
+  else:
+    raise MemoryError("no more traps!")
 
 def trap_free(uint16_t tid):
   cdef void *data
   cdef object callable
   data = traps.trap_free(tid)
   Py_DECREF(<object>data)
+
+def traps_get_num_free():
+  return traps.traps_get_num_free()
 
 # tools
 

@@ -171,3 +171,19 @@ def test_auto_rts_trap(mach):
   assert ev.addr == 0x100
   assert ev.data is None
   assert ev.handler is None
+
+def test_many_traps(mach):
+  num_free = traps_get_num_free()
+  def my_cb():
+    print("HUHU")
+  # allocate all traps
+  tids = []
+  for i in range(num_free):
+    tid = trap_setup(TRAP_AUTO_RTS, my_cb)
+    tids.append(tid)
+  # expect error on next allocation
+  with pytest.raises(MemoryError):
+    trap_setup(TRAP_DEFAULT, my_cb)
+  # free all
+  for tid in tids:
+    trap_free(tid)

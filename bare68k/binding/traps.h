@@ -24,6 +24,8 @@ typedef unsigned int uint;
 
 /* ----- API ----- */
 extern void traps_init(void);
+extern int traps_get_num_free(void);
+extern int traps_shutdown(void);
 extern uint16_t trap_setup(int flags, void *data);
 extern void *trap_free(uint16_t opcode);
 

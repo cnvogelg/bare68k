@@ -61,6 +61,28 @@ void traps_init(void)
   m68k_set_aline_hook_callback(trap_aline);
 }
 
+int traps_get_num_free(void)
+{
+  entry_t *e = first_free;
+  int num_free = 0;
+
+  while(e != NULL) {
+    e = e->next;
+    num_free++;
+  }
+  return num_free;
+}
+
+int traps_shutdown(void)
+{
+
+  /* remove trap handler */
+  m68k_set_aline_hook_callback(NULL);
+
+  /* return non-freed traps */
+  return NUM_TRAPS - traps_get_num_free();
+}
+
 uint16_t trap_setup(int flags, void *data)
 {
   int off;
