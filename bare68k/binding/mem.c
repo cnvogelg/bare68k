@@ -621,6 +621,22 @@ uint8_t *mem_get_max_range(uint32_t address, uint32_t *size)
   }
 }
 
+int mem_get_memory_flags(uint32_t address)
+{
+  uint page_no = address >> 16;
+  if(page_no >= total_pages) {
+    return 0;
+  } else {
+    page_entry_t *page = &pages[page_no];
+    memory_entry_t *mem = page->memory_entry;
+    if(mem != NULL) {
+      return mem->flags;
+    } else {
+      return 0;
+    }
+  }
+}
+
 /* ----- API mem access ----- */
 
 int mem_set_block(uint32_t address, uint32_t size, uint8_t value)

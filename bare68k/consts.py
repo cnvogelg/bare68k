@@ -63,6 +63,7 @@ M68K_INT_ACK_SPURIOUS   = 0xfffffffe
 MEM_FLAGS_READ  = 1
 MEM_FLAGS_WRITE = 2
 MEM_FLAGS_RW    = 3
+MEM_FLAGS_TRAPS = 4
 
 # memory trace
 MEM_ACCESS_R8    = 1

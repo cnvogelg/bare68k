@@ -8,5 +8,5 @@ def mach(request):
   cpu = request.param
   init(cpu, 4)
   request.addfinalizer(shutdown)
-  add_memory(0, 1, MEM_FLAGS_RW)
+  add_memory(0, 1, MEM_FLAGS_RW | MEM_FLAGS_TRAPS)
   pulse_reset()

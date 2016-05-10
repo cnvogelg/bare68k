@@ -8,6 +8,7 @@
 
 #include "traps.h"
 #include "cpu.h"
+#include "mem.h"
 #include "m68k.h"
 
 #define NUM_TRAPS  0x1000
@@ -22,12 +23,31 @@ typedef struct entry entry_t;
 
 static entry_t traps[NUM_TRAPS];
 static entry_t *first_free;
+static int global_enable = 1;
 
 static int trap_aline(uint opcode, uint pc)
 {
+  /* global disable */
+  if(!global_enable) {
+    return M68K_ALINE_EXCEPT;
+  }
+
+  /* mem flags? */
+  int mem_flags = mem_get_memory_flags(pc);
+  if((mem_flags & MEM_FLAGS_TRAPS) == 0) {
+    return M68K_ALINE_EXCEPT;
+  }
+
   uint off = opcode & TRAP_MASK;
-  void *data = traps[off].data;
+
+  /* enabled? */
   int flags = traps[off].flags;
+  if((flags & TRAP_ENABLE) == 0) {
+    return M68K_ALINE_EXCEPT;
+  }
+
+  /* process aline trap */
+  void *data = traps[off].data;
 
   /* auto clean one shot trap */
   if(flags & TRAP_ONE_SHOT) {
@@ -53,12 +73,16 @@ void traps_init(void)
   for(i=0;i<(NUM_TRAPS-1);i++) {
     traps[i].next = &traps[i+1];
     traps[i].data = NULL;
+    traps[i].flags = 0;
   }
   traps[NUM_TRAPS-1].next = NULL;
   traps[NUM_TRAPS-1].data = NULL;
+  traps[NUM_TRAPS-1].flags = 0;
 
   /* setup my trap handler */
   m68k_set_aline_hook_callback(trap_aline);
+
+  global_enable = 1;
 }
 
 int traps_get_num_free(void)
@@ -75,7 +99,6 @@ int traps_get_num_free(void)
 
 int traps_shutdown(void)
 {
-
   /* remove trap handler */
   m68k_set_aline_hook_callback(NULL);
 
@@ -98,8 +121,9 @@ uint16_t trap_setup(int flags, void *data)
   first_free = traps[off].next;
 
   /* store trap data */
+  traps[off].next = NULL;
   traps[off].data = data;
-  traps[off].flags = flags;
+  traps[off].flags = flags | TRAP_SETUP | TRAP_ENABLE;
 
   return off | 0xa000;
 }
@@ -115,4 +139,26 @@ void *trap_free(uint16_t opcode)
   traps[id].data = NULL;
   traps[id].flags = 0;
   return data;
+}
+
+void trap_enable(uint16_t opcode)
+{
+  uint16_t id = opcode & TRAP_MASK;
+  traps[id].flags |= TRAP_ENABLE;
+}
+
+void trap_disable(uint16_t opcode)
+{
+  uint16_t id = opcode & TRAP_MASK;
+  traps[id].flags &= ~TRAP_ENABLE;
+}
+
+void traps_global_enable(void)
+{
+  global_enable = 1;
+}
+
+void traps_global_disable(void)
+{
+  global_enable = 0;
 }

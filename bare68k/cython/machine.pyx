@@ -800,8 +800,20 @@ def trap_free(uint16_t tid):
   data = traps.trap_free(tid)
   Py_DECREF(<object>data)
 
+def trap_enable(uint16_t tid):
+  traps.trap_enable(tid)
+
+def trap_disable(uint16_t tid):
+  traps.trap_disable(tid)
+
 def traps_get_num_free():
   return traps.traps_get_num_free()
+
+def traps_global_enable():
+  traps.traps_global_enable()
+
+def traps_global_disable():
+  traps.traps_global_disable()
 
 # tools
 

@@ -12,7 +12,15 @@ cdef extern from "binding/traps.h":
     TRAP_INVALID = 0xffff
 
   void traps_init()
-  int traps_get_num_free()
   int traps_shutdown()
+
+  int traps_get_num_free()
+
   uint16_t trap_setup(int flags, void *data)
   void *trap_free(uint16_t tid)
+
+  void trap_enable(uint16_t opcode)
+  void trap_disable(uint16_t opcode)
+
+  void traps_global_enable()
+  void traps_global_disable()

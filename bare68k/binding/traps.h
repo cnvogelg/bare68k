@@ -13,6 +13,8 @@
 #define TRAP_DEFAULT    0
 #define TRAP_ONE_SHOT   1
 #define TRAP_AUTO_RTS   2
+#define TRAP_SETUP      4
+#define TRAP_ENABLE     8
 
 #define TRAP_INVALID    0xffff
 
@@ -24,9 +26,17 @@ typedef unsigned int uint;
 
 /* ----- API ----- */
 extern void traps_init(void);
-extern int traps_get_num_free(void);
 extern int traps_shutdown(void);
+
+extern int traps_get_num_free(void);
+
 extern uint16_t trap_setup(int flags, void *data);
 extern void *trap_free(uint16_t opcode);
+
+extern void trap_enable(uint16_t opcode);
+extern void trap_disable(uint16_t opcode);
+
+extern void traps_global_enable(void);
+extern void traps_global_disable(void);
 
 #endif

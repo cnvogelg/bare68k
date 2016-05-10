@@ -19,6 +19,7 @@ typedef unsigned int uint;
 
 #define MEM_FLAGS_READ    1
 #define MEM_FLAGS_WRITE   2
+#define MEM_FLAGS_TRAPS   4
 
 /* Use Bits 0,1,2 to signal 8, 16, 32 bit access.
    Bit 3 is set for write operations.
@@ -119,6 +120,8 @@ extern void mem_default_api_trace_func(int access, uint32_t addr, uint32_t val, 
 
 extern uint8_t *mem_get_range(uint32_t address, uint32_t size);
 extern uint8_t *mem_get_max_range(uint32_t address, uint32_t *size);
+
+extern int mem_get_memory_flags(uint32_t address);
 
 extern int mem_set_block(uint32_t address, uint32_t size, uint8_t value);
 extern int mem_copy_block(uint32_t src_addr, uint32_t tgt_addr, uint32_t size);
