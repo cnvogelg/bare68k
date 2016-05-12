@@ -1,4 +1,5 @@
 import pytest
+import traceback
 
 from bare68k import *
 from bare68k.consts import *
@@ -71,3 +72,58 @@ def test_mem_bounds(rt):
   cpu.w_pc(0x100000)
   ri = rt.run()
   assert ri.results == [rt.RETURN_MEM_BOUNDS]
+
+# --- traps ---
+
+def test_rt_trap_cpu(rt):
+  """an unbound trap causing a CPU exception vector"""
+  mem.w16(PROG_BASE, 0xa000)
+  mem.w32(0x28, PROG_BASE + 10)
+  mem.w16(PROG_BASE + 10, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.results == [rt.RETURN_OK]
+
+def test_rt_trap_unbound(rt):
+  """enable unbound trap and get a ALINE_TRAP event"""
+  traps.enable(0xa000)
+  mem.w16(PROG_BASE, 0xa000)
+  ri = rt.run()
+  assert ri.results == [rt.RETURN_ALINE_TRAP]
+
+class TrapHelper:
+  def __init__(self):
+    self.event = None
+  def __call__(self, event):
+    self.event = event
+
+def test_rt_trap_setup(rt):
+  """setup a bound trap that gets called automatically"""
+  th = TrapHelper()
+  op = traps.setup(TRAP_DEFAULT, th)
+  mem.w16(PROG_BASE, op)
+  mem.w16(PROG_BASE + 2, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.results == [rt.RETURN_OK]
+  assert th.event is not None
+
+def test_rt_trap_fail(rt):
+  """the trap callback raises an exception"""
+  def fail(event):
+    raise ValueError("failed!")
+  op = traps.setup(TRAP_DEFAULT, fail)
+  mem.w16(PROG_BASE, op)
+  mem.w16(PROG_BASE + 2, RESET_OPCODE)
+  with pytest.raises(ValueError):
+    ri = rt.run()
+
+def test_rt_trap_catch(rt):
+  """the trap callback raises an exception"""
+  def fail(event):
+    raise ValueError("failed!")
+  op = traps.setup(TRAP_DEFAULT, fail)
+  mem.w16(PROG_BASE, op)
+  mem.w16(PROG_BASE + 2, RESET_OPCODE)
+  try:
+    ri = rt.run()
+  except Exception as e:
+    traceback.print_exc()

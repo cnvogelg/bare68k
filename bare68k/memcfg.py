@@ -12,20 +12,22 @@ PAGE_MASK  = 0xffff
 PAGE_SHIFT = 16
 
 class MemoryRange(object):
-  def __init__(self, start_page, num_pages, mem_type, opts=None):
+  def __init__(self, start_page, num_pages, mem_type, opts=None, traps=True):
     self.start_page = start_page
     self.num_pages = num_pages
     self.mem_type = mem_type
     self.opts = opts
+    self.traps = traps
     self.next_page = self.start_page + self.num_pages
 
   def __repr__(self):
-    return "MemoryRange(%d, %d, %s, %r)" % (self.start_page, self.num_pages,
-      self.mem_type, self.opts)
+    return "MemoryRange(%d, %d, %s, %r, %r)" % (self.start_page, self.num_pages,
+      self.mem_type, self.opts, self.traps)
 
   def __eq__(self, o):
     return self.start_page == o.start_page and self.num_pages == o.num_pages \
-      and self.mem_type == o.mem_type and self.opts == o.opts
+      and self.mem_type == o.mem_type and self.opts == o.opts \
+      and self.traps == o.traps
 
 
 class MemoryConfig(object):
@@ -90,10 +92,10 @@ class MemoryConfig(object):
     """convert an absolute address to a page number"""
     return self._get_num_pages(addr, 1)
 
-  def _store_page_range(self, begin_page, num_pages, mem_type, opts=None, sparse=False):
+  def _store_page_range(self, begin_page, num_pages, mem_type, opts=None, sparse=False, traps=True):
     """make sure the given page range fits in the page list"""
     # create a new range
-    r = MemoryRange(begin_page, num_pages, mem_type, opts)
+    r = MemoryRange(begin_page, num_pages, mem_type, opts, traps)
     # add to range_list
     rl = self.range_list
     if len(rl) == 0:
@@ -116,11 +118,11 @@ class MemoryConfig(object):
             if sparse:
               # create partial range that fits
               np = e.start_page - r.start_page
-              nr = MemoryRange(r.start_page, np, r.mem_type, r.opts)
+              nr = MemoryRange(r.start_page, np, r.mem_type, r.opts, r.traps)
               rl.insert(pos, nr)
               res.append(nr)
               # keep remainder
-              r = MemoryRange(e.next_page, r.num_pages - np, r.mem_type, r.opts)
+              r = MemoryRange(e.next_page, r.num_pages - np, r.mem_type, r.opts, r.traps)
             else:
               raise ConfigError("%r overlaps %r!" % (r, e))
         # liese inside
@@ -153,12 +155,12 @@ class MemoryConfig(object):
 
   # page based
 
-  def add_ram_range(self, begin_page, num_pages, sparse=False):
-    return self._store_page_range(begin_page, num_pages, MEM_RAM, sparse=sparse)
+  def add_ram_range(self, begin_page, num_pages, sparse=False, traps=True):
+    return self._store_page_range(begin_page, num_pages, MEM_RAM, sparse=sparse, traps=traps)
 
-  def add_rom_range(self, begin_page, num_pages, data=None, pad=False):
+  def add_rom_range(self, begin_page, num_pages, data=None, pad=False, traps=True):
     rom = self._prepare_rom(data, pad)
-    return self._store_page_range(begin_page, num_pages, MEM_ROM, opts=rom)
+    return self._store_page_range(begin_page, num_pages, MEM_ROM, opts=rom, traps=traps)
 
   def add_special_range(self, begin_page, num_pages, r_func, w_func):
     opts = (r_func, w_func)
@@ -169,15 +171,15 @@ class MemoryConfig(object):
 
   # address based
 
-  def add_ram_range_addr(self, begin_addr, size, units=1024, sparse=False):
+  def add_ram_range_addr(self, begin_addr, size, units=1024, sparse=False, traps=True):
     begin_page = self._get_page_addr(begin_addr)
     num_pages = self._get_num_pages(size, units)
-    return self.add_ram_range(begin_page, num_pages, sparse)
+    return self.add_ram_range(begin_page, num_pages, sparse, traps=traps)
 
-  def add_rom_range_addr(self, begin_addr, size, data=None, units=1024, pad=False):
+  def add_rom_range_addr(self, begin_addr, size, data=None, units=1024, pad=False, traps=True):
     begin_page = self._get_page_addr(begin_addr)
     num_pages = self._get_num_pages(size, units)
-    return self.add_rom_range(begin_page, num_pages, data, pad)
+    return self.add_rom_range(begin_page, num_pages, data, pad, traps=traps)
 
   def add_special_range_addr(self, begin_addr, size, r_func, w_func, units=1024):
     begin_page = self._get_page_addr(begin_addr)

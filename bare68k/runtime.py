@@ -25,6 +25,7 @@ RETURN_OK = 0
 RETURN_USER_ABORT = 1
 RETURN_MEM_ACCESS = 2
 RETURN_MEM_BOUNDS = 3
+RETURN_ALINE_TRAP = 4
 
 # global vars to modify run() loop
 _reset_end_pc = None
@@ -98,11 +99,17 @@ def _setup_mem(mem_cfg):
     start = mr.start_page
     size = mr.num_pages
     if mt == MEM_RAM:
-      mach.add_memory(start, size, MEM_FLAGS_RW)
-      _log.info("memory: RAM @%04x +%04x", start, size)
+      flags = MEM_FLAGS_RW
+      if mr.traps:
+        flags |= MEM_FLAGS_TRAPS
+      mach.add_memory(start, size, flags)
+      _log.info("memory: RAM @%04x +%04x flags=%x", start, size, flags)
     elif mt == MEM_ROM:
-      mach.add_memory(start, size, MEM_FLAGS_READ)
-      _log.info("memory: ROM @%04x +%04x", start, size)
+      flags = MEM_FLAGS_READ
+      if mr.traps:
+        flags |= MEM_FLAGS_TRAPS
+      mach.add_memory(start, size, flags)
+      _log.info("memory: ROM @%04x +%04x flags=%x", start, size, flags)
     elif mt == MEM_SPECIAL:
       r_func, w_func = mr.opts
       mach.add_special(start, size, r_func, w_func)
@@ -201,7 +208,9 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True):
 def _setup_handlers():
   """internal setter for all machine event handlers"""
   eh = mach.event_handlers
+  eh[CPU_EVENT_CALLBACK_ERROR] = handler_cb_error
   eh[CPU_EVENT_RESET] = handler_reset
+  eh[CPU_EVENT_ALINE_TRAP] = handler_aline_trap
   eh[CPU_EVENT_MEM_ACCESS] = handler_mem_access
   eh[CPU_EVENT_MEM_BOUNDS] = handler_mem_bounds
 
@@ -210,6 +219,13 @@ def set_handler(event_type, handler):
   if event_type < 0 or event_type >= CPU_NUM_EVENTS:
     raise ValueError("Invalid event type")
   mach.event_handlers[event_type] = handler
+
+def handler_cb_error(event):
+  """a callback running your code raised an exception"""
+  # re-raise
+  exc = event.data
+  _log.error("handle CALLBACK raised", exc)
+  raise exc
 
 def handler_reset(event):
   """default handler for reset opcode"""
@@ -220,6 +236,13 @@ def handler_reset(event):
   if _reset_end_pc is None or _reset_end_pc == pc:
     # quit run loop:
     return RETURN_OK
+
+def handler_aline_trap(event):
+  """an unbound aline trap was encountered"""
+  pc = event.addr
+  op = event.value
+  _log.warn("unbound ALINE encountered: @%08x: %04x", pc, op)
+  return RETURN_ALINE_TRAP
 
 def handler_mem_access(event):
   """default handler for invalid memory accesses"""
