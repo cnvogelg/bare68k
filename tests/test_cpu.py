@@ -398,7 +398,7 @@ def test_mem_access(mach):
   assert ri.num_events >= 1
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_MEM_ACCESS
-  assert ev.flags == 0x62 # SUPER+PROG + R16
+  assert ev.flags == MEM_FC_SUPER_PROG | MEM_ACCESS_R16
   assert ev.addr == 0x30000
 
 def test_mem_bounds(mach):
@@ -413,5 +413,5 @@ def test_mem_bounds(mach):
   assert ri.num_events >= 1
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_MEM_BOUNDS
-  assert ev.flags == 0x62 # SUPER+PROG + R16
+  assert ev.flags == MEM_FC_SUPER_PROG | MEM_ACCESS_R16
   assert ev.addr == 0x40000

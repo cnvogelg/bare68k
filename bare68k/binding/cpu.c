@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "cpu.h"
+#include "mem.h"
 
 #define DEFAULT_CYCLES 100000
 #define MAX_EVENTS 8
@@ -66,9 +67,21 @@ static int int_ack_cb(int int_level)
   return ack;
 }
 
+/* map CPU function code to our mapping */
+static unsigned int cpu_fc_map[] = {
+  MEM_FC_INVALID,   /* 0 */
+  MEM_FC_USER_DATA, /* 1 */
+  MEM_FC_USER_PROG, /* 2 */
+  MEM_FC_INVALID,   /* 3 */
+  MEM_FC_INVALID,   /* 4 */
+  MEM_FC_SUPER_DATA,/* 5 */
+  MEM_FC_SUPER_PROG,/* 6 */
+  MEM_FC_INT_ACK    /* 7 */
+};
+
 static void set_fc_cb(unsigned int new_fc)
 {
-  cpu_current_fc = new_fc << CPU_FC_SHIFT;
+  cpu_current_fc = cpu_fc_map[new_fc & 7];
 }
 
 /* ----- Default ----- */

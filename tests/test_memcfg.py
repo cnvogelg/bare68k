@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import pytest
+
 from bare68k import *
 from bare68k.consts import *
 from bare68k.errors import *

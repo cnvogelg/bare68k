@@ -521,9 +521,9 @@ def test_cpu_access_str():
   assert s == "W08:SP"
   s = get_cpu_access_str(MEM_ACCESS_W16 | MEM_FC_INT_ACK)
   assert s == "W16:IA"
-  s = get_cpu_access_str(MEM_ACCESS_W32)
+  s = get_cpu_access_str(MEM_ACCESS_W32 | 0x10)
   assert s == "W32:??"
-  s = get_cpu_access_str(0)
+  s = get_cpu_access_str(0x10)
   assert s == "R??:??"
 
 def test_api_access_str():
