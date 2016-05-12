@@ -16,6 +16,8 @@ from bare68k.memcfg import MemoryConfig
 # globals
 _cpu_cfg = None
 _mem_cfg = None
+_reset_pc = None
+_reset_sp = None
 
 # logging setup
 _log = logging.getLogger(__name__)
@@ -136,6 +138,9 @@ def reset(init_pc, init_sp=0x400):
   CPU emulation. After this operation you are free to overwrite these values
   again. Now proceed to call run().
   """
+  global _reset_pc, _reset_sp
+  _reset_pc = init_pc
+  _reset_sp = init_sp
   # place SP and PC in memory
   mem.w32(0, init_sp)
   mem.w32(4, init_pc)
@@ -144,6 +149,12 @@ def reset(init_pc, init_sp=0x400):
   # clear info to reset cycle counts
   mach.clear_info()
   _log.info("reset: pc=%08x, sp=%08x", init_pc, init_sp)
+
+def get_reset_pc():
+  return _reset_pc
+
+def get_reset_sp():
+  return _reset_sp
 
 def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True):
   """run the CPU until emulation ends

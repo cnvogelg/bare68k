@@ -4,25 +4,8 @@ import traceback
 from bare68k import *
 from bare68k.consts import *
 
-PROG_BASE = 0x1000
-STACK = 0x800
-
 RESET_OPCODE = 0x4e70
 NOP_OPCODE = 0x4e71
-
-@pytest.fixture(params=[M68K_CPU_TYPE_68000, M68K_CPU_TYPE_68020],
-                ids=["68000", "68020"])
-def rt(request):
-  runtime.log_setup()
-  cpu_cfg = CPUConfig(request.param)
-  mem_cfg = MemoryConfig()
-  mem_cfg.add_ram_range(0, 1)
-  mem_cfg.add_rom_range(2, 1)
-  runtime.init(cpu_cfg, mem_cfg)
-  request.addfinalizer(runtime.shutdown)
-  runtime.reset(PROG_BASE, STACK)
-  return runtime
-
 
 def test_init_shutdown():
   cpu_cfg = CPUConfig()
@@ -39,12 +22,14 @@ def test_runtime_init(rt):
   pass
 
 def test_mem_cpu(rt):
+  PROG_BASE = rt.get_reset_pc()
   mem.w16(PROG_BASE, RESET_OPCODE)
   cpu.w_reg(M68K_REG_D0, 0)
 
 def test_reset_quit_on_first(rt):
   is_68k = rt.get_cpu_cfg().get_cpu_type() == M68K_CPU_TYPE_68000
   reset_cycles = 132 if is_68k else 518
+  PROG_BASE = rt.get_reset_pc()
   mem.w16(PROG_BASE, RESET_OPCODE)
   ri = rt.run()
   assert ri.total_cycles == reset_cycles
@@ -54,6 +39,7 @@ def test_reset_quit_on_first(rt):
 def test_reset_quit_on_pc(rt):
   is_68k = rt.get_cpu_cfg().get_cpu_type() == M68K_CPU_TYPE_68000
   reset_cycles = 132 if is_68k else 518
+  PROG_BASE = rt.get_reset_pc()
   mem.w16(PROG_BASE, RESET_OPCODE)
   mem.w16(PROG_BASE+2, RESET_OPCODE)
   ri = rt.run(reset_end_pc=PROG_BASE + 4)
@@ -77,6 +63,7 @@ def test_mem_bounds(rt):
 
 def test_rt_trap_cpu(rt):
   """an unbound trap causing a CPU exception vector"""
+  PROG_BASE = rt.get_reset_pc()
   mem.w16(PROG_BASE, 0xa000)
   mem.w32(0x28, PROG_BASE + 10)
   mem.w16(PROG_BASE + 10, RESET_OPCODE)
@@ -85,6 +72,7 @@ def test_rt_trap_cpu(rt):
 
 def test_rt_trap_unbound(rt):
   """enable unbound trap and get a ALINE_TRAP event"""
+  PROG_BASE = rt.get_reset_pc()
   traps.enable(0xa000)
   mem.w16(PROG_BASE, 0xa000)
   ri = rt.run()
@@ -98,6 +86,7 @@ class TrapHelper:
 
 def test_rt_trap_setup(rt):
   """setup a bound trap that gets called automatically"""
+  PROG_BASE = rt.get_reset_pc()
   th = TrapHelper()
   op = traps.setup(TRAP_DEFAULT, th)
   mem.w16(PROG_BASE, op)
@@ -108,6 +97,7 @@ def test_rt_trap_setup(rt):
 
 def test_rt_trap_fail(rt):
   """the trap callback raises an exception"""
+  PROG_BASE = rt.get_reset_pc()
   def fail(event):
     raise ValueError("failed!")
   op = traps.setup(TRAP_DEFAULT, fail)
@@ -118,6 +108,7 @@ def test_rt_trap_fail(rt):
 
 def test_rt_trap_catch(rt):
   """the trap callback raises an exception"""
+  PROG_BASE = rt.get_reset_pc()
   def fail(event):
     raise ValueError("failed!")
   op = traps.setup(TRAP_DEFAULT, fail)

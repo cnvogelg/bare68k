@@ -4,5 +4,6 @@ import bare68k.runtime as runtime
 import bare68k.cpu as cpu
 import bare68k.mem as mem
 import bare68k.traps as traps
+import bare68k.trace as trace
 
-__all__ = ['CPUConfig', 'MemoryConfig', 'runtime', 'cpu', 'mem', 'traps']
+__all__ = ['CPUConfig', 'MemoryConfig', 'runtime', 'cpu', 'mem', 'traps', 'trace']
