@@ -47,10 +47,17 @@ class RunInfo:
       self.total_time, self.cpu_time,
       self.total_cycles, repr(self.results))
 
+  def is_ok(self):
+    return len(self.results) == 1 and self.results[0] == RETURN_OK
+
+  def calc_cpu_mhz(self):
+    """from cpu time and cycle count calc cpu clock speed of musashi"""
+    return self.total_cycles / (self.cpu_time * 1000000)
+
 
 def log_setup(level=logging.DEBUG):
   """setup logging of the runtime"""
-  FORMAT = '%(asctime)-15s %(name)10s:%(levelname)7s:  %(message)s'
+  FORMAT = '%(asctime)-15s %(name)24s:%(levelname)7s:  %(message)s'
   logging.basicConfig(format=FORMAT, level=level)
 
 def init(cpu_cfg, mem_cfg):
