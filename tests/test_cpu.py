@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import pytest
+import traceback
+
 from bare68k.consts import *
 from bare68k.machine import *
 
@@ -224,7 +226,8 @@ def test_instr_hook_exc(mach):
   assert ri.num_events == 1
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_CALLBACK_ERROR
-  assert ev.data == e
+  assert ev.data[1] == e
+  traceback.print_exception(*ev.data)
 
 def test_instr_hook_value(mach):
   w16(0x100, NOP_OPCODE)
@@ -358,7 +361,9 @@ def test_irq_vec_exc(mach):
   assert ri.num_events == 1
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_CALLBACK_ERROR
-  assert ev.data == e
+  assert ev.data[1] == e
+  # ev.data = sys.exc_info()!
+  traceback.print_exception(*ev.data)
 
 def test_get_sr_str(mach):
   sr = r_sr()

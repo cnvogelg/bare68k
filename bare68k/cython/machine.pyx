@@ -9,6 +9,8 @@ cimport cpu
 cimport mem
 cimport traps
 
+import sys
+
 cdef class Event:
   cdef readonly int ev_type
   cdef readonly int cycles
@@ -260,9 +262,10 @@ cdef int int_ack_adapter(int level, uint32_t pc, uint32_t *ack_ret, void **data)
       Py_INCREF(res)
       data[0] = <void *>res
       return cpu.CPU_CB_EVENT
-  except BaseException as e:
-    Py_INCREF(e)
-    data[0] = <void *>e
+  except BaseException:
+    exc_info = sys.exc_info()
+    Py_INCREF(exc_info)
+    data[0] = <void *>exc_info
     return cpu.CPU_CB_ERROR
 
 def set_int_ack_func(object cb):
@@ -370,9 +373,10 @@ cdef int mem_special_adapter_w(int access, uint32_t addr, uint32_t val, void *pf
         return cpu.CPU_CB_EVENT
     else:
       return cpu.CPU_CB_NO_EVENT
-  except BaseException as e:
-    Py_INCREF(e)
-    out_data[0] = <void *>e
+  except BaseException:
+    exc_info = sys.exc_info()
+    Py_INCREF(exc_info)
+    out_data[0] = <void *>exc_info
     return cpu.CPU_CB_ERROR
 
 cdef int mem_special_adapter_r(int access, uint32_t addr, uint32_t *val, void *pfunc, void **out_data):
@@ -390,9 +394,10 @@ cdef int mem_special_adapter_r(int access, uint32_t addr, uint32_t *val, void *p
         return cpu.CPU_CB_EVENT
     else:
       return cpu.CPU_CB_NO_EVENT
-  except BaseException as e:
-    Py_INCREF(e)
-    out_data[0] = <void *>e
+  except BaseException:
+    exc_info = sys.exc_info()
+    Py_INCREF(exc_info)
+    out_data[0] = <void *>exc_info
     return cpu.CPU_CB_ERROR
 
 def add_special(uint16_t start_page, uint16_t num_pages, read_func, write_func):
@@ -429,9 +434,10 @@ cdef int instr_hook_func_wrapper(uint32_t pc, void **data):
       Py_INCREF(result)
       data[0] = <void *>result
       return cpu.CPU_CB_EVENT
-  except BaseException as e:
-    Py_INCREF(e)
-    data[0] = <void *>e
+  except BaseException:
+    exc_info = sys.exc_info()
+    Py_INCREF(exc_info)
+    data[0] = <void *>exc_info
     return cpu.CPU_CB_ERROR
 
 cdef int instr_hook_func_str_wrapper(uint32_t pc, void **data):
@@ -446,9 +452,10 @@ cdef int instr_hook_func_str_wrapper(uint32_t pc, void **data):
       Py_INCREF(result)
       data[0] = <void *>result
       return cpu.CPU_CB_EVENT
-  except BaseException as e:
-    Py_INCREF(e)
-    data[0] = <void *>e
+  except BaseException:
+    exc_info = sys.exc_info()
+    Py_INCREF(exc_info)
+    data[0] = <void *>exc_info
     return cpu.CPU_CB_ERROR
 
 def set_instr_hook_func(object cb=None, bool default=False, bool as_str=False):
@@ -477,9 +484,10 @@ cdef int mem_cpu_trace_adapter(int flag, uint32_t addr, uint32_t val, void **dat
       Py_INCREF(result)
       data[0] = <void *>result
       return 0
-  except BaseException as e:
-    Py_INCREF(e)
-    data[0] = <void *>e
+  except BaseException:
+    exc_info = sys.exc_info()
+    Py_INCREF(exc_info)
+    data[0] = <void *>exc_info
     return 0
 
 cdef int mem_cpu_trace_adapter_str(int flag, uint32_t addr, uint32_t val, void **data):
@@ -495,9 +503,10 @@ cdef int mem_cpu_trace_adapter_str(int flag, uint32_t addr, uint32_t val, void *
       Py_INCREF(result)
       data[0] = <void *>result
       return 0
-  except BaseException as e:
-    Py_INCREF(e)
-    data[0] = <void *>e
+  except BaseException:
+    exc_info = sys.exc_info()
+    Py_INCREF(exc_info)
+    data[0] = <void *>exc_info
     return 0
 
 def set_mem_cpu_trace_func(object cb=None, bool default=False, bool as_str=False):
@@ -515,26 +524,26 @@ def set_mem_cpu_trace_func(object cb=None, bool default=False, bool as_str=False
 # memory trace api
 
 cdef object mem_api_trace_func = None
-cdef object mem_api_exc = None
+cdef object mem_api_exc_info = None
 
 cdef void mem_api_trace_adapter(int flag, uint32_t addr, uint32_t val, uint32_t extra):
   global mem_api_trace_func
-  global mem_api_exc
+  global mem_api_exc_info
   try:
     mem_api_trace_func(flag, addr, val, extra)
-  except BaseException as e:
-    mem_api_exc = e
+  except BaseException:
+    mem_api_exc_info = sys.exc_info()
 
 cdef void mem_api_trace_adapter_str(int flag, uint32_t addr, uint32_t val, uint32_t extra):
   cdef bytes s
   global mem_api_trace_func
-  global mem_api_exc
+  global mem_api_exc_info
   try:
     v = (flag, addr, val, extra)
     s = get_api_mem_str(flag, addr, val, extra)
     mem_api_trace_func(s, v)
   except BaseException as e:
-    mem_api_exc = e
+    mem_api_exc_info = sys.exc_info()
 
 def set_mem_api_trace_func(object cb=None, bool default=False, bool as_str=False):
   global mem_api_trace_func
@@ -549,12 +558,11 @@ def set_mem_api_trace_func(object cb=None, bool default=False, bool as_str=False
     mem.mem_set_api_trace_func(mem_api_trace_adapter)
 
 cdef _handle_api_exc():
-  global mem_api_exc
-  cdef object ex
-  if mem_api_exc is not None:
-    ex = mem_api_exc
-    mem_api_exc = None
-    raise ex
+  global mem_api_exc_info
+  if mem_api_exc_info is not None:
+    ex = mem_api_exc_info
+    mem_api_exc_info = None
+    raise ex[0], ex[1], ex[2]
 
 # block access
 

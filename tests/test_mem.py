@@ -235,8 +235,8 @@ def test_cpu_trace_func_exc(mem_rw):
   assert ri.num_events == 1
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_MEM_TRACE
-  assert ev.data == ve
-  traceback.print_exc()
+  assert ev.data[1] == ve
+  traceback.print_exception(*ev.data)
 
 def test_cpu_trace_func_val(mem_rw):
   # if trace func returns a value then generate trace event
@@ -326,7 +326,8 @@ def test_special_exc(mach):
   assert ri.num_events == 1
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_CALLBACK_ERROR
-  assert ev.data == e1
+  assert ev.data[1] == e1
+  traceback.print_exception(*ev.data)
   clear_info()
   # test write fail
   w8(0, 11)
@@ -334,7 +335,8 @@ def test_special_exc(mach):
   assert ri.num_events == 1
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_CALLBACK_ERROR
-  assert ev.data == e2
+  assert ev.data[1] == e2
+  traceback.print_exception(*ev.data)
 
 def test_special_none(mach):
   add_special(0, 1, None, None)
@@ -476,10 +478,10 @@ def test_api_trace_func_exc(mach):
   # raise exception
   with pytest.raises(ValueError) as e:
     w8(0, 42)
-    assert e == exc
+    assert e[1] == exc
   with pytest.raises(ValueError) as e:
     r8(0)
-    assert e == exc
+    assert e[1] == exc
 
 def test_api_trace_func_default(mach):
   set_mem_api_trace_func(default=True)
