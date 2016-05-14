@@ -241,9 +241,9 @@ def set_handler(event_type, handler):
 def handler_cb_error(event):
   """a callback running your code raised an exception"""
   # re-raise
-  exc = event.data
-  _log.error("handle CALLBACK raised: %s", exc)
-  raise exc
+  exc_info = event.data
+  _log.error("handle CALLBACK raised: %s", exc_info[1])
+  raise exc_info[0], exc_info[1], exc_info[2]
 
 def handler_reset(event):
   """default handler for reset opcode"""
