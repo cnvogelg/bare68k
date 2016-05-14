@@ -242,7 +242,7 @@ def handler_cb_error(event):
   """a callback running your code raised an exception"""
   # re-raise
   exc = event.data
-  _log.error("handle CALLBACK raised", exc)
+  _log.error("handle CALLBACK raised: %s", exc)
   raise exc
 
 def handler_reset(event):

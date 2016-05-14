@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import pytest
+import traceback
 
 from bare68k import *
 from bare68k.consts import *
@@ -38,6 +39,28 @@ def test_trace_annotate_instr(rt):
   # without trace
   trace.disable_instr_trace()
   rt.run()
+
+def test_trace_annotate_exc(rt):
+  _setup_code()
+  # with trace
+  def anno(pc, num_bytes):
+    raise ValueError("anno test fail!")
+  trace.set_instr_annotate_func(anno)
+  trace.enable_instr_trace()
+  with pytest.raises(ValueError):
+    rt.run()
+
+def test_trace_annotate_catch(rt):
+  _setup_code()
+  # with trace
+  def anno(pc, num_bytes):
+    raise ValueError("anno test fail!")
+  trace.set_instr_annotate_func(anno)
+  trace.enable_instr_trace()
+  try:
+    rt.run()
+  except ValueError as e:
+    traceback.print_exc()
 
 def test_trace_cpu_mem(rt):
   _setup_code()
