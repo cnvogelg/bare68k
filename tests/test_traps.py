@@ -111,10 +111,10 @@ def test_default_trap(mach):
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_ALINE_TRAP
   assert ev.addr == 0x100
-  assert ev.data is None
-  assert ev.handler == my_cb
+  assert ev.data == my_cb
+  assert ev.handler is None
   # trigger callback
-  ev.handler()
+  ev.data()
   # finally free trap
   trap_free(opcode)
   # after trap: aline is disabled again
@@ -134,10 +134,10 @@ def test_one_shot_trap(mach):
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_ALINE_TRAP
   assert ev.addr == 0x100
-  assert ev.data is None
-  assert ev.handler == my_cb
+  assert ev.data == my_cb
+  assert ev.handler is None
   # trigger callback
-  ev.handler()
+  ev.data()
   # after trap: aline is empty again
   check_aline_cpu_ex(opcode)
 
@@ -165,10 +165,10 @@ def test_auto_rts_trap(mach):
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_ALINE_TRAP
   assert ev.addr == 0x100
-  assert ev.data is None
-  assert ev.handler is not None
+  assert ev.data is not None
+  assert ev.handler is None
   # trigger callback
-  ev.handler()
+  ev.data()
 
   # check next steps: auto rts will be performed
   ne = execute(2)

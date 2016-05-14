@@ -257,10 +257,16 @@ def handler_reset(event):
 
 def handler_aline_trap(event):
   """an unbound aline trap was encountered"""
+  # bound handler?
+  bound_handler = event.data
   pc = event.addr
   op = event.value
-  _log.warn("unbound ALINE encountered: @%08x: %04x", pc, op)
-  return RETURN_ALINE_TRAP
+  if bound_handler is not None:
+    _log.debug("bound ALINE handler: @%08x: %04x -> %r", pc, op, bound_handler)
+    bound_handler(event)
+  else:
+    _log.warn("unbound ALINE encountered: @%08x: %04x", pc, op)
+    return RETURN_ALINE_TRAP
 
 def handler_mem_access(event):
   """default handler for invalid memory accesses"""

@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import pytest
+import traceback
+
 from bare68k.consts import *
 from bare68k.machine import *
 
@@ -234,6 +236,7 @@ def test_cpu_trace_func_exc(mem_rw):
   ev = ri.events[0]
   assert ev.ev_type == CPU_EVENT_MEM_TRACE
   assert ev.data == ve
+  traceback.print_exc()
 
 def test_cpu_trace_func_val(mem_rw):
   # if trace func returns a value then generate trace event

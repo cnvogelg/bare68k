@@ -40,41 +40,29 @@ cdef Event create_event(cpu.event_t *event):
   global event_handlers
   cdef int ev_type = event.type
   cdef object data = None
+  # lookup handler
   cdef object handler = event_handlers[ev_type]
-  cdef int decref = 0
 
+  # extract python object
   if event.data != NULL:
     data = <object>event.data
-    # traps will be handled in a special way: their data is the handler
-    if ev_type == cpu.CPU_EVENT_ALINE_TRAP:
-      # if trap is one-shot then de-ref callee now
-      if event.flags & traps.TRAP_ONE_SHOT != 0:
-        decref = 1
-      handler = data
-      data = None
-    # all other event have temp data so remove now
-    else:
-      decref = 1
 
-  ev = Event(ev_type, event.cycles,
-             event.addr, event.value, event.flags,
-             data, handler)
-
-  if decref:
-    Py_DECREF(data)
-    event.data = NULL
-  return ev
+  return Event(ev_type, event.cycles,
+               event.addr, event.value, event.flags,
+               data, handler)
 
 cdef void cleanup_event(cpu.event_t *event):
   cdef int ev_type = event.type
   cdef object data = None
+  cdef int decref = 1
 
   if event.data != NULL:
     data = <object>event.data
-    # passed in result objects or exceptions
-    if ev_type in (cpu.CPU_EVENT_MEM_TRACE,
-                   cpu.CPU_EVENT_MEM_SPECIAL,
-                   cpu.CPU_EVENT_INSTR_HOOK):
+    # non one-shot traps will be kept!
+    if ev_type == cpu.CPU_EVENT_ALINE_TRAP and \
+       event.flags & traps.TRAP_ONE_SHOT == 0:
+        decref = 0
+    if decref:
       Py_DECREF(data)
 
 
