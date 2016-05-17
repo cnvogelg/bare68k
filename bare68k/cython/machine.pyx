@@ -173,9 +173,9 @@ cdef class Registers:
 
 # ----- API -----
 
-def init(int cpu_type, int ram_kib):
+def init(int cpu_type, int num_pages):
   cpu.cpu_init(cpu_type)
-  mem.mem_init(ram_kib)
+  mem.mem_init(num_pages)
   traps.traps_init()
 
   cpu.cpu_set_cleanup_event_func(cleanup_event)

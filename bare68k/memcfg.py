@@ -19,6 +19,7 @@ class MemoryRange(object):
     self.opts = opts
     self.traps = traps
     self.next_page = self.start_page + self.num_pages
+    self.start_addr = start_page << PAGE_SHIFT
 
   def __repr__(self):
     return "MemoryRange(%d, %d, %s, %r, %r)" % (self.start_page, self.num_pages,
@@ -77,7 +78,6 @@ class MemoryConfig(object):
       total = n_size * n_units
     else:
       total = size * units
-    print("TOTAL",total,self.auto_align)
     # is 64k page aligned?
     if total & PAGE_MASK != 0:
       if self.auto_align:

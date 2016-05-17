@@ -118,12 +118,13 @@ def _setup_mem(mem_cfg):
       if mr.traps:
         flags |= MEM_FLAGS_TRAPS
       mach.add_memory(start, size, flags)
+      mem.w_block(mr.start_addr, mr.opts)
       _log.info("memory: ROM @%04x +%04x flags=%x", start, size, flags)
     elif mt == MEM_SPECIAL:
       r_func, w_func = mr.opts
       mach.add_special(start, size, r_func, w_func)
       _log.info("memory: spc @%04x +%04x", start, size)
-  _log.info("memory: done")
+  _log.info("memory: done. max_pages=%04x", mem_cfg.get_num_pages())
 
 def shutdown():
   """shutdown runtime
@@ -163,7 +164,7 @@ def get_reset_pc():
 def get_reset_sp():
   return _reset_sp
 
-def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True):
+def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True, max_cycles=None):
   """run the CPU until emulation ends
 
   This is the main loop of your emulation. The CPU emulation is run and
@@ -188,9 +189,14 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True):
   stay = True
   while stay:
     try:
-      # execute CPU code until event occurs
       start = timer()
-      num_events = mach.execute_to_event_checked(cycles_per_run)
+      if max_cycles is None:
+        # execute CPU code until event occurs
+        num_events = mach.execute_to_event_checked(cycles_per_run)
+      else:
+        # run for a given number of cycles
+        num_events = mach.execute(max_cycles)
+        stay = False
     except KeyboardInterrupt as e:
       # either abort execution (default) or re-raise exception
       results.append(RETURN_USER_ABORT)
