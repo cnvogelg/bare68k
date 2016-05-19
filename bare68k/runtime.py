@@ -118,7 +118,9 @@ def _setup_mem(mem_cfg):
       if mr.traps:
         flags |= MEM_FLAGS_TRAPS
       mach.add_memory(start, size, flags)
-      mem.w_block(mr.start_addr, mr.opts)
+      data = mr.opts
+      if data is not None:
+        mem.w_block(mr.start_addr, mr.opts)
       _log.info("memory: ROM @%04x +%04x flags=%x", start, size, flags)
     elif mt == MEM_SPECIAL:
       r_func, w_func = mr.opts
