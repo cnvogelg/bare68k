@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "cpu.h"
 #include "mem.h"
@@ -15,6 +16,13 @@
 
 typedef void (*event_func_t)(void);
 
+typedef struct {
+  uint32_t *entries;
+  int max;
+  int offset;
+  int num;
+} pc_trace_t;
+
 static int cpu_type;
 static event_t events[MAX_EVENTS];
 static run_info_t run_info;
@@ -23,6 +31,7 @@ static cleanup_event_func_t cleanup_func;
 static instr_hook_func_t instr_hook_func;
 static int_ack_func_t int_ack_func;
 static int dont_clear;
+static pc_trace_t pc_trace;
 
 /* public */
 unsigned int cpu_current_fc;
@@ -38,15 +47,29 @@ static void reset_instr_cb(void)
 static void instr_hook_cb(void)
 {
   uint32_t pc = cpu_r_reg(M68K_REG_PC);
-  void *data = NULL;
-  int res = instr_hook_func(pc, &data);
-  /* res == 0 generates an INSTR_HOOK event */
-  if(res == CPU_CB_EVENT) {
-    cpu_add_event(CPU_EVENT_INSTR_HOOK, pc, 0, 0, data);
+  pc_trace_t *pt = &pc_trace;
+
+  /* handle function */
+  if(instr_hook_func != NULL) {
+    void *data = NULL;
+    int res = instr_hook_func(pc, &data);
+    /* res == 0 generates an INSTR_HOOK event */
+    if(res == CPU_CB_EVENT) {
+      cpu_add_event(CPU_EVENT_INSTR_HOOK, pc, 0, 0, data);
+    }
+    /* res < 0 generates an CALLBACK_ERROR event */
+    else if(res == CPU_CB_ERROR) {
+      cpu_add_event(CPU_EVENT_CALLBACK_ERROR, pc, 0, 0, data);
+    }
   }
-  /* res < 0 generates an CALLBACK_ERROR event */
-  else if(res == CPU_CB_ERROR) {
-    cpu_add_event(CPU_EVENT_CALLBACK_ERROR, pc, 0, 0, data);
+
+  /* add to pc trace? */
+  if(pt->entries != NULL) {
+    pt->entries[pt->offset] = pc;
+    pt->offset = (pt->offset + 1) % pt->max;
+    if(pt->num < pt->max) {
+      pt->num ++;
+    }
   }
 }
 
@@ -103,6 +126,7 @@ void cpu_init(unsigned int cpu_type_)
   m68k_init();
   m68k_set_reset_instr_callback(reset_instr_cb);
   m68k_set_fc_callback(set_fc_cb);
+  m68k_set_instr_hook_callback(instr_hook_cb);
 
   /* clear regs */
   for(i=0;i<8;i++) {
@@ -125,6 +149,9 @@ int cpu_get_type(void)
 void cpu_free(void)
 {
   cpu_clear_info();
+
+  /* clear pc trace */
+  cpu_setup_pc_trace(0);
 }
 
 void cpu_reset(void)
@@ -141,11 +168,7 @@ void cpu_set_cleanup_event_func(cleanup_event_func_t func)
 void cpu_set_instr_hook_func(instr_hook_func_t func)
 {
   instr_hook_func = func;
-  if(func != NULL) {
-    m68k_set_instr_hook_callback(instr_hook_cb);
-  } else {
-    m68k_set_instr_hook_callback(NULL);
-  }
+  /* callback is always setup */
 }
 
 void cpu_set_int_ack_func(int_ack_func_t func)
@@ -348,4 +371,60 @@ int cpu_execute_to_event(int cycles_per_run)
   event_func = NULL;
 
   return run_info.num_events;
+}
+
+/* ----- PC Trace ----- */
+
+void cpu_setup_pc_trace(int num)
+{
+  if(num < 0) {
+    return;
+  }
+
+  /* cleanup old */
+  if(pc_trace.entries != NULL) {
+    free(pc_trace.entries);
+    pc_trace.entries = NULL;
+  }
+
+  pc_trace.max = num;
+  pc_trace.offset = 0;
+  pc_trace.num = 0;
+
+  if(num > 0) {
+    pc_trace.entries = (uint32_t *)malloc(sizeof(uint32_t) * num);
+  }
+}
+
+uint32_t *cpu_get_pc_trace(int *size)
+{
+  int i;
+  int pos = (pc_trace.offset + pc_trace.max - pc_trace.num) % pc_trace.max;
+  int n = pc_trace.num;
+
+  if(n == 0) {
+    *size = 0;
+    return NULL;
+  }
+
+  /* create result array */
+  uint32_t *result = (uint32_t *)malloc(sizeof(uint32_t) * n);
+  if(result == NULL) {
+    *size = 0;
+    return NULL;
+  }
+
+  /* copy values */
+  for(i=0;i<n;i++) {
+    result[i] = pc_trace.entries[pos];
+    pos = (pos + 1) % pc_trace.max;
+  }
+
+  *size = n;
+  return result;
+}
+
+void cpu_free_pc_trace(uint32_t *data)
+{
+  free(data);
 }

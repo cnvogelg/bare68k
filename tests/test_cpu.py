@@ -420,3 +420,59 @@ def test_mem_bounds(mach):
   assert ev.ev_type == CPU_EVENT_MEM_BOUNDS
   assert ev.flags == MEM_FC_SUPER_PROG | MEM_ACCESS_R16
   assert ev.addr == 0x40000
+
+def test_pc_no_trace(mach):
+  w16(0x100, NOP_OPCODE)
+  w16(0x102, NOP_OPCODE)
+  w16(0x104, NOP_OPCODE)
+  w16(0x106, NOP_OPCODE)
+  w16(0x108, RESET_OPCODE)
+  # no trace enabled by default
+  w_pc(0x100)
+  ne = execute(100)
+  assert ne == 1
+  ri = get_info()
+  print("PC_TRACE", ri)
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_RESET
+  trace = get_pc_trace()
+  assert trace == None
+
+def test_pc_trace(mach):
+  w16(0x100, NOP_OPCODE)
+  w16(0x102, NOP_OPCODE)
+  w16(0x104, NOP_OPCODE)
+  w16(0x106, NOP_OPCODE)
+  w16(0x108, RESET_OPCODE)
+  # no trace enabled by default
+  w_pc(0x100)
+  setup_pc_trace(16)
+  ne = execute(100)
+  assert ne == 1
+  ri = get_info()
+  print("PC_TRACE", ri)
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_RESET
+  trace = get_pc_trace()
+  assert trace == [256, 258, 260, 262, 264]
+
+def test_pc_trace_short(mach):
+  w16(0x100, NOP_OPCODE)
+  w16(0x102, NOP_OPCODE)
+  w16(0x104, NOP_OPCODE)
+  w16(0x106, NOP_OPCODE)
+  w16(0x108, RESET_OPCODE)
+  # no trace enabled by default
+  w_pc(0x100)
+  setup_pc_trace(3)
+  ne = execute(100)
+  assert ne == 1
+  ri = get_info()
+  print("PC_TRACE", ri)
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_RESET
+  trace = get_pc_trace()
+  assert trace == [260, 262, 264]

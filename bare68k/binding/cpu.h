@@ -58,6 +58,10 @@ extern void cpu_init(unsigned int cpu_type);
 extern void cpu_free(void);
 extern void cpu_reset(void);
 
+extern void cpu_setup_pc_trace(int num);
+extern uint32_t *cpu_get_pc_trace(int *size);
+extern void cpu_free_pc_trace(uint32_t *data);
+
 extern int cpu_get_type(void);
 extern void cpu_set_cleanup_event_func(cleanup_event_func_t func);
 extern void cpu_set_instr_hook_func(instr_hook_func_t func);
