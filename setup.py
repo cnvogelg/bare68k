@@ -124,6 +124,8 @@ sourcefiles = gen_src + [
   'bare68k/binding/cpu.c',
   'bare68k/binding/mem.c',
   'bare68k/binding/traps.c',
+  'bare68k/binding/tools.c',
+
   'bare68k/musashi/m68kcpu.c',
   'bare68k/musashi/m68kdasm.c',
 ]
@@ -134,7 +136,8 @@ depends = [
 
   'bare68k/binding/cpu.h',
   'bare68k/binding/mem.h',
-  'bare68k/binding/traps.h'
+  'bare68k/binding/traps.h',
+  'bare68k/binding/tools.h'
 ]
 inc_dirs = [
   'bare68k/musashi', 'bare68k/binding', 'bare68k', 'gen'

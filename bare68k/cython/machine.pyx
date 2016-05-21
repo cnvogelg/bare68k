@@ -8,6 +8,7 @@ cimport musashi
 cimport cpu
 cimport mem
 cimport traps
+cimport tools
 
 import sys
 
@@ -282,19 +283,19 @@ def set_irq(unsigned int level):
 # cpu pc trace
 
 def setup_pc_trace(uint32_t pc):
-  cpu.cpu_setup_pc_trace(pc)
+  tools.tools_setup_pc_trace(pc)
 
 def get_pc_trace():
   cdef uint32_t *data
   cdef int size
   cdef int i
-  data = cpu.cpu_get_pc_trace(&size)
+  data = tools.tools_get_pc_trace(&size)
   if data == NULL:
     return None
   a = []
   for i in range(size):
     a.append(data[i])
-  cpu.cpu_free_pc_trace(data)
+  tools.tools_free_pc_trace(data)
   return a
 
 # cpu context

@@ -50,10 +50,6 @@ cdef extern from "binding/cpu.h":
   void cpu_reset()
   int cpu_get_type()
 
-  void cpu_setup_pc_trace(int num)
-  uint32_t *cpu_get_pc_trace(int *size)
-  void cpu_free_pc_trace(uint32_t *data)
-
   void cpu_set_cleanup_event_func(cleanup_event_func_t func)
   void cpu_set_instr_hook_func(instr_hook_func_t func)
   void cpu_set_int_ack_func(int_ack_func_t func)
