@@ -133,6 +133,7 @@ depends = [
   'bare68k/cython/cpu.pxd',
   'bare68k/cython/mem.pxd',
   'bare68k/cython/traps.pxd',
+  'bare68k/cython/tools.pxd',
 
   'bare68k/binding/cpu.h',
   'bare68k/binding/mem.h',
