@@ -280,24 +280,6 @@ def set_int_ack_func(object cb):
 def set_irq(unsigned int level):
   cpu.cpu_set_irq(level)
 
-# cpu pc trace
-
-def setup_pc_trace(uint32_t pc):
-  tools.tools_setup_pc_trace(pc)
-
-def get_pc_trace():
-  cdef uint32_t *data
-  cdef int size
-  cdef int i
-  data = tools.tools_get_pc_trace(&size)
-  if data == NULL:
-    return None
-  a = []
-  for i in range(size):
-    a.append(data[i])
-  tools.tools_free_pc_trace(data)
-  return a
-
 # cpu context
 
 def get_cpu_context():
@@ -861,3 +843,97 @@ def get_regs():
 cpdef get_instr_str(uint32_t pc):
   cdef const char *s = cpu.cpu_get_instr_str(pc)
   return <bytes>s
+
+# ----- Tools -----
+
+# cpu pc trace
+
+def get_pc_trace_size():
+  return tools.tools_get_pc_trace_size()
+
+def setup_pc_trace(uint32_t num_traces):
+  if tools.tools_setup_pc_trace(num_traces) < 0:
+    raise MemoryError("No PC Trace memory!")
+
+def cleanup_pc_trace():
+  tools.tools_setup_pc_trace(0)
+
+def get_pc_trace():
+  cdef uint32_t *data
+  cdef int size
+  cdef int i
+  data = tools.tools_get_pc_trace(&size)
+  if data == NULL:
+    return None
+  a = []
+  for i in range(size):
+    a.append(data[i])
+  tools.tools_free_pc_trace(data)
+  return a
+
+# breakpoints
+
+def get_max_breakpoints():
+  return tools.tools_get_max_breakpoints()
+
+def get_num_breakpoints():
+  return tools.tools_get_num_breakpoints()
+
+cdef void free_breakpoint_cb(void *data):
+  if data != NULL:
+    Py_DECREF(<object>data)
+
+def setup_breakpoints(uint32_t num_bp):
+  if tools.tools_setup_breakpoints(num_bp, free_breakpoint_cb) < 0:
+    raise MemoryError("No breakpoints memory!")
+
+def cleanup_breakpoints():
+  tools.tools_setup_breakpoints(0, NULL)
+
+def set_breakpoint(int bp_id, uint32_t addr, int flags, object data):
+  cdef void *cdata
+  if data is not None:
+    cdata = <void *>data
+  else:
+    cdata = NULL
+  if tools.tools_create_breakpoint(bp_id, addr, flags, cdata) < 0:
+    raise ValueError("Invalid breakpoint index!")
+  if data is not None:
+    Py_INCREF(data)
+
+def clear_breakpoint(int bp_id):
+  if tools.tools_free_breakpoint(bp_id) < 0:
+    raise ValueError("Invalid breakpoint index!")
+
+def enable_breakpoint(int bp_id):
+  if tools.tools_enable_breakpoint(bp_id) < 0:
+    raise ValueError("Invalid breakpoint index!")
+
+def disable_breakpoint(int bp_id):
+  if tools.tools_disable_breakpoint(bp_id) < 0:
+    raise ValueError("Invalid breakpoint index!")
+
+def is_breakpoint_enabled(int bp_id):
+  cdef res
+  res = tools.tools_is_breakpoint_enabled(bp_id)
+  if res < 0:
+    raise ValueError("Invalid breakpoint index!")
+  elif res == 0:
+    return False
+  else:
+    return True
+
+def get_breakpoint_data(int bp_id):
+  cdef void *cdata
+  cdata = tools.tools_get_breakpoint_data(bp_id)
+  if cdata != NULL:
+    return <object>cdata
+  else:
+    return None
+
+def check_breakpoint(uint32_t addr, int flags):
+  cdef int bp_id = tools.tools_check_breakpoint(addr, flags)
+  if bp_id < 0:
+    return None
+  else:
+    return bp_id

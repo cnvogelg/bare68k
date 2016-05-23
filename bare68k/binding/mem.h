@@ -37,18 +37,19 @@ typedef unsigned int uint;
 
 /* cpu access flag also holds function code */
 #define MEM_FC_SHIFT       4
-#define MEM_FC_MASK        0xF0
-#define MEM_FC_USER_DATA   0x50
-#define MEM_FC_USER_PROG   0x60
-#define MEM_FC_SUPER_DATA  0x90
-#define MEM_FC_SUPER_PROG  0xa0
-#define MEM_FC_INT_ACK     0x00
-#define MEM_FC_INVALID     0xf0
+#define MEM_FC_MASK        0x1F0
+#define MEM_FC_USER_DATA   0x050
+#define MEM_FC_USER_PROG   0x060
+#define MEM_FC_SUPER_DATA  0x090
+#define MEM_FC_SUPER_PROG  0x0a0
+#define MEM_FC_INT_ACK     0x100
+#define MEM_FC_INVALID     0x1f0
 /* masks */
-#define MEM_FC_DATA_MASK   0x10
-#define MEM_FC_PROG_MASK   0x20
-#define MEM_FC_USER_MASK   0x40
-#define MEM_FC_SUPER_MASK  0x80
+#define MEM_FC_DATA_MASK   0x010
+#define MEM_FC_PROG_MASK   0x020
+#define MEM_FC_USER_MASK   0x040
+#define MEM_FC_SUPER_MASK  0x080
+#define MEM_FC_INT_MASK    0x100
 
 /* special mem access for API trace */
 #define MEM_ACCESS_SPECIAL 0x1f0

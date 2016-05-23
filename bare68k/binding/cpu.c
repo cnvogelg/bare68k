@@ -56,8 +56,18 @@ static void instr_hook_cb(void)
   }
 
   /* add to pc trace? */
-  if(tools_enable_pc_trace) {
+  if(tools_pc_trace_enabled) {
     tools_update_pc_trace(pc);
+  }
+
+  /* check for breakpoints */
+  if(tools_breakpoints_enabled) {
+    int flags = cpu_current_fc;
+    int id = tools_check_breakpoint(pc, flags);
+    if(id > -1) {
+      void *data = tools_get_breakpoint_data(id);
+      cpu_add_event(CPU_EVENT_BREAKPOINT, pc, id, flags, data);
+    }
   }
 }
 
@@ -140,6 +150,7 @@ void cpu_free(void)
 
   /* clear pc trace */
   tools_setup_pc_trace(0);
+  tools_setup_breakpoints(0, NULL);
 }
 
 void cpu_reset(void)
