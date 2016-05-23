@@ -127,3 +127,24 @@ def test_bp_check(mach):
   assert check_breakpoint(0x104, 7) == None
   assert check_breakpoint(0x100, 7) == 0
   assert check_breakpoint(0x100, 2) == 2
+
+def test_bp_check(mach):
+  setup_breakpoints(4)
+  set_breakpoint(0, 0x100, MEM_FC_USER_MASK, "hello")
+  set_breakpoint(1, 0x102, MEM_FC_SUPER_MASK, "world")
+  w16(0x100, NOP_OPCODE)
+  w16(0x102, NOP_OPCODE)
+  w16(0x104, NOP_OPCODE)
+  w16(0x106, NOP_OPCODE)
+  w16(0x108, RESET_OPCODE)
+  w_pc(0x100)
+  ne = execute(100)
+  assert ne == 1
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_BREAKPOINT
+  assert ev.addr == 0x102
+  assert ev.value == 1 # bp id
+  assert ev.flags == MEM_FC_SUPER_PROG
+  assert ev.data == "world"

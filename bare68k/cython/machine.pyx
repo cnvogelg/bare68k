@@ -65,6 +65,8 @@ cdef void cleanup_event(cpu.event_t *event):
     if ev_type == cpu.CPU_EVENT_ALINE_TRAP and \
        event.flags & traps.TRAP_ONE_SHOT == 0:
         decref = 0
+    elif ev_type == cpu.CPU_EVENT_BREAKPOINT:
+      decref = 0
     if decref:
       Py_DECREF(data)
 

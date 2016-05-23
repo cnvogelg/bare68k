@@ -21,7 +21,7 @@
 #define CPU_EVENT_INT_ACK 8
 #define CPU_EVENT_BREAKPOINT 9
 
-#define CPU_NUM_EVENTS 9
+#define CPU_NUM_EVENTS 10
 
 #define CPU_CB_EVENT 0
 #define CPU_CB_NO_EVENT 1
