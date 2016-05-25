@@ -182,6 +182,7 @@ def init(int cpu_type, int num_pages):
   cpu.cpu_init(cpu_type)
   mem.mem_init(num_pages)
   traps.traps_init()
+  tools.tools_init()
 
   cpu.cpu_set_cleanup_event_func(cleanup_event)
   mem.mem_set_special_cleanup(mem_special_cleanup)
@@ -201,6 +202,7 @@ def shutdown():
   cpu.cpu_free()
   mem.mem_free()
   traps.traps_shutdown()
+  tools.tools_free()
 
 # cpu control
 

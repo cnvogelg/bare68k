@@ -147,10 +147,6 @@ int cpu_get_type(void)
 void cpu_free(void)
 {
   cpu_clear_info();
-
-  /* clear pc trace */
-  tools_setup_pc_trace(0);
-  tools_setup_breakpoints(0, NULL);
 }
 
 void cpu_reset(void)

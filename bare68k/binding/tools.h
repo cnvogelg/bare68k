@@ -13,6 +13,9 @@
 
 typedef void (*free_func_t)(void *data);
 
+extern void tools_init(void);
+extern void tools_free(void);
+
 extern int tools_pc_trace_enabled;
 extern int tools_breakpoints_enabled;
 extern int tools_watchpoints_enabled;

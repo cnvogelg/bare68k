@@ -78,6 +78,18 @@ def test_pc_trace_short(mach):
 
 # ----- breakpoints -----
 
+def test_bp_simple(mach):
+  assert get_num_breakpoints() == 0
+  assert get_max_breakpoints() == 0
+  assert get_next_free_breakpoint() == -1
+  setup_breakpoints(8)
+  assert get_next_free_breakpoint() == 0
+  # remove breakpoints
+  cleanup_breakpoints()
+  assert get_num_breakpoints() == 0
+  assert get_max_breakpoints() == 0
+  assert get_next_free_breakpoint() == -1
+
 def test_bp_setup(mach):
   assert get_num_breakpoints() == 0
   assert get_max_breakpoints() == 0
@@ -155,6 +167,18 @@ def test_bp_check(mach):
   assert ev.data == "world"
 
 # ----- watchpoints -----
+
+def test_wp_simple(mach):
+  assert get_num_watchpoints() == 0
+  assert get_max_watchpoints() == 0
+  assert get_next_free_watchpoint() == -1
+  setup_watchpoints(8)
+  assert get_next_free_watchpoint() == 0
+  # remove watchpoints
+  cleanup_watchpoints()
+  assert get_num_watchpoints() == 0
+  assert get_max_watchpoints() == 0
+  assert get_next_free_watchpoint() == -1
 
 def test_wp_setup(mach):
   assert get_num_watchpoints() == 0

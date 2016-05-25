@@ -5,6 +5,9 @@ cdef extern from "binding/tools.h":
 
   ctypedef void (*free_func_t)(void *data)
 
+  void tools_init()
+  void tools_free()
+
   int tools_get_pc_trace_size()
   int tools_setup_pc_trace(int num)
   uint32_t *tools_get_pc_trace(int *size)
