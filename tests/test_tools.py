@@ -88,11 +88,14 @@ def test_bp_setup(mach):
   with pytest.raises(ValueError):
     set_breakpoint(-1, 0, 0, None)
   # add empty breakpoint
+  assert get_next_free_breakpoint() == 0
   set_breakpoint(0, 0x100, 0, None)
+  assert get_next_free_breakpoint() == 1
   assert get_breakpoint_data(0) == None
   assert get_num_breakpoints() == 1
   # add non empty bp
   set_breakpoint(1, 0x200, 0, "hallo")
+  assert get_next_free_breakpoint() == 2
   assert get_breakpoint_data(1) == "hallo"
   assert get_num_breakpoints() == 2
   # remove invalid
@@ -100,6 +103,7 @@ def test_bp_setup(mach):
     clear_breakpoint(2)
   # remove first
   clear_breakpoint(0)
+  assert get_next_free_breakpoint() == 0
   assert get_num_breakpoints() == 1
   # remove last
   clear_breakpoint(1)
@@ -108,6 +112,7 @@ def test_bp_setup(mach):
   cleanup_breakpoints()
   assert get_num_breakpoints() == 0
   assert get_max_breakpoints() == 0
+  assert get_next_free_breakpoint() == -1
 
 def test_bp_enable(mach):
   setup_breakpoints(1)

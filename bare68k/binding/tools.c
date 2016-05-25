@@ -265,7 +265,7 @@ static int point_check(point_array_t *a, uint32_t addr, int flags)
 {
   int i;
 
-  for(i=0;i<a->num;i++) {
+  for(i=0;i<a->max;i++) {
     point_t *p = &a->points[i];
     if(p->enable == (FLAG_ENABLE | FLAG_SETUP)) {
       /* first check address */
@@ -290,6 +290,17 @@ static void *point_get_data(point_array_t *a, int id)
   return a->points[id].data;
 }
 
+static int point_get_next_free(point_array_t *a)
+{
+  for(int i=0;i<a->max;i++) {
+    point_t *p = &a->points[i];
+    if((p->enable & FLAG_SETUP) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 /* ---- Breakpoints ----- */
 
 int tools_get_num_breakpoints(void)
@@ -300,6 +311,11 @@ int tools_get_num_breakpoints(void)
 int tools_get_max_breakpoints(void)
 {
   return breakpoints.max;
+}
+
+int tools_get_next_free_breakpoint(void)
+{
+  return point_get_next_free(&breakpoints);
 }
 
 int tools_setup_breakpoints(int num, free_func_t free_func)

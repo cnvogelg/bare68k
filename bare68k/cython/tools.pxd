@@ -12,6 +12,7 @@ cdef extern from "binding/tools.h":
 
   int tools_get_num_breakpoints()
   int tools_get_max_breakpoints()
+  int tools_get_next_free_breakpoint()
   int tools_setup_breakpoints(int num, free_func_t free_func)
   int tools_create_breakpoint(int id, uint32_t addr, int flags, void *data)
   int tools_free_breakpoint(int id)

@@ -881,6 +881,9 @@ def get_max_breakpoints():
 def get_num_breakpoints():
   return tools.tools_get_num_breakpoints()
 
+def get_next_free_breakpoint():
+  return tools.tools_get_next_free_breakpoint()
+
 cdef void free_breakpoint_cb(void *data):
   if data != NULL:
     Py_DECREF(<object>data)

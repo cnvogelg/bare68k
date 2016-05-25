@@ -24,6 +24,7 @@ extern void tools_update_pc_trace(uint32_t pc);
 
 extern int tools_get_max_breakpoints(void);
 extern int tools_get_num_breakpoints(void);
+extern int tools_get_next_free_breakpoint(void);
 extern int tools_setup_breakpoints(int num, free_func_t free_func);
 extern int tools_create_breakpoint(int id, uint32_t addr, int flags, void *data);
 extern int tools_free_breakpoint(int id);
