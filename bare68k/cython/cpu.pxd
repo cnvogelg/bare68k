@@ -14,7 +14,10 @@ cdef extern from "binding/cpu.h":
     CPU_EVENT_INSTR_HOOK = 7
     CPU_EVENT_INT_ACK = 8
     CPU_EVENT_BREAKPOINT = 9
-    CPU_NUM_EVENTS = 10
+    CPU_EVENT_WATCHPOINT = 10
+    CPU_EVENT_TIMER = 11
+
+    CPU_NUM_EVENTS = 12
 
   cdef enum:
     CPU_CB_NO_EVENT = 0

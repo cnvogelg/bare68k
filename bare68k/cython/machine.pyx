@@ -69,6 +69,8 @@ cdef void cleanup_event(cpu.event_t *event):
       decref = 0
     elif ev_type == cpu.CPU_EVENT_WATCHPOINT:
       decref = 0
+    elif ev_type == cpu.CPU_EVENT_TIMER:
+      decref = 0
     if decref:
       Py_DECREF(data)
 
@@ -1016,3 +1018,69 @@ def check_watchpoint(uint32_t addr, int flags):
     return None
   else:
     return bp_id
+
+# timers
+
+def get_max_timers():
+  return tools.tools_get_max_timers()
+
+def get_num_timers():
+  return tools.tools_get_num_timers()
+
+def get_next_free_timer():
+  return tools.tools_get_next_free_timer()
+
+cdef void free_timer_cb(void *data):
+  if data != NULL:
+    Py_DECREF(<object>data)
+
+def setup_timers(uint32_t num_bp):
+  if tools.tools_setup_timers(num_bp, free_timer_cb) < 0:
+    raise MemoryError("No timers memory!")
+
+def cleanup_timers():
+  tools.tools_setup_timers(0, NULL)
+
+def set_timer(int bp_id, uint32_t interval, object data):
+  cdef void *cdata
+  if data is not None:
+    cdata = <void *>data
+  else:
+    cdata = NULL
+  if tools.tools_create_timer(bp_id, interval, cdata) < 0:
+    raise ValueError("Invalid timer index!")
+  if data is not None:
+    Py_INCREF(data)
+
+def clear_timer(int bp_id):
+  if tools.tools_free_timer(bp_id) < 0:
+    raise ValueError("Invalid timer index!")
+
+def enable_timer(int bp_id):
+  if tools.tools_enable_timer(bp_id) < 0:
+    raise ValueError("Invalid timer index!")
+
+def disable_timer(int bp_id):
+  if tools.tools_disable_timer(bp_id) < 0:
+    raise ValueError("Invalid timer index!")
+
+def is_timer_enabled(int bp_id):
+  cdef res
+  res = tools.tools_is_timer_enabled(bp_id)
+  if res < 0:
+    raise ValueError("Invalid timer index!")
+  elif res == 0:
+    return False
+  else:
+    return True
+
+def get_timer_data(int bp_id):
+  cdef void *cdata
+  cdata = tools.tools_get_timer_data(bp_id)
+  if cdata != NULL:
+    return <object>cdata
+  else:
+    return None
+
+def tick_timers(uint32_t pc, uint32_t elapsed):
+  return tools.tools_tick_timers(pc, elapsed)

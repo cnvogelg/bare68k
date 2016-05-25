@@ -25,6 +25,7 @@ static cleanup_event_func_t cleanup_func;
 static instr_hook_func_t instr_hook_func;
 static int_ack_func_t int_ack_func;
 static int dont_clear;
+static uint32_t last_cycles;
 
 /* public */
 unsigned int cpu_current_fc;
@@ -68,6 +69,14 @@ static void instr_hook_cb(void)
       void *data = tools_get_breakpoint_data(id);
       cpu_add_event(CPU_EVENT_BREAKPOINT, pc, id, flags, data);
     }
+  }
+
+  /* timers? */
+  if(tools_timers_enabled) {
+    uint32_t cycles = m68k_cycles_run();
+    uint32_t elapsed = cycles - last_cycles;
+    last_cycles = cycles;
+    tools_tick_timers(pc, elapsed);
   }
 }
 
@@ -137,6 +146,7 @@ void cpu_init(unsigned int cpu_type_)
   run_info.events = events;
   run_info.total_cycles = 0;
   dont_clear = 0;
+  last_cycles = 0;
 }
 
 int cpu_get_type(void)
@@ -151,6 +161,7 @@ void cpu_free(void)
 
 void cpu_reset(void)
 {
+  last_cycles = 0;
   run_info.total_cycles = 0;
   m68k_pulse_reset();
 }

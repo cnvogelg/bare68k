@@ -255,3 +255,90 @@ def test_wp_check(mach):
   assert ev.value == 1 # bp id
   assert ev.flags == MEM_FC_SUPER_PROG | MEM_ACCESS_R16
   assert ev.data == "world"
+
+# ----- timers -----
+
+def test_timers_simple(mach):
+  assert get_num_timers() == 0
+  assert get_max_timers() == 0
+  assert get_next_free_timer() == -1
+  setup_timers(8)
+  assert get_next_free_timer() == 0
+  # remove timers
+  cleanup_timers()
+  assert get_num_timers() == 0
+  assert get_max_timers() == 0
+  assert get_next_free_timer() == -1
+
+def test_timers_setup(mach):
+  assert get_num_timers() == 0
+  assert get_max_timers() == 0
+  setup_timers(8)
+  assert get_num_timers() == 0
+  assert get_max_timers() == 8
+  # invalid timer
+  with pytest.raises(ValueError):
+    set_timer(-1, 0, None)
+  # add empty timer
+  assert get_next_free_timer() == 0
+  set_timer(0, 100, None)
+  assert get_next_free_timer() == 1
+  assert get_timer_data(0) == None
+  assert get_num_timers() == 1
+  # add non empty bp
+  set_timer(1, 200, "hallo")
+  assert get_next_free_timer() == 2
+  assert get_timer_data(1) == "hallo"
+  assert get_num_timers() == 2
+  # remove invalid
+  with pytest.raises(ValueError):
+    clear_timer(2)
+  # remove first
+  clear_timer(0)
+  assert get_next_free_timer() == 0
+  assert get_num_timers() == 1
+  # remove last
+  clear_timer(1)
+  assert get_num_timers() == 0
+  # remove timers
+  cleanup_timers()
+  assert get_num_timers() == 0
+  assert get_max_timers() == 0
+  assert get_next_free_timer() == -1
+
+def test_timers_enable(mach):
+  setup_timers(1)
+  set_timer(0, 100, None)
+  assert is_timer_enabled(0) == True
+  disable_timer(0)
+  assert is_timer_enabled(0) == False
+  enable_timer(0)
+  assert is_timer_enabled(0) == True
+
+def test_timers_tick(mach):
+  setup_timers(1)
+  set_timer(0, 20, None)
+  assert tick_timers(0, 10) == 0
+  assert tick_timers(0, 10) == 1
+  assert tick_timers(0, 12) == 0
+  assert tick_timers(0, 12) == 1
+
+def test_timers_event(mach):
+  setup_timers(1)
+  set_timer(0, 4, "hello")
+  w16(0x100, NOP_OPCODE)
+  w16(0x102, NOP_OPCODE)
+  w16(0x104, NOP_OPCODE)
+  w16(0x106, NOP_OPCODE)
+  w16(0x108, RESET_OPCODE)
+  w_pc(0x100)
+  ne = execute(100)
+  assert ne == 1
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_TIMER
+  assert ev.addr in (0x104, 0x102) # ?
+  assert ev.value == 0 # bp id
+  assert ev.flags == 0 # offset to interval
+  assert ev.data == "hello"

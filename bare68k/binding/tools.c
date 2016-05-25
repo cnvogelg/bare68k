@@ -8,6 +8,7 @@
 #include <strings.h>
 
 #include "tools.h"
+#include "cpu.h"
 
 typedef struct {
   uint32_t *entries;
@@ -28,6 +29,12 @@ typedef struct {
 } point_t;
 
 typedef struct {
+  node_t node;
+  uint32_t interval;
+  uint32_t elapsed;
+} timer_t;
+
+typedef struct {
   node_t *nodes;
   size_t node_size;
   int num;
@@ -45,6 +52,10 @@ int tools_watchpoints_enabled;
 static free_func_t watchpoints_free_func;
 static array_t watchpoints;
 
+int tools_timers_enabled;
+static free_func_t timers_free_func;
+static array_t timers;
+
 #define FLAG_ENABLE 1
 #define FLAG_SETUP 2
 
@@ -53,6 +64,7 @@ void tools_init(void)
   tools_pc_trace_enabled = 0;
   tools_breakpoints_enabled = 0;
   tools_watchpoints_enabled = 0;
+  tools_timers_enabled = 0;
 }
 
 void tools_free(void)
@@ -60,6 +72,7 @@ void tools_free(void)
   tools_setup_pc_trace(0);
   tools_setup_breakpoints(0, NULL);
   tools_setup_watchpoints(0, NULL);
+  tools_setup_timers(0, NULL);
 }
 
 /* ----- PC Trace ----- */
@@ -163,7 +176,7 @@ static int array_setup(array_t *a, int num, size_t node_size)
   return num;
 }
 
-static node_t *node_get(array_t *a, int id)
+static inline node_t *node_get(array_t *a, int id)
 {
   if((id < 0) || (id >= a->max)) {
     return NULL;
@@ -395,14 +408,14 @@ int tools_is_breakpoint_enabled(int id)
   return is_node_enabled(&breakpoints, id);
 }
 
-int tools_check_breakpoint(uint32_t addr, int flags)
-{
-  return point_check(&breakpoints, addr, flags);
-}
-
 void *tools_get_breakpoint_data(int id)
 {
   return node_get_data(&breakpoints, id);
+}
+
+int tools_check_breakpoint(uint32_t addr, int flags)
+{
+  return point_check(&breakpoints, addr, flags);
 }
 
 /* ---- Watchpoints ----- */
@@ -468,12 +481,105 @@ int tools_is_watchpoint_enabled(int id)
   return is_node_enabled(&watchpoints, id);
 }
 
+void *tools_get_watchpoint_data(int id)
+{
+  return node_get_data(&watchpoints, id);
+}
+
 int tools_check_watchpoint(uint32_t addr, int flags)
 {
   return point_check(&watchpoints, addr, flags);
 }
 
-void *tools_get_watchpoint_data(int id)
+/* ----- Timers ----- */
+
+int tools_get_num_timers(void)
 {
-  return node_get_data(&watchpoints, id);
+  return timers.num;
+}
+
+int tools_get_max_timers(void)
+{
+  return timers.max;
+}
+
+int tools_get_next_free_timer(void)
+{
+  return node_get_next_free(&timers);
+}
+
+int tools_setup_timers(int num, free_func_t free_func)
+{
+  if(num < 0) {
+    return -1;
+  }
+
+  /* remove old */
+  if(timers.nodes != NULL) {
+    array_cleanup(&timers, timers_free_func);
+  }
+
+  tools_timers_enabled = (num > 0);
+  timers_free_func = free_func;
+
+  if(num > 0) {
+    return array_setup(&timers, num, sizeof(timer_t));
+  } else {
+    return 0;
+  }
+}
+
+int tools_create_timer(int id, uint32_t interval, void *data)
+{
+  timer_t *t = (timer_t *)node_alloc(&timers, id, data);
+  if(t == NULL) {
+    return -1;
+  }
+  t->interval = interval;
+  t->elapsed = 0;
+  return id;
+}
+
+int tools_free_timer(int id)
+{
+  return node_free(&timers, id, timers_free_func);
+}
+
+int tools_enable_timer(int id)
+{
+  return node_enable(&timers, id);
+}
+
+int tools_disable_timer(int id)
+{
+  return node_disable(&timers, id);
+}
+
+int tools_is_timer_enabled(int id)
+{
+  return is_node_enabled(&timers, id);
+}
+
+void *tools_get_timer_data(int id)
+{
+  return node_get_data(&timers, id);
+}
+
+int tools_tick_timers(uint32_t pc, uint32_t elapsed)
+{
+  int i;
+  int num_events = 0;
+  for(i=0;i<timers.max;i++) {
+    timer_t *t = (timer_t *)node_get(&timers, i);
+    /* is timer enabled */
+    if(t->node.enable == (FLAG_ENABLE | FLAG_SETUP)) {
+      t->elapsed += elapsed;
+      while(t->elapsed >= t->interval) {
+        t->elapsed -= t->interval;
+        cpu_add_event(CPU_EVENT_TIMER, pc, i, t->elapsed, t->node.data);
+        num_events++;
+      }
+    }
+  }
+  return num_events;
 }
