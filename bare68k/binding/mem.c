@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "mem.h"
+#include "tools.h"
 
 /* ----- Data ----- */
 
@@ -191,6 +192,31 @@ static inline void trace_event(int access, uint32_t addr, uint32_t val, void *da
   cpu_add_event(CPU_EVENT_MEM_TRACE, addr, val, access, data);
 }
 
+static inline void watchpoint_event(int access, uint32_t addr, uint32_t val, void *data)
+{
+  cpu_add_event(CPU_EVENT_WATCHPOINT, addr, val, access, data);
+}
+
+/* m68k access helper macros */
+
+#define TRACE_FUNC(the_value) \
+  if(cpu_trace_func != NULL) { \
+    void *data = NULL; \
+    int res = cpu_trace_func(access, address, the_value, &data); \
+    if(res==0) { \
+      trace_event(access, address, the_value, data); \
+    } \
+  }
+
+#define WATCHPOINT_CHECK() \
+  if(tools_watchpoints_enabled) { \
+    int id = tools_check_watchpoint(address, access); \
+    if(id != NO_POINT) { \
+      void *data = tools_get_watchpoint_data(id); \
+      watchpoint_event(access, address, id, data); \
+    } \
+  }
+
 /* CPU Read */
 
 uint m68k_read_memory_8(uint address)
@@ -211,13 +237,8 @@ uint m68k_read_memory_8(uint address)
       result = rf(page, address);
     }
   }
-  if(cpu_trace_func != NULL) {
-    void *data = NULL;
-    int res = cpu_trace_func(access, address, result, &data);
-    if(res==0) {
-      trace_event(access, address, result, data);
-    }
-  }
+  TRACE_FUNC(result)
+  WATCHPOINT_CHECK()
   return result;
 }
 
@@ -239,13 +260,8 @@ uint m68k_read_memory_16(uint address)
       result = rf(page, address);
     }
   }
-  if(cpu_trace_func != NULL) {
-    void *data = NULL;
-    int res = cpu_trace_func(access, address, result, &data);
-    if(res == 0) {
-      trace_event(access, address, result, data);
-    }
-  }
+  TRACE_FUNC(result)
+  WATCHPOINT_CHECK()
   return result;
 }
 
@@ -267,13 +283,8 @@ uint m68k_read_memory_32(uint address)
       result = rf(page, address);
     }
   }
-  if(cpu_trace_func != NULL) {
-    void *data = NULL;
-    int res = cpu_trace_func(access, address, result, &data);
-    if(res == 0) {
-      trace_event(access, address, result, data);
-    }
-  }
+  TRACE_FUNC(result)
+  WATCHPOINT_CHECK()
   return result;
 }
 
@@ -294,13 +305,8 @@ void m68k_write_memory_8(uint address, uint value)
       wf(page, address, value);
     }
   }
-  if(cpu_trace_func != NULL) {
-    void *data = NULL;
-    int res = cpu_trace_func(access, address, value, &data);
-    if(res == 0) {
-      trace_event(access, address, value, data);
-    }
-  }
+  TRACE_FUNC(value)
+  WATCHPOINT_CHECK()
 }
 
 void m68k_write_memory_16(uint address, uint value)
@@ -318,13 +324,8 @@ void m68k_write_memory_16(uint address, uint value)
       wf(page, address, value);
     }
   }
-  if(cpu_trace_func != NULL) {
-    void *data = NULL;
-    int res = cpu_trace_func(access, address, value, &data);
-    if(res == 0) {
-      trace_event(access, address, value, data);
-    }
-  }
+  TRACE_FUNC(value)
+  WATCHPOINT_CHECK()
 }
 
 void m68k_write_memory_32(uint address, uint value)
@@ -342,13 +343,8 @@ void m68k_write_memory_32(uint address, uint value)
       wf(page, address, value);
     }
   }
-  if(cpu_trace_func != NULL) {
-    void *data = NULL;
-    int res = cpu_trace_func(access, address, value, &data);
-    if(res == 0) {
-      trace_event(access, address, value, data);
-    }
-  }
+  TRACE_FUNC(value)
+  WATCHPOINT_CHECK()
 }
 
 /* Disassemble */

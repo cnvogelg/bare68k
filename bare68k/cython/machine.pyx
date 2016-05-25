@@ -67,6 +67,8 @@ cdef void cleanup_event(cpu.event_t *event):
         decref = 0
     elif ev_type == cpu.CPU_EVENT_BREAKPOINT:
       decref = 0
+    elif ev_type == cpu.CPU_EVENT_WATCHPOINT:
+      decref = 0
     if decref:
       Py_DECREF(data)
 
@@ -938,6 +940,76 @@ def get_breakpoint_data(int bp_id):
 
 def check_breakpoint(uint32_t addr, int flags):
   cdef int bp_id = tools.tools_check_breakpoint(addr, flags)
+  if bp_id < 0:
+    return None
+  else:
+    return bp_id
+
+# watchpoints
+
+def get_max_watchpoints():
+  return tools.tools_get_max_watchpoints()
+
+def get_num_watchpoints():
+  return tools.tools_get_num_watchpoints()
+
+def get_next_free_watchpoint():
+  return tools.tools_get_next_free_watchpoint()
+
+cdef void free_watchpoint_cb(void *data):
+  if data != NULL:
+    Py_DECREF(<object>data)
+
+def setup_watchpoints(uint32_t num_bp):
+  if tools.tools_setup_watchpoints(num_bp, free_watchpoint_cb) < 0:
+    raise MemoryError("No watchpoints memory!")
+
+def cleanup_watchpoints():
+  tools.tools_setup_watchpoints(0, NULL)
+
+def set_watchpoint(int bp_id, uint32_t addr, int flags, object data):
+  cdef void *cdata
+  if data is not None:
+    cdata = <void *>data
+  else:
+    cdata = NULL
+  if tools.tools_create_watchpoint(bp_id, addr, flags, cdata) < 0:
+    raise ValueError("Invalid watchpoint index!")
+  if data is not None:
+    Py_INCREF(data)
+
+def clear_watchpoint(int bp_id):
+  if tools.tools_free_watchpoint(bp_id) < 0:
+    raise ValueError("Invalid watchpoint index!")
+
+def enable_watchpoint(int bp_id):
+  if tools.tools_enable_watchpoint(bp_id) < 0:
+    raise ValueError("Invalid watchpoint index!")
+
+def disable_watchpoint(int bp_id):
+  if tools.tools_disable_watchpoint(bp_id) < 0:
+    raise ValueError("Invalid watchpoint index!")
+
+def is_watchpoint_enabled(int bp_id):
+  cdef res
+  res = tools.tools_is_watchpoint_enabled(bp_id)
+  if res < 0:
+    raise ValueError("Invalid watchpoint index!")
+  elif res == 0:
+    return False
+  else:
+    return True
+
+def get_watchpoint_data(int bp_id):
+  cdef void *cdata
+  cdata = tools.tools_get_watchpoint_data(bp_id)
+  if cdata != NULL:
+    return <object>cdata
+  else:
+    return None
+
+def check_watchpoint(uint32_t addr, int flags):
+  cdef int bp_id = tools.tools_check_watchpoint(addr, flags)
   if bp_id < 0:
     return None
   else:

@@ -153,3 +153,81 @@ def test_bp_check(mach):
   assert ev.value == 1 # bp id
   assert ev.flags == MEM_FC_SUPER_PROG
   assert ev.data == "world"
+
+# ----- watchpoints -----
+
+def test_wp_setup(mach):
+  assert get_num_watchpoints() == 0
+  assert get_max_watchpoints() == 0
+  setup_watchpoints(8)
+  assert get_num_watchpoints() == 0
+  assert get_max_watchpoints() == 8
+  # invalid watchpoint
+  with pytest.raises(ValueError):
+    set_watchpoint(-1, 0, 0, None)
+  # add empty watchpoint
+  assert get_next_free_watchpoint() == 0
+  set_watchpoint(0, 0x100, 0, None)
+  assert get_next_free_watchpoint() == 1
+  assert get_watchpoint_data(0) == None
+  assert get_num_watchpoints() == 1
+  # add non empty bp
+  set_watchpoint(1, 0x200, 0, "hallo")
+  assert get_next_free_watchpoint() == 2
+  assert get_watchpoint_data(1) == "hallo"
+  assert get_num_watchpoints() == 2
+  # remove invalid
+  with pytest.raises(ValueError):
+    clear_watchpoint(2)
+  # remove first
+  clear_watchpoint(0)
+  assert get_next_free_watchpoint() == 0
+  assert get_num_watchpoints() == 1
+  # remove last
+  clear_watchpoint(1)
+  assert get_num_watchpoints() == 0
+  # remove watchpoints
+  cleanup_watchpoints()
+  assert get_num_watchpoints() == 0
+  assert get_max_watchpoints() == 0
+  assert get_next_free_watchpoint() == -1
+
+def test_wp_enable(mach):
+  setup_watchpoints(1)
+  set_watchpoint(0, 0x100, 0, None)
+  assert is_watchpoint_enabled(0) == True
+  disable_watchpoint(0)
+  assert is_watchpoint_enabled(0) == False
+  enable_watchpoint(0)
+  assert is_watchpoint_enabled(0) == True
+
+def test_wp_check(mach):
+  setup_watchpoints(4)
+  set_watchpoint(0, 0x100, 1, None)
+  set_watchpoint(1, 0x102, 2, None)
+  set_watchpoint(2, 0x100, 3, None)
+  set_watchpoint(3, 0x102, 4, None)
+  assert check_watchpoint(0x104, 7) == None
+  assert check_watchpoint(0x100, 7) == 0
+  assert check_watchpoint(0x100, 2) == 2
+
+def test_wp_check(mach):
+  setup_watchpoints(4)
+  set_watchpoint(0, 0x100, MEM_FC_USER_MASK, "hello")
+  set_watchpoint(1, 0x102, MEM_FC_SUPER_MASK, "world")
+  w16(0x100, NOP_OPCODE)
+  w16(0x102, NOP_OPCODE)
+  w16(0x104, NOP_OPCODE)
+  w16(0x106, NOP_OPCODE)
+  w16(0x108, RESET_OPCODE)
+  w_pc(0x100)
+  ne = execute(100)
+  assert ne == 1
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_WATCHPOINT
+  assert ev.addr == 0x102
+  assert ev.value == 1 # bp id
+  assert ev.flags == MEM_FC_SUPER_PROG | MEM_ACCESS_R16
+  assert ev.data == "world"

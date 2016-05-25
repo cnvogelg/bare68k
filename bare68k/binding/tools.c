@@ -36,6 +36,10 @@ int tools_breakpoints_enabled;
 static free_func_t breakpoints_free_func;
 static point_array_t breakpoints;
 
+int tools_watchpoints_enabled;
+static free_func_t watchpoints_free_func;
+static point_array_t watchpoints;
+
 #define FLAG_ENABLE 1
 #define FLAG_SETUP 2
 
@@ -292,7 +296,8 @@ static void *point_get_data(point_array_t *a, int id)
 
 static int point_get_next_free(point_array_t *a)
 {
-  for(int i=0;i<a->max;i++) {
+  int i;
+  for(i=0;i<a->max;i++) {
     point_t *p = &a->points[i];
     if((p->enable & FLAG_SETUP) == 0) {
       return i;
@@ -372,4 +377,77 @@ int tools_check_breakpoint(uint32_t addr, int flags)
 void *tools_get_breakpoint_data(int id)
 {
   return point_get_data(&breakpoints, id);
+}
+
+/* ---- Watchpoints ----- */
+
+int tools_get_num_watchpoints(void)
+{
+  return watchpoints.num;
+}
+
+int tools_get_max_watchpoints(void)
+{
+  return watchpoints.max;
+}
+
+int tools_get_next_free_watchpoint(void)
+{
+  return point_get_next_free(&watchpoints);
+}
+
+int tools_setup_watchpoints(int num, free_func_t free_func)
+{
+  if(num < 0) {
+    return -1;
+  }
+
+  /* remove old */
+  if(watchpoints.points != NULL) {
+    point_array_cleanup(&watchpoints, watchpoints_free_func);
+  }
+
+  tools_watchpoints_enabled = (num > 0);
+  watchpoints_free_func = free_func;
+
+  if(num > 0) {
+    return point_array_setup(&watchpoints, num);
+  } else {
+    return 0;
+  }
+}
+
+int tools_create_watchpoint(int id, uint32_t addr, int flags, void *data)
+{
+  return point_alloc(&watchpoints, id, addr, flags, data);
+}
+
+int tools_free_watchpoint(int id)
+{
+  return point_free(&watchpoints, id, watchpoints_free_func);
+}
+
+int tools_enable_watchpoint(int id)
+{
+  return point_enable(&watchpoints, id);
+}
+
+int tools_disable_watchpoint(int id)
+{
+  return point_disable(&watchpoints, id);
+}
+
+int tools_is_watchpoint_enabled(int id)
+{
+  return is_point_enabled(&watchpoints, id);
+}
+
+int tools_check_watchpoint(uint32_t addr, int flags)
+{
+  return point_check(&watchpoints, addr, flags);
+}
+
+void *tools_get_watchpoint_data(int id)
+{
+  return point_get_data(&watchpoints, id);
 }
