@@ -32,7 +32,7 @@ typedef struct {
   node_t node;
   uint32_t interval;
   uint32_t elapsed;
-} timer_t;
+} my_timer_t;
 
 typedef struct {
   node_t *nodes;
@@ -523,7 +523,7 @@ int tools_setup_timers(int num, free_func_t free_func)
   timers_free_func = free_func;
 
   if(num > 0) {
-    return array_setup(&timers, num, sizeof(timer_t));
+    return array_setup(&timers, num, sizeof(my_timer_t));
   } else {
     return 0;
   }
@@ -531,7 +531,7 @@ int tools_setup_timers(int num, free_func_t free_func)
 
 int tools_create_timer(int id, uint32_t interval, void *data)
 {
-  timer_t *t = (timer_t *)node_alloc(&timers, id, data);
+  my_timer_t *t = (my_timer_t *)node_alloc(&timers, id, data);
   if(t == NULL) {
     return -1;
   }
@@ -570,7 +570,7 @@ int tools_tick_timers(uint32_t pc, uint32_t elapsed)
   int i;
   int num_events = 0;
   for(i=0;i<timers.max;i++) {
-    timer_t *t = (timer_t *)node_get(&timers, i);
+    my_timer_t *t = (my_timer_t *)node_get(&timers, i);
     /* is timer enabled */
     if(t->node.enable == (FLAG_ENABLE | FLAG_SETUP)) {
       t->elapsed += elapsed;
