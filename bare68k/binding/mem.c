@@ -23,9 +23,35 @@ static special_entry_t *first_special_entry;
 static cpu_trace_func_t cpu_trace_func;
 static api_trace_func_t api_trace_func;
 static special_cleanup_func_t special_cleanup_func;
+
 static uint invalid8 = 0xff;
 static uint invalid16 = 0xffff;
 static uint invalid32 = 0xffffffff;
+
+static uint32_t empty8 = 0xff;
+static uint32_t empty16 = 0xffff;
+static uint32_t empty32 = 0xffffffff;
+
+/* ----- Empty Range ----- */
+static uint32_t r8_empty(struct page_entry *page, uint32_t addr)
+{
+  return empty8;
+}
+
+static uint32_t r16_empty(struct page_entry *page, uint32_t addr)
+{
+  return empty16;
+}
+
+static uint32_t r32_empty(struct page_entry *page, uint32_t addr)
+{
+  return empty32;
+}
+
+static void wx_empty(page_entry_t *page, uint32_t addr, uint32_t val)
+{
+  // ignore a write
+}
 
 /* ----- Special Access ----- */
 static uint32_t r8_special(struct page_entry *page, uint32_t addr)
@@ -374,8 +400,10 @@ int mem_init(uint num_pages)
     return 0;
   }
   total_pages = num_pages;
-
   bzero(pages, bytes);
+
+  mem_set_invalid_value(0xff);
+  mem_set_empty_value(0xff);
   return 1;
 }
 
@@ -419,6 +447,13 @@ void mem_set_invalid_value(uint8_t val)
   invalid8 = val;
   invalid16 = val << 8 | val;
   invalid32 = val << 24 | val << 16 | val << 8 | val;
+}
+
+void mem_set_empty_value(uint8_t val)
+{
+  empty8 = val;
+  empty16 = val << 8 | val;
+  empty32 = val << 24 | val << 16 | val << 8 | val;
 }
 
 memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
@@ -570,6 +605,51 @@ special_entry_t *mem_add_special(uint start_page, uint num_pages,
     page++;
   }
   return se;
+}
+
+int mem_add_empty(uint start_page, uint num_pages, int flags)
+{
+  /* check parameters */
+  if((start_page + num_pages) > total_pages) {
+    return 0;
+  }
+  if(num_pages == 0) {
+    return 0;
+  }
+
+  /* setup pages */
+  page_entry_t *page = &pages[start_page];
+  int i;
+  for(i=0;i<num_pages;i++) {
+    /* setup read pointers */
+    if((flags & MEM_FLAGS_READ) == MEM_FLAGS_READ) {
+      page->r_func[0] = r8_empty;
+      page->r_func[1] = r16_empty;
+      page->r_func[2] = r32_empty;
+    } else {
+      page->r_func[0] = NULL;
+      page->r_func[1] = NULL;
+      page->r_func[2] = NULL;
+    }
+
+    /* setup write pointers */
+    if((flags & MEM_FLAGS_WRITE) == MEM_FLAGS_WRITE) {
+      page->w_func[0] = wx_empty;
+      page->w_func[1] = wx_empty;
+      page->w_func[2] = wx_empty;
+    } else {
+      page->w_func[0] = NULL;
+      page->w_func[1] = NULL;
+      page->w_func[2] = NULL;
+    }
+
+    page->data = NULL;
+    page->byte_left = 0;
+    page->memory_entry = NULL;
+    page->special_entry = NULL;
+    page++;
+  }
+  return 1;
 }
 
 void mem_set_cpu_trace_func(cpu_trace_func_t func)

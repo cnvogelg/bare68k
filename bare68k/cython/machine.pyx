@@ -429,6 +429,15 @@ def add_special(uint16_t start_page, uint16_t num_pages, read_func, write_func):
     raise ValueError("Invalid special: start=%d, num=%d" % (start_page, num_pages))
   return <uint32_t>(start_page << 16)
 
+def set_empty_value(uint8_t val):
+  mem.mem_set_empty_value(val)
+
+def add_empty(uint16_t start_page, uint16_t num_pages, int flags):
+  cdef int res = mem.mem_add_empty(start_page, num_pages, flags)
+  if res == -1:
+    raise ValueError("Invalid empty: start=%d, num=%d" % (start_page, num_pages))
+  return <uint32_t>(start_page << 16)
+
 # cpu trace
 
 cdef object instr_hook_func

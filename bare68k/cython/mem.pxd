@@ -34,6 +34,9 @@ cdef extern from "binding/mem.h":
                            special_read_func_t read_func, void *read_data,
                            special_write_func_t write_func, void *write_data)
 
+  void mem_set_empty_value(uint8_t val)
+  int mem_add_empty(unsigned int start_page, unsigned int num_pages, int flags)
+
   void mem_set_cpu_trace_func(cpu_trace_func_t func)
   void mem_set_api_trace_func(api_trace_func_t func)
 

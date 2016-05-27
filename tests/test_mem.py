@@ -350,6 +350,65 @@ def test_special_none(mach):
   ri = get_info()
   assert ri.num_events == 0
 
+def test_empty_val(mach):
+  set_empty_value(0x10)
+  add_empty(0, 1, MEM_FLAGS_READ)
+  assert r8(0) == 0x10
+  assert r16(0) == 0x1010
+  assert r32(0) == 0x10101010
+
+def test_empty_ro(mach):
+  add_empty(0, 1, MEM_FLAGS_READ)
+  assert r8(0) == 0xff
+  assert r16(0) == 0xffff
+  assert r32(0) == 0xffffffff
+  # w8 fails
+  cpu_w8(0, 21)
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_MEM_ACCESS
+  assert ev.addr == 0
+  assert ev.value == 21
+  assert ev.flags == MEM_ACCESS_W8 | MEM_FC_SUPER_PROG
+  clear_info()
+  # w16 fails
+  cpu_w16(0, 0x1234)
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_MEM_ACCESS
+  assert ev.addr == 0
+  assert ev.value == 0x1234
+  assert ev.flags == MEM_ACCESS_W16 | MEM_FC_SUPER_PROG
+  clear_info()
+  # w32 fails
+  cpu_w32(0, 0x12345678)
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_MEM_ACCESS
+  assert ev.addr == 0
+  assert ev.value == 0x12345678
+  assert ev.flags == MEM_ACCESS_W32 | MEM_FC_SUPER_PROG
+
+def test_empty_rw(mach):
+  add_empty(0, 1, MEM_FLAGS_RW)
+  assert r8(0) == 0xff
+  assert r16(0) == 0xffff
+  assert r32(0) == 0xffffffff
+  # no events. simply ignored
+  cpu_w8(0, 21)
+  ri = get_info()
+  assert ri.num_events == 0
+  cpu_w16(0, 0x1234)
+  ri = get_info()
+  assert ri.num_events == 0
+  cpu_w32(0, 0x12345678)
+  ri = get_info()
+  assert ri.num_events == 0
+
+
 def test_disassemble(mach):
   w16(0x100, 0x4e75) # rts
   num, line = disassemble(0x100)
