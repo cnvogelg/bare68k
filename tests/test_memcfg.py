@@ -91,4 +91,5 @@ def test_memtypes():
   memcfg.add_special_range(4,1,r,None)
   # reserver
   memcfg.add_reserve_range(5,1)
-
+  # empty
+  memcfg.add_empty_range(6,1)
