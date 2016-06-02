@@ -56,6 +56,9 @@ def ppunpack(data, unpacker_code, do_trace=False):
     trace.enable_instr_trace()
     trace.enable_cpu_mem_trace()
 
+  # pc trace with 16 entries in backlog
+  tools.setup_pc_trace(16)
+
   # go!
   ri = runtime.run()
   if ri.is_ok():
@@ -66,6 +69,10 @@ def ppunpack(data, unpacker_code, do_trace=False):
       print("UNPACK ERROR:", result)
     else:
       data_out = mem.r_block(data_out_addr, result)
+
+  # dump final CPU state
+  print("final state:")
+  dump.print_cpu_state()
 
   # clean up bare68k environment
   runtime.shutdown()

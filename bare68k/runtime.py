@@ -127,8 +127,8 @@ def _setup_mem(mem_cfg):
       mach.add_special(start, size, r_func, w_func)
       _log.info("memory: spc @%04x +%04x", start, size)
     elif mt == MEM_EMPTY:
-      mach.add_empty(start, size)
-      _log.info("memory: --- @%04x +%04y", start, size)
+      mach.add_empty(start, size, MEM_FLAGS_RW)
+      _log.info("memory: --- @%04x +%04x", start, size)
     else:
       raise ValueError("Invalid memory type: %d" % mt)
   _log.info("memory: done. max_pages=%04x", mem_cfg.get_num_pages())

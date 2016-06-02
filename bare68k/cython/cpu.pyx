@@ -357,24 +357,7 @@ def r_sr():
 def w_sr(uint32_t addr, uint32_t val):
   cpu.cpu_w_reg(musashi.M68K_REG_SR, val)
 
-# tools
-
-def get_cpu_access_str(int access):
-  cdef const char *s = mem.mem_get_cpu_access_str(access)
-  return <bytes>s[:6]
-
-cpdef get_cpu_mem_str(int access, uint32_t address, uint32_t value):
-  cdef const char *s = mem.mem_get_cpu_mem_str(access, address, value)
-  return <bytes>s[:26]
-
-def get_api_access_str(int access):
-  cdef const char *s = mem.mem_get_api_access_str(access)
-  return <bytes>s[:6]
-
-cpdef get_api_mem_str(int access, uint32_t address, uint32_t value, uint32_t extra):
-  cdef int size
-  cdef const char *s = mem.mem_get_api_mem_str(access, address, value, extra, &size)
-  return <bytes>s[:size]
+# dump tools
 
 def get_sr_str(uint32_t sr):
   cdef const char *s = cpu.cpu_get_sr_str(sr)

@@ -394,3 +394,22 @@ def cpu_r16(uint32_t addr):
 
 def cpu_r32(uint32_t addr):
   return mem.m68k_read_memory_32(addr)
+
+# dump tools
+
+def get_cpu_access_str(int access):
+  cdef const char *s = mem.mem_get_cpu_access_str(access)
+  return <bytes>s[:6]
+
+cpdef get_cpu_mem_str(int access, uint32_t address, uint32_t value):
+  cdef const char *s = mem.mem_get_cpu_mem_str(access, address, value)
+  return <bytes>s[:26]
+
+def get_api_access_str(int access):
+  cdef const char *s = mem.mem_get_api_access_str(access)
+  return <bytes>s[:6]
+
+cpdef get_api_mem_str(int access, uint32_t address, uint32_t value, uint32_t extra):
+  cdef int size
+  cdef const char *s = mem.mem_get_api_mem_str(access, address, value, extra, &size)
+  return <bytes>s[:size]

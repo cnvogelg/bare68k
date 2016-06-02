@@ -51,6 +51,10 @@ typedef struct {
   uint32_t     ax[8];
   uint32_t     pc;
   uint32_t     sr;
+  uint32_t     usp;
+  uint32_t     isp;
+  uint32_t     msp;
+  uint32_t     vbr;
 } registers_t;
 
 typedef void (*cleanup_event_func_t)(event_t *e);

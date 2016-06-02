@@ -33,7 +33,7 @@ def test_trace_annotate_instr(rt):
   # with trace
   def anno(pc, num_bytes):
     return "HUHU:%08x" % pc
-  trace.set_instr_annotate_func(anno)
+  dump.set_instr_annotate_func(anno)
   trace.enable_instr_trace()
   rt.run()
   # without trace
@@ -45,7 +45,7 @@ def test_trace_annotate_exc(rt):
   # with trace
   def anno(pc, num_bytes):
     raise ValueError("anno test fail!")
-  trace.set_instr_annotate_func(anno)
+  dump.set_instr_annotate_func(anno)
   trace.enable_instr_trace()
   with pytest.raises(ValueError):
     rt.run()
@@ -55,7 +55,7 @@ def test_trace_annotate_catch(rt):
   # with trace
   def anno(pc, num_bytes):
     raise ValueError("anno test fail!")
-  trace.set_instr_annotate_func(anno)
+  dump.set_instr_annotate_func(anno)
   trace.enable_instr_trace()
   try:
     rt.run()

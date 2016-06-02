@@ -207,6 +207,11 @@ void cpu_r_regs(registers_t *regs)
   }
   regs->pc = m68k_get_reg(NULL, M68K_REG_PC);
   regs->sr = m68k_get_reg(NULL, M68K_REG_SR);
+
+  regs->usp = m68k_get_reg(NULL, M68K_REG_USP);
+  regs->isp = m68k_get_reg(NULL, M68K_REG_ISP);
+  regs->msp = m68k_get_reg(NULL, M68K_REG_MSP);
+  regs->vbr = m68k_get_reg(NULL, M68K_REG_VBR);
 }
 
 void cpu_w_regs(const registers_t *regs)
@@ -219,6 +224,11 @@ void cpu_w_regs(const registers_t *regs)
   }
   m68k_set_reg(M68K_REG_PC, regs->pc);
   m68k_set_reg(M68K_REG_SR, regs->sr);
+
+  m68k_set_reg(M68K_REG_USP, regs->usp);
+  m68k_set_reg(M68K_REG_ISP, regs->isp);
+  m68k_set_reg(M68K_REG_MSP, regs->msp);
+  m68k_set_reg(M68K_REG_VBR, regs->vbr);
 }
 
 /*                             0123456789012345 */
@@ -242,25 +252,37 @@ const char *cpu_get_sr_str(uint32_t val)
 }
 
 static char pc_line[40];
-static char dx_line[100];
-static char ax_line[100];
-static char *reg_lines[] = { pc_line, dx_line, ax_line, NULL };
+static char dx1_line[60];
+static char dx2_line[60];
+static char ax1_line[60];
+static char ax2_line[60];
+static char sp_line[60];
+static char *reg_lines[] = { pc_line, dx1_line, dx2_line, ax1_line, ax2_line, sp_line, NULL };
 const char ** cpu_get_regs_str(const registers_t *regs)
 {
-  int n = sprintf(pc_line, "PC=%08x SR=", regs->pc);
+  int n = sprintf(pc_line, " PC=%08x  SR=", regs->pc);
   const char *sr = cpu_get_sr_str(regs->sr);
   strcpy(pc_line + n, sr);
 
-  char *ax = ax_line;
-  char *dx = dx_line;
+  char *ax1 = ax1_line;
+  char *ax2 = ax2_line;
+  char *dx1 = dx1_line;
+  char *dx2 = dx2_line;
   int i;
-  for(i=0;i<8;i++) {
-    sprintf(dx, "D%d=%08x ", i, regs->dx[i]);
-    sprintf(ax, "A%d=%08x ", i, regs->ax[i]);
-    dx += 12;
-    ax += 12;
+  for(i=0;i<4;i++) {
+    int j = i + 4;
+    sprintf(dx1, " D%d=%08x ", i, regs->dx[i]);
+    sprintf(ax1, " A%d=%08x ", i, regs->ax[i]);
+    sprintf(dx2, " D%d=%08x ", j, regs->dx[j]);
+    sprintf(ax2, " A%d=%08x ", j, regs->ax[j]);
+    dx1 += 13;
+    ax1 += 13;
+    dx2 += 13;
+    ax2 += 13;
   }
 
+  sprintf(sp_line, "USP=%08x ISP=%08x MSP=%08x VBR=%08x",
+          regs->usp, regs->isp, regs->msp, regs->vbr);
   return (const char **)reg_lines;
 }
 

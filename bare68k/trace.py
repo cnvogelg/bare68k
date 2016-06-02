@@ -1,11 +1,11 @@
 """memory and CPU trace support"""
 
 import logging
-import struct
 
 import bare68k.machine as mach
 import bare68k.cpu as cpu
 import bare68k.mem as mem
+import bare68k.dump as dump
 from bare68k.consts import *
 
 # globals
@@ -23,38 +23,10 @@ def set_log_output(instr=None, mem_cpu=None, mem_api=None):
   if mem_api is not None:
     _log_mem_api = mem_api
 
-def _get_words(data):
-  num_words = len(data) >> 1
-  off = 0
-  res = []
-  for i in range(num_words):
-    d = struct.unpack_from(">H", data, off)
-    res.append("%04x" % d)
-    off += 2
-  return res
-
 # ----- instruction trace -----
 
-def default_instr_annotate(pc, num_bytes):
-  # get raw words
-  data = mem.r_block(pc, num_bytes)
-  return "%-20s" % " ".join(_get_words(data))
-
-_instr_annotate = default_instr_annotate
-
-def set_instr_annotate_func(f):
-  """set instr annotation function"""
-  global _instr_annotate
-  _instr_annotate = f
-
 def handle_instr_trace(pc):
-  """callback for instruction trace"""
-  num_bytes, line = mach.disassemble(pc)
-  if _instr_annotate is not None:
-    annotation = _instr_annotate(pc, num_bytes)
-  else:
-    annotation = ""
-  _log_instr.info("%08x: %s %s" % (pc, annotation, line))
+  _log_instr.info(dump.disassemble_line(pc))
 
 def enable_instr_trace():
   """enable instruction tracing"""

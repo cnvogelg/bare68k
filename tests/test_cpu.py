@@ -374,7 +374,7 @@ def test_get_regs(mach):
   r = get_regs()
   # test printout
   l = r.get_lines()
-  assert len(l) == 3
+  assert len(l) == 6
   # now change some value
   r.w_pc(0xdeadbeef)
   assert r.r_pc() == 0xdeadbeef
