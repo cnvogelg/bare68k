@@ -28,6 +28,10 @@ def set_instr_annotate_func(f):
   global _instr_annotate
   _instr_annotate = f
 
+def reset_instr_annotate_func():
+  global _instr_annotate
+  _instr_annotate = default_instr_annotate
+
 def disassemble_line(pc):
   """callback for instruction trace"""
   num_bytes, line = mach.disassemble(pc)

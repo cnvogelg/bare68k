@@ -39,6 +39,7 @@ def test_trace_annotate_instr(rt):
   # without trace
   trace.disable_instr_trace()
   rt.run()
+  dump.reset_instr_annotate_func()
 
 def test_trace_annotate_exc(rt):
   _setup_code()
@@ -49,6 +50,7 @@ def test_trace_annotate_exc(rt):
   trace.enable_instr_trace()
   with pytest.raises(ValueError):
     rt.run()
+  dump.reset_instr_annotate_func()
 
 def test_trace_annotate_catch(rt):
   _setup_code()
@@ -61,6 +63,7 @@ def test_trace_annotate_catch(rt):
     rt.run()
   except ValueError as e:
     traceback.print_exc()
+  dump.reset_instr_annotate_func()
 
 def test_trace_cpu_mem(rt):
   _setup_code()
@@ -68,6 +71,6 @@ def test_trace_cpu_mem(rt):
   rt.run()
 
 def test_trace_api_mem(rt):
-  trace.enable_api_mem_trace()
   _setup_code()
+  trace.enable_api_mem_trace()
   rt.run()
