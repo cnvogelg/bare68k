@@ -397,6 +397,10 @@ def cpu_r32(uint32_t addr):
 
 # dump tools
 
+def get_cpu_fc_str(int access):
+  cdef const char *s = mem.mem_get_cpu_fc_str(access)
+  return <bytes>s[:2]
+
 def get_cpu_access_str(int access):
   cdef const char *s = mem.mem_get_cpu_access_str(access)
   return <bytes>s[:6]

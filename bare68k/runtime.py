@@ -22,15 +22,9 @@ _reset_sp = None
 # logging setup
 _log = logging.getLogger(__name__)
 
-# return reasons
-RETURN_OK = 0
-RETURN_USER_ABORT = 1
-RETURN_MEM_ACCESS = 2
-RETURN_MEM_BOUNDS = 3
-RETURN_ALINE_TRAP = 4
-
 # global vars to modify run() loop
 _reset_end_pc = None
+_catch_kb_intr = True
 
 
 class RunInfo:
@@ -47,8 +41,14 @@ class RunInfo:
       self.total_time, self.cpu_time,
       self.total_cycles, repr(self.results))
 
-  def is_ok(self):
-    return len(self.results) == 1 and self.results[0] == RETURN_OK
+  def is_done(self):
+    return self.get_last_result() == CPU_EVENT_DONE
+
+  def get_last_result(self):
+    if len(self.results) > 0:
+      return self.results[-1][0]
+    else:
+      return None
 
   def calc_cpu_mhz(self):
     """from cpu time and cycle count calc cpu clock speed of musashi"""
@@ -180,13 +180,14 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True, max_cycles=None
 
   Returns a RunInfo instance giving you timing information.
   """
-  global _reset_end_pc
+  global _reset_end_pc, _catch_kb_intr
 
   # timer function
   timer = time.time
 
   cpu_time = 0
   _reset_end_pc = reset_end_pc
+  _catch_kb_intr = catch_kb_intr
 
   # main loop
   _log.debug("enter main loop")
@@ -206,9 +207,10 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True, max_cycles=None
         stay = False
     except KeyboardInterrupt as e:
       # either abort execution (default) or re-raise exception
-      results.append(RETURN_USER_ABORT)
+      _log.debug("keyboard interrupt")
       if not catch_kb_intr:
         raise e
+      results.append((CPU_EVENT_USER_ABORT, None))
       break
     finally:
       end = timer()
@@ -223,11 +225,13 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True, max_cycles=None
         result = handler(event)
         # handler wants to
         if result is not None:
-          results.append(result)
+          results.append((result, event))
           stay = False
-          _log.debug("leave run loop: reason=%d", result)
+          _log.debug("leave run loop: result=%s (event=%r)",
+                     CPU_EVENT_NAMES[result], event)
       else:
-        _log.warning("no handler for event: %s", event)
+        _log.warning("no handler: result=%s (event=%r)",
+                     CPU_EVENT_NAMES[event.ev_type], event)
 
   total_end = timer()
   _log.debug("leave main loop")
@@ -244,6 +248,13 @@ def _setup_handlers():
   eh[CPU_EVENT_ALINE_TRAP] = handler_aline_trap
   eh[CPU_EVENT_MEM_ACCESS] = handler_mem_access
   eh[CPU_EVENT_MEM_BOUNDS] = handler_mem_bounds
+  eh[CPU_EVENT_MEM_TRACE] = handler_mem_trace
+  eh[CPU_EVENT_MEM_SPECIAL] = handler_mem_special
+  eh[CPU_EVENT_INSTR_HOOK] = handler_instr_hook
+  eh[CPU_EVENT_INT_ACK] = handler_int_ack
+  eh[CPU_EVENT_BREAKPOINT] = handler_breakpoint
+  eh[CPU_EVENT_WATCHPOINT] = handler_watchpoint
+  eh[CPU_EVENT_TIMER] = handler_timer
 
 def set_handler(event_type, handler):
   """set a custom handler for an event type and overwrite default handler"""
@@ -251,11 +262,20 @@ def set_handler(event_type, handler):
     raise ValueError("Invalid event type")
   mach.event_handlers[event_type] = handler
 
+# ----- default handlers -----
+
 def handler_cb_error(event):
   """a callback running your code raised an exception"""
-  # re-raise
+  global _catch_kb_intr
+  # get exception info
   exc_info = event.data
-  _log.error("handle CALLBACK raised: %s", exc_info[1])
+  # keyboard interrupt
+  if exc_info[0] is KeyboardInterrupt:
+    if _catch_kb_intr:
+      _log.debug("keyboard interrupt (in callback)")
+      return CPU_EVENT_USER_ABORT
+  # re-raise other error
+  _log.error("handle CALLBACK raised: %s", exc_info[0])
   raise exc_info[0], exc_info[1], exc_info[2]
 
 def handler_reset(event):
@@ -266,7 +286,9 @@ def handler_reset(event):
   # check if final PC reached to end run loop
   if _reset_end_pc is None or _reset_end_pc == pc:
     # quit run loop:
-    return RETURN_OK
+    return CPU_EVENT_DONE
+  else:
+    return CPU_EVENT_RESET
 
 def handler_aline_trap(event):
   """an unbound aline trap was encountered"""
@@ -279,18 +301,53 @@ def handler_aline_trap(event):
     bound_handler(event)
   else:
     _log.warn("unbound ALINE encountered: @%08x: %04x", pc, op)
-    return RETURN_ALINE_TRAP
+    return CPU_EVENT_ALINE_TRAP
 
 def handler_mem_access(event):
   """default handler for invalid memory accesses"""
   mem_str = mach.get_cpu_mem_str(event.flags, event.addr, event.value)
   _log.error("MEM ACCESS: %s", mem_str)
   # quit run loop:
-  return RETURN_MEM_ACCESS
+  return CPU_EVENT_MEM_ACCESS
 
 def handler_mem_bounds(event):
   """default handler for invalid memory accesses beyond max pages"""
   mem_str = mach.get_cpu_mem_str(event.flags, event.addr, event.value)
   _log.error("MEM BOUNDS: %s", mem_str)
   # quit run loop:
-  return RETURN_MEM_BOUNDS
+  return CPU_EVENT_MEM_BOUNDS
+
+def handler_mem_trace(event):
+  pass
+
+def handler_mem_special(event):
+  pass
+
+def handler_instr_hook(event):
+  pass
+
+def handler_int_ack(event):
+  pass
+
+def handler_breakpoint(event):
+  addr = event.addr
+  bp_id = event.value
+  mem_flags = event.flags
+  mf_str = mach.get_cpu_fc_str(mem_flags)
+  user_data = event.data
+  _log.info("BREAKPOINT: @%08x #%d flags=%s data=%s",
+            addr, bp_id, mf_str, user_data)
+  return CPU_EVENT_BREAKPOINT
+
+def handler_watchpoint(event):
+  addr = event.addr
+  bp_id = event.value
+  mem_flags = event.flags
+  mf_str = mach.get_cpu_access_str(mem_flags)
+  user_data = event.data
+  _log.info("WATCHPOINT: @%08x #%d flags=%s data=%s",
+            addr, bp_id, mf_str, user_data)
+  return CPU_EVENT_WATCHPOINT
+
+def handler_timer(event):
+  _log.info("TIMER")

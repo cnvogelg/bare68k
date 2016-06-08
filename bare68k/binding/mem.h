@@ -139,6 +139,7 @@ extern const uint8_t *mem_r_block(uint32_t address, uint32_t size);
 extern int mem_w_block(uint32_t address, uint32_t size, const uint8_t *src_data);
 
 extern const char *mem_get_cpu_access_str(int access);
+extern const char *mem_get_cpu_fc_str(int access);
 extern const char *mem_get_cpu_mem_str(int access, uint32_t address, uint32_t value);
 extern const char *mem_get_api_access_str(int access);
 extern const char *mem_get_api_mem_str(int access, uint32_t address, uint32_t value, uint32_t extra, int *ret_size);

@@ -2,7 +2,7 @@ import bare68k.machine as mach
 
 # cpu pc trace
 
-get_pc_trace_siize = mach.get_pc_trace_size
+get_pc_trace_size = mach.get_pc_trace_size
 setup_pc_trace = mach.setup_pc_trace
 cleanup_pc_trace = mach.cleanup_pc_trace
 get_pc_trace = mach.get_pc_trace

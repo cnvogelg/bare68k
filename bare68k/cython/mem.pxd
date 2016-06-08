@@ -43,6 +43,7 @@ cdef extern from "binding/mem.h":
   int mem_default_cpu_trace_func(int access, uint32_t addr, uint32_t val, void **data)
   void mem_default_api_trace_func(int access, uint32_t addr, uint32_t val, uint32_t extra)
 
+  const char *mem_get_cpu_fc_str(int access)
   const char *mem_get_cpu_access_str(int access)
   const char *mem_get_cpu_mem_str(int access, uint32_t address, uint32_t value)
   const char *mem_get_api_access_str(int access)

@@ -1059,6 +1059,12 @@ const char *mem_get_cpu_mem_str(int access, uint32_t address, uint32_t value)
   return mem_str;
 }
 
+const char *mem_get_cpu_fc_str(int access)
+{
+  const char *ptr = mem_get_cpu_access_str(access);
+  return ptr + 4;
+}
+
 const char *mem_get_cpu_access_str(int access)
 {
   char *s = mem_str;

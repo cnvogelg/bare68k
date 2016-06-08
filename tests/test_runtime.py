@@ -34,7 +34,7 @@ def test_reset_quit_on_first(rt):
   ri = rt.run()
   assert ri.total_cycles == reset_cycles
   assert cpu.r_pc() == PROG_BASE + 2
-  assert ri.results == [rt.RETURN_OK]
+  assert ri.get_last_result() == CPU_EVENT_DONE
 
 def test_reset_quit_on_pc(rt):
   is_68k = rt.get_cpu_cfg().get_cpu_type() == M68K_CPU_TYPE_68000
@@ -43,21 +43,21 @@ def test_reset_quit_on_pc(rt):
   mem.w16(PROG_BASE, RESET_OPCODE)
   mem.w16(PROG_BASE+2, RESET_OPCODE)
   ri = rt.run(reset_end_pc=PROG_BASE + 4)
-  assert ri.total_cycles == reset_cycles * 2
-  assert cpu.r_pc() == PROG_BASE + 4
-  assert ri.results == [rt.RETURN_OK]
+  assert ri.total_cycles == reset_cycles
+  assert cpu.r_pc() == PROG_BASE + 2
+  assert ri.get_last_result() == CPU_EVENT_RESET
 
 def test_mem_access(rt):
   # access between RAM and ROM
   cpu.w_pc(0x10000)
   ri = rt.run()
-  assert ri.results == [rt.RETURN_MEM_ACCESS]
+  assert ri.get_last_result() == CPU_EVENT_MEM_ACCESS
 
 def test_mem_bounds(rt):
   # access beyond max pages
   cpu.w_pc(0x100000)
   ri = rt.run()
-  assert ri.results == [rt.RETURN_MEM_BOUNDS]
+  assert ri.get_last_result() == CPU_EVENT_MEM_BOUNDS
 
 # --- traps ---
 
@@ -68,7 +68,7 @@ def test_rt_trap_cpu(rt):
   mem.w32(0x28, PROG_BASE + 10)
   mem.w16(PROG_BASE + 10, RESET_OPCODE)
   ri = rt.run()
-  assert ri.results == [rt.RETURN_OK]
+  assert ri.get_last_result() == CPU_EVENT_DONE
 
 def test_rt_trap_unbound(rt):
   """enable unbound trap and get a ALINE_TRAP event"""
@@ -76,7 +76,7 @@ def test_rt_trap_unbound(rt):
   traps.enable(0xa000)
   mem.w16(PROG_BASE, 0xa000)
   ri = rt.run()
-  assert ri.results == [rt.RETURN_ALINE_TRAP]
+  assert ri.get_last_result() == CPU_EVENT_ALINE_TRAP
 
 class TrapHelper:
   def __init__(self):
@@ -92,7 +92,7 @@ def test_rt_trap_setup(rt):
   mem.w16(PROG_BASE, op)
   mem.w16(PROG_BASE + 2, RESET_OPCODE)
   ri = rt.run()
-  assert ri.results == [rt.RETURN_OK]
+  assert ri.get_last_result() == CPU_EVENT_DONE
   assert th.event is not None
 
 def test_rt_trap_fail(rt):
@@ -118,3 +118,25 @@ def test_rt_trap_catch(rt):
     ri = rt.run()
   except Exception as e:
     traceback.print_exc()
+
+def test_rt_breakpoint(rt):
+  """test breakpoints"""
+  PROG_BASE = rt.get_reset_pc()
+  # loop endless
+  # 0x1000: jmp.w 0x1000
+  mem.w16(PROG_BASE, 0x4ef8)
+  mem.w16(PROG_BASE+2, PROG_BASE)
+  tools.setup_breakpoints(1)
+  tools.set_breakpoint(0, PROG_BASE, MEM_FC_SUPER_MASK, "bla")
+  ri = rt.run()
+
+def test_rt_watchpoint(rt):
+  """test watchpoints"""
+  PROG_BASE = rt.get_reset_pc()
+  # loop endless
+  # 0x1000: jmp.w 0x1000
+  mem.w16(PROG_BASE, 0x4ef8)
+  mem.w16(PROG_BASE+2, PROG_BASE)
+  tools.setup_watchpoints(1)
+  tools.set_watchpoint(0, PROG_BASE, MEM_FC_SUPER_MASK, "bla")
+  ri = rt.run()

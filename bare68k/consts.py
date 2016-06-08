@@ -121,3 +121,25 @@ CPU_EVENT_WATCHPOINT = 10
 CPU_EVENT_TIMER = 11
 
 CPU_NUM_EVENTS = 12
+
+# extra events (created by runtime)
+CPU_EVENT_USER_ABORT = 12
+CPU_EVENT_DONE = 13
+
+# names for all events
+CPU_EVENT_NAMES = (
+    "CALLBACK_ERROR", #0
+    "RESET", #1
+    "ALINE_TRAP", #2
+    "MEM_ACCESS", #3
+    "MEM_BOUNDS", #4
+    "MEM_TRACE", #5
+    "MEM_SPECIAL", #6
+    "INSTR_HOOK", #7
+    "INT_ACK", #8
+    "BREAKPOINT", #9
+    "WATCHPOINT", #10
+    "TIMER", #11
+    "USER_ABORT", #13
+    "DONE", #14
+)

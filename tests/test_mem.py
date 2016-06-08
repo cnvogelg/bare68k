@@ -590,6 +590,20 @@ def test_cpu_access_str():
   s = get_cpu_access_str(0x10)
   assert s == "R??:??"
 
+def test_cpu_fc_str():
+  s = get_cpu_fc_str(MEM_FC_USER_DATA)
+  assert s == "UD"
+  s = get_cpu_fc_str(MEM_FC_USER_PROG)
+  assert s == "UP"
+  s = get_cpu_fc_str(MEM_FC_SUPER_DATA)
+  assert s == "SD"
+  s = get_cpu_fc_str(MEM_FC_SUPER_PROG)
+  assert s == "SP"
+  s = get_cpu_fc_str(MEM_FC_INT_ACK)
+  assert s == "IA"
+  s = get_cpu_fc_str(0x10)
+  assert s == "??"
+
 def test_api_access_str():
   s = get_api_access_str(MEM_ACCESS_R8)
   assert s == "r08   "

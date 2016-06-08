@@ -61,7 +61,7 @@ def ppunpack(data, unpacker_code, do_trace=False):
 
   # go!
   ri = runtime.run()
-  if ri.is_ok():
+  if ri.is_done():
     print(ri, "CPU MHZ=", ri.calc_cpu_mhz())
     # get result in reg D0
     result = cpu.r_reg(M68K_REG_D0)
@@ -112,4 +112,4 @@ def check_unpack(input_file, ref_output_file, unpacker_file="unpack.bin",
 
 # run when script is called
 if __name__ == '__main__':
-  check_unpack("data.bin", "rnc_1.s", trace=True)
+  check_unpack("data.bin", "rnc_1.s", trace=False)
