@@ -22,50 +22,59 @@ typedef unsigned int uint;
 #define MEM_FLAGS_TRAPS   4
 
 /* Use Bits 0,1,2 to signal 8, 16, 32 bit access.
-   Bit 3 is set for write operations.
+   Bit 4 is set for read operations.
+   Bit 5 is set for write operations.
 */
-#define MEM_ACCESS_R8      1
-#define MEM_ACCESS_R16     2
-#define MEM_ACCESS_R32     4
-#define MEM_ACCESS_W8      9
-#define MEM_ACCESS_W16     10
-#define MEM_ACCESS_W32     12
+#define MEM_ACCESS_READ    0x10
+#define MEM_ACCESS_WRITE   0x20
+#define MEM_ACCESS_WIDTH   0x0f
 
-#define MEM_ACCESS_WIDTH   7
-#define MEM_ACCESS_WRITE   8
-#define MEM_ACCESS_MASK    15
+#define MEM_ACCESS_R8      0x11
+#define MEM_ACCESS_R16     0x12
+#define MEM_ACCESS_R32     0x14
+#define MEM_ACCESS_W8      0x21
+#define MEM_ACCESS_W16     0x22
+#define MEM_ACCESS_W32     0x24
+
+#define MEM_ACCESS_MASK    0xff
 
 /* cpu access flag also holds function code */
-#define MEM_FC_SHIFT       4
-#define MEM_FC_MASK        0x1F0
-#define MEM_FC_USER_DATA   0x050
-#define MEM_FC_USER_PROG   0x060
-#define MEM_FC_SUPER_DATA  0x090
-#define MEM_FC_SUPER_PROG  0x0a0
-#define MEM_FC_INT_ACK     0x100
-#define MEM_FC_INVALID     0x1f0
+#define MEM_FC_MASK        0xff00
+#define MEM_FC_USER_DATA   0x1100
+#define MEM_FC_USER_PROG   0x1200
+#define MEM_FC_SUPER_DATA  0x2100
+#define MEM_FC_SUPER_PROG  0x2200
+#define MEM_FC_INT_ACK     0x4000
+#define MEM_FC_INVALID     0x8000
 /* masks */
-#define MEM_FC_DATA_MASK   0x010
-#define MEM_FC_PROG_MASK   0x020
-#define MEM_FC_USER_MASK   0x040
-#define MEM_FC_SUPER_MASK  0x080
-#define MEM_FC_INT_MASK    0x100
+#define MEM_FC_DATA_MASK   0x0100
+#define MEM_FC_PROG_MASK   0x0200
+#define MEM_FC_USER_MASK   0x1000
+#define MEM_FC_SUPER_MASK  0x2000
+#define MEM_FC_INT_MASK    0x4000
 
 /* special mem access for API trace */
-#define MEM_ACCESS_SPECIAL 0x1f0
-#define MEM_ACCESS_SWRITE  0x080
-#define MEM_ACCESS_EXTRA   0x100
+#define MEM_ACCESS_SPECIAL 0xff00
+#define MEM_ACCESS_SREAD   0x0100
+#define MEM_ACCESS_SWRITE  0x0200
+#define MEM_ACCESS_EXTRA   0x0400
+#define MEM_ACCESS_TYPE    0xf000
 
-#define MEM_ACCESS_R_BLOCK 0x010
-#define MEM_ACCESS_W_BLOCK 0x090
-#define MEM_ACCESS_R_CSTR  0x020
-#define MEM_ACCESS_W_CSTR  0x0a0
-#define MEM_ACCESS_R_BSTR  0x030
-#define MEM_ACCESS_W_BSTR  0x0b0
-#define MEM_ACCESS_R_B32   0x040
-#define MEM_ACCESS_W_B32   0x0c0
-#define MEM_ACCESS_BSET    0x100
-#define MEM_ACCESS_BCOPY   0x110
+#define MEM_ACCESS_R_BLOCK 0x1100
+#define MEM_ACCESS_W_BLOCK 0x1200
+#define MEM_ACCESS_R_CSTR  0x2100
+#define MEM_ACCESS_W_CSTR  0x2200
+#define MEM_ACCESS_R_BSTR  0x3100
+#define MEM_ACCESS_W_BSTR  0x3200
+#define MEM_ACCESS_R_B32   0x4100
+#define MEM_ACCESS_W_B32   0x4200
+#define MEM_ACCESS_BSET    0x5400
+#define MEM_ACCESS_BCOPY   0x6400
+
+#define MEM_ACCESS_BLOCK   0x1000
+#define MEM_ACCESS_CSTR    0x2000
+#define MEM_ACCESS_BSTR    0x3000
+#define MEM_ACCESS_B32     0x4000
 
 typedef struct memory_entry
 {

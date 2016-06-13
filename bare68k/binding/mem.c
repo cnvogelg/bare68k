@@ -1071,7 +1071,8 @@ const char *mem_get_cpu_access_str(int access)
 
   if((access & MEM_ACCESS_WRITE) == MEM_ACCESS_WRITE) {
     s[0] = 'W';
-  } else {
+  }
+  else if((access & MEM_ACCESS_READ) == MEM_ACCESS_READ) {
     s[0] = 'R';
   }
 
@@ -1150,18 +1151,18 @@ const char *mem_get_api_access_str(int access)
         s[0] = 'r';
       }
       s++;
-      access &= ~MEM_ACCESS_SWRITE;
+      access &= MEM_ACCESS_TYPE;
       switch(access) {
-        case MEM_ACCESS_R_BLOCK:
+        case MEM_ACCESS_BLOCK:
           sprintf(s, "block");
           break;
-        case MEM_ACCESS_R_CSTR:
+        case MEM_ACCESS_CSTR:
           sprintf(s, "cstr ");
           break;
-        case MEM_ACCESS_R_BSTR:
+        case MEM_ACCESS_BSTR:
           sprintf(s, "bstr ");
           break;
-        case MEM_ACCESS_R_B32:
+        case MEM_ACCESS_B32:
           sprintf(s, "b32  ");
           break;
         default:
