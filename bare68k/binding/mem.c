@@ -32,6 +32,10 @@ static uint32_t empty8 = 0xff;
 static uint32_t empty16 = 0xffff;
 static uint32_t empty32 = 0xffffffff;
 
+static const uint8_t *disasm_buffer;
+static uint32_t disasm_size;
+static uint32_t disasm_offset;
+
 /* ----- Empty Range ----- */
 static uint32_t r8_empty(struct page_entry *page, uint32_t addr)
 {
@@ -377,16 +381,49 @@ void m68k_write_memory_32(uint address, uint value)
 
 uint m68k_read_disassembler_16(uint address)
 {
-  uint16_t val;
-  mem_r16(address, &val);
+  uint16_t val = 0;
+  if(disasm_buffer == NULL) {
+    mem_r16(address, &val);
+  } else {
+    if(address >= disasm_offset) {
+      address -= disasm_offset;
+      if(address <= (disasm_size-2)) {
+        val = (disasm_buffer[address] << 8) | disasm_buffer[address+1];
+      }
+    }
+  }
   return val;
 }
 
 uint m68k_read_disassembler_32(uint address)
 {
-  uint32_t val;
-  mem_r32(address, &val);
+  uint32_t val = 0;
+  if(disasm_buffer == NULL) {
+    mem_r32(address, &val);
+  } else {
+    if(address >= disasm_offset) {
+      address -= disasm_offset;
+      if(address <= (disasm_size-4)) {
+        val = (disasm_buffer[address] << 24) | (disasm_buffer[address+1] << 16) |
+              (disasm_buffer[address+2] << 8) | disasm_buffer[address+3];
+      }
+    }
+  }
   return val;
+}
+
+void mem_disasm_buffer(const uint8_t *buf, uint32_t size, uint32_t offset)
+{
+  disasm_buffer = buf;
+  disasm_size = size;
+  disasm_offset = offset;
+}
+
+void mem_disasm_default(void)
+{
+  disasm_buffer = NULL;
+  disasm_size = 0;
+  disasm_offset = 0;
 }
 
 /* ---------- API ---------- */

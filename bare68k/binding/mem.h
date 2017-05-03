@@ -171,6 +171,10 @@ extern int mem_w_bstr(uint32_t address, const uint8_t *str, uint32_t length);
 extern int mem_rb32(uint32_t address, uint32_t *value);
 extern int mem_wb32(uint32_t address, uint32_t value);
 
+/* support disassembling a buffer */
+extern void mem_disasm_buffer(const uint8_t *buf, uint32_t size, uint32_t offset);
+extern void mem_disasm_default(void);
+
 /* ----- Musashi Binding ----- */
 extern uint m68k_read_memory_8(uint address);
 extern uint m68k_read_memory_16(uint address);

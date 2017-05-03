@@ -16,10 +16,10 @@ def _get_words(data):
     off += 2
   return res
 
-def default_instr_annotate(pc, num_bytes):
+def default_instr_annotate(pc, words):
   # get raw words
-  data = mem.r_block(pc, num_bytes)
-  return "%-20s" % " ".join(_get_words(data))
+  hw = map(lambda x: "%04x" % x, words)
+  return "%-20s" % " ".join(hw)
 
 _instr_annotate = default_instr_annotate
 
@@ -34,9 +34,9 @@ def reset_instr_annotate_func():
 
 def disassemble_line(pc):
   """callback for instruction trace"""
-  num_bytes, line = mach.disassemble(pc)
+  words, line = mach.disassemble(pc)
   if _instr_annotate is not None:
-    annotation = _instr_annotate(pc, num_bytes)
+    annotation = _instr_annotate(pc, words)
   else:
     annotation = ""
   return "%08x: %s %s" % (pc, annotation, line)

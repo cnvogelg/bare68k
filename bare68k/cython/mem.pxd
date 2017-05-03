@@ -74,6 +74,9 @@ cdef extern from "binding/mem.h":
   int mem_w16(uint32_t address, uint16_t value)
   int mem_w32(uint32_t address, uint32_t value)
 
+  void mem_disasm_buffer(const uint8_t *buf, uint32_t size, uint32_t offset)
+  void mem_disasm_default()
+
   unsigned int m68k_read_memory_8(unsigned int address)
   unsigned int m68k_read_memory_16(unsigned int address)
   unsigned int m68k_read_memory_32(unsigned int address)
@@ -81,3 +84,6 @@ cdef extern from "binding/mem.h":
   void m68k_write_memory_8(unsigned int address, unsigned int value)
   void m68k_write_memory_16(unsigned int address, unsigned int value)
   void m68k_write_memory_32(unsigned int address, unsigned int value)
+
+  unsigned int m68k_read_disassembler_16(unsigned int address)
+  unsigned int m68k_read_disassembler_32(unsigned int address)
