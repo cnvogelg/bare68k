@@ -206,24 +206,6 @@ def get_total_cycles():
 def clear_info():
   cpu.cpu_clear_info()
 
-def disassemble(uint32_t pc):
-  cdef char line[80]
-  cdef unsigned int num_bytes
-  cdef unsigned int i
-  num_bytes = musashi.m68k_disassemble(line, pc, cpu.cpu_get_type())
-  words = []
-  for i in range(num_bytes/2):
-    words.append(mem.m68k_read_disassembler_16(pc+i*2))
-  return (words, line)
-
-def disassemble_buffer(bytes buf, uint32_t offset=0):
-  cdef const uint8_t *ptr = buf
-  cdef unsigned int size = len(buf)
-  mem.mem_disasm_buffer(ptr, size, offset)
-
-def disassemble_default():
-  mem.mem_disasm_default()
-
 # irq
 
 cdef object int_ack_func = None

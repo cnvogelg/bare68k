@@ -419,7 +419,7 @@ void mem_disasm_buffer(const uint8_t *buf, uint32_t size, uint32_t offset)
   disasm_offset = offset;
 }
 
-void mem_disasm_default(void)
+void mem_disasm_memory(void)
 {
   disasm_buffer = NULL;
   disasm_size = 0;

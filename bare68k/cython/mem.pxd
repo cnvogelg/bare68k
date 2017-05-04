@@ -75,7 +75,7 @@ cdef extern from "binding/mem.h":
   int mem_w32(uint32_t address, uint32_t value)
 
   void mem_disasm_buffer(const uint8_t *buf, uint32_t size, uint32_t offset)
-  void mem_disasm_default()
+  void mem_disasm_memory()
 
   unsigned int m68k_read_memory_8(unsigned int address)
   unsigned int m68k_read_memory_16(unsigned int address)

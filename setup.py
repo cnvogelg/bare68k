@@ -140,6 +140,7 @@ depends = [
   'bare68k/cython/mem.pyx',
   'bare68k/cython/traps.pyx',
   'bare68k/cython/tools.pyx',
+  'bare68k/cython/disasm.pyx',
 
   'bare68k/binding/cpu.h',
   'bare68k/binding/mem.h',

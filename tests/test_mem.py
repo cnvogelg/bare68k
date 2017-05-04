@@ -409,43 +409,6 @@ def test_empty_rw(mach):
   assert ri.num_events == 0
 
 
-def test_disassemble(mach):
-  w16(0x100, 0x4e75) # rts
-  words, line = disassemble(0x100)
-  print(words, line)
-  assert words == [0x4e75]
-  assert line == "rts"
-
-  w16(0x108, 0x4eb9) # jsr
-  w32(0x10a, 0xdeadbeef)
-  words, line = disassemble(0x108)
-  print(words, line)
-  assert words == [0x4eb9, 0xdead, 0xbeef]
-  assert line == "jsr     $deadbeef.l"
-
-
-def test_disassemble_buffer(mach):
-  buf = b"\x4e\x75"
-  disassemble_buffer(buf)
-  words, line = disassemble(0)
-  print(words, line)
-  assert words == [0x4e75]
-  assert line == "rts"
-
-  buf = b"\x4e\xb9\xde\xad\xbe\xef"
-  disassemble_buffer(buf)
-  words, line = disassemble(0)
-  print(words, line)
-  assert words == [0x4eb9, 0xdead, 0xbeef]
-  assert line == "jsr     $deadbeef.l"
-  # back to mem disassembly
-  disassemble_default()
-  words, line = disassemble(0)
-  print(words, line)
-  assert words == [0, 0]
-  assert line == "ori.b   #$0, D0"
-
-
 def test_api_trace_func(mach):
   class Tester:
     value = None

@@ -6,16 +6,6 @@ import bare68k.machine as mach
 import bare68k.cpu as cpu
 import bare68k.mem as mem
 
-def _get_words(data):
-  num_words = len(data) >> 1
-  off = 0
-  res = []
-  for i in range(num_words):
-    d = struct.unpack_from(">H", data, off)
-    res.append("%04x" % d)
-    off += 2
-  return res
-
 def default_instr_annotate(pc, words):
   # get raw words
   hw = map(lambda x: "%04x" % x, words)
@@ -34,7 +24,7 @@ def reset_instr_annotate_func():
 
 def disassemble_line(pc):
   """callback for instruction trace"""
-  words, line = mach.disassemble(pc)
+  pc, words, line = mach.disassemble(pc)
   if _instr_annotate is not None:
     annotation = _instr_annotate(pc, words)
   else:
