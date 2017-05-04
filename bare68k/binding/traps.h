@@ -31,6 +31,7 @@ extern int traps_shutdown(void);
 extern int traps_get_num_free(void);
 
 extern uint16_t trap_setup(int flags, void *data);
+extern uint16_t trap_setup_abs(uint16_t trap_num, int flags, void *data);
 extern void *trap_free(uint16_t opcode);
 
 extern void trap_enable(uint16_t opcode);

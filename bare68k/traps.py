@@ -3,6 +3,7 @@
 import bare68k.machine as mach
 
 setup = mach.trap_setup
+setup_abs = mach.trap_setup_abs
 free = mach.trap_free
 
 get_num_free = mach.traps_get_num_free

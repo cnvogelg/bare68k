@@ -17,6 +17,7 @@ cdef extern from "binding/traps.h":
   int traps_get_num_free()
 
   uint16_t trap_setup(int flags, void *data)
+  uint16_t trap_setup_abs(uint16_t tid, int flags, void *data)
   void *trap_free(uint16_t tid)
 
   void trap_enable(uint16_t opcode)

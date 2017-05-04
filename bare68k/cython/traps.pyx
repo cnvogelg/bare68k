@@ -1,11 +1,20 @@
 # traps
 
 def trap_setup(int flags, object call not None):
-  cdef uint16_t tid
-  tid = traps.trap_setup(flags, <void *>call)
-  if tid != traps.TRAP_INVALID:
+  cdef uint16_t op
+  op = traps.trap_setup(flags, <void *>call)
+  if op != traps.TRAP_INVALID:
     Py_INCREF(call)
-    return tid
+    return op
+  else:
+    raise MemoryError("no more traps!")
+
+def trap_setup_abs(uint16_t tid, int flags, object call not None):
+  cdef uint16_t op
+  op = traps.trap_setup_abs(tid, flags, <void *>call)
+  if op != traps.TRAP_INVALID:
+    Py_INCREF(call)
+    return op
   else:
     raise MemoryError("no more traps!")
 
