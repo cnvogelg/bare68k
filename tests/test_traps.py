@@ -204,3 +204,30 @@ def test_many_traps(mach):
   # free all
   for tid in tids:
     trap_free(tid)
+
+def test_abs_traps(mach):
+  def my_cb():
+    print("HUHU")
+  assert traps_get_num_free() == 0x1000
+  opcode = trap_setup_abs(0x100, TRAP_DEFAULT, my_cb)
+  assert traps_get_num_free() == 0x1000 - 1
+  assert opcode == 0xa100
+  w_pc(0x100)
+  w16(0x100, opcode)
+  ne = execute(1000)
+  assert ne == 1
+  ri = get_info()
+  print("TRAP", ri)
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_ALINE_TRAP
+  assert ev.addr == 0x100
+  assert ev.data == my_cb
+  assert ev.handler is None
+  # trigger callback
+  ev.data()
+  # finally free trap
+  trap_free(opcode)
+  assert traps_get_num_free() == 0x1000
+  # after trap: aline is disabled again
+  check_aline_cpu_ex(opcode)
