@@ -9,6 +9,7 @@ cimport cpu
 cimport mem
 cimport traps
 cimport tools
+cimport label
 
 import sys
 
@@ -18,11 +19,15 @@ event_handlers = [None] * cpu.CPU_NUM_EVENTS
 
 # ----- API -----
 
-def init(int cpu_type, int num_pages):
+def init(int cpu_type, int num_pages, bool with_labels=False):
   cpu.cpu_init(cpu_type)
   mem.mem_init(num_pages)
   traps.traps_init()
   tools.tools_init()
+
+  if with_labels:
+    label.label_init()
+    label.label_set_cleanup_func(cleanup_label)
 
   cpu.cpu_set_cleanup_event_func(cleanup_event)
   mem.mem_set_special_cleanup(mem_special_cleanup)
@@ -32,12 +37,15 @@ def init(int cpu_type, int num_pages):
   for i in range(len(event_handlers)):
     event_handlers[i] = None
 
-def shutdown():
+def shutdown(bool with_labels=False):
   set_mem_cpu_trace_func(None)
   set_mem_api_trace_func(None)
   set_instr_hook_func(None)
   set_int_ack_func(None)
   set_irq(0)
+
+  if with_labels:
+    label.label_free()
 
   cpu.cpu_free()
   mem.mem_free()
@@ -50,3 +58,4 @@ include "mem.pyx"
 include "traps.pyx"
 include "tools.pyx"
 include "disasm.pyx"
+include "label.pyx"

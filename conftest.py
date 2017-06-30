@@ -7,11 +7,15 @@ from bare68k.machine import *
 @pytest.fixture(params=[M68K_CPU_TYPE_68000, M68K_CPU_TYPE_68020],
                 ids=["68000", "68020"])
 def mach(request):
+  use_labels = getattr(request.module, "use_labels", False)
+  if use_labels:
+    print("Using labels")
   cpu = request.param
-  init(cpu, 4)
-  request.addfinalizer(shutdown)
+  init(cpu, 4, use_labels)
   add_memory(0, 1, MEM_FLAGS_RW | MEM_FLAGS_TRAPS)
   pulse_reset()
+  yield
+  shutdown(use_labels)
 
 PROG_BASE = 0x1000
 STACK = 0x800
@@ -25,6 +29,6 @@ def rt(request):
   mem_cfg.add_ram_range(0, 1)
   mem_cfg.add_rom_range(2, 1)
   runtime.init(cpu_cfg, mem_cfg)
-  request.addfinalizer(runtime.shutdown)
   runtime.reset(PROG_BASE, STACK)
-  return runtime
+  yield runtime
+  runtime.shutdown()

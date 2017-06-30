@@ -126,6 +126,7 @@ sourcefiles = gen_src + [
   'bare68k/binding/mem.c',
   'bare68k/binding/traps.c',
   'bare68k/binding/tools.c',
+  'bare68k/binding/label.c',
 
   'bare68k/musashi/m68kcpu.c',
   'bare68k/musashi/m68kdasm.c',
@@ -135,12 +136,14 @@ depends = [
   'bare68k/cython/mem.pxd',
   'bare68k/cython/traps.pxd',
   'bare68k/cython/tools.pxd',
+  'bare68k/cython/label.pxd',
 
   'bare68k/cython/cpu.pyx',
   'bare68k/cython/mem.pyx',
   'bare68k/cython/traps.pyx',
   'bare68k/cython/tools.pyx',
   'bare68k/cython/disasm.pyx',
+  'bare68k/cython/label.pyx',
 
   'bare68k/binding/cpu.h',
   'bare68k/binding/mem.h',

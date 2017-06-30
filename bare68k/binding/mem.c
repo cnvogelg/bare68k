@@ -13,9 +13,6 @@
 
 /* ----- Data ----- */
 
-#define PAGE_SIZE 0x10000
-#define PAGE_MASK 0x0ffff
-
 static page_entry_t *pages;
 static uint total_pages;
 static memory_entry_t *first_mem_entry;
@@ -154,7 +151,7 @@ static void w32_special(struct page_entry *page, uint32_t addr, uint32_t value)
 static uint32_t r8_mem(page_entry_t *page, uint32_t addr)
 {
   uint8_t *data = page->data;
-  uint32_t off = addr & PAGE_MASK;
+  uint32_t off = addr & MEM_PAGE_MASK;
 
   return data[off];
 }
@@ -162,7 +159,7 @@ static uint32_t r8_mem(page_entry_t *page, uint32_t addr)
 static uint32_t r16_mem(page_entry_t *page, uint32_t addr)
 {
   uint8_t *data = page->data;
-  uint32_t off = addr & PAGE_MASK;
+  uint32_t off = addr & MEM_PAGE_MASK;
 
   return (data[off] << 8) | data[off+1];
 }
@@ -170,7 +167,7 @@ static uint32_t r16_mem(page_entry_t *page, uint32_t addr)
 static uint32_t r32_mem(page_entry_t *page, uint32_t addr)
 {
   uint8_t *data = page->data;
-  uint32_t off = addr & PAGE_MASK;
+  uint32_t off = addr & MEM_PAGE_MASK;
 
   return (data[off] << 24) | (data[off+1] << 16) |
          (data[off+2] << 8) | (data[off+3]);
@@ -180,7 +177,7 @@ static uint32_t r32_mem(page_entry_t *page, uint32_t addr)
 static void w8_mem(page_entry_t *page, uint32_t addr, uint32_t val)
 {
   uint8_t *data = page->data;
-  uint32_t off = addr & PAGE_MASK;
+  uint32_t off = addr & MEM_PAGE_MASK;
 
   data[off] = val;
 }
@@ -188,7 +185,7 @@ static void w8_mem(page_entry_t *page, uint32_t addr, uint32_t val)
 static void w16_mem(page_entry_t *page, uint32_t addr, uint32_t val)
 {
   uint8_t *data = page->data;
-  uint32_t off = addr & PAGE_MASK;
+  uint32_t off = addr & MEM_PAGE_MASK;
 
   data[off] = val >> 8;
   data[off+1] = val & 0xff;
@@ -197,7 +194,7 @@ static void w16_mem(page_entry_t *page, uint32_t addr, uint32_t val)
 static void w32_mem(page_entry_t *page, uint32_t addr, uint32_t val)
 {
   uint8_t *data = page->data;
-  uint32_t off = addr & PAGE_MASK;
+  uint32_t off = addr & MEM_PAGE_MASK;
 
   data[off]   = val >> 24;
   data[off+1] = (val >> 16) & 0xff;
@@ -252,7 +249,7 @@ static inline void watchpoint_event(int access, uint32_t addr, uint32_t val, voi
 uint m68k_read_memory_8(uint address)
 {
   uint result = 0;
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_R8 | cpu_current_fc;
   if(page_no >= total_pages) {
     result = invalid8;
@@ -275,7 +272,7 @@ uint m68k_read_memory_8(uint address)
 uint m68k_read_memory_16(uint address)
 {
   uint result = 0;
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_R16 | cpu_current_fc;
   if(page_no >= total_pages) {
     result = invalid16;
@@ -298,7 +295,7 @@ uint m68k_read_memory_16(uint address)
 uint m68k_read_memory_32(uint address)
 {
   uint result = 0;
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_R32 | cpu_current_fc;
   if(page_no >= total_pages) {
     result = invalid32;
@@ -322,7 +319,7 @@ uint m68k_read_memory_32(uint address)
 
 void m68k_write_memory_8(uint address, uint value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_W8 | cpu_current_fc;
   if(page_no >= total_pages) {
     memory_bounds(access, address, value);
@@ -341,7 +338,7 @@ void m68k_write_memory_8(uint address, uint value)
 
 void m68k_write_memory_16(uint address, uint value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_W16 | cpu_current_fc;
   if(page_no >= total_pages) {
     memory_bounds(access, address, value);
@@ -360,7 +357,7 @@ void m68k_write_memory_16(uint address, uint value)
 
 void m68k_write_memory_32(uint address, uint value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_W32 | cpu_current_fc;
   if(page_no >= total_pages) {
     memory_bounds(access, address, value);
@@ -479,6 +476,27 @@ void mem_free(void)
   api_trace_func = NULL;
 }
 
+uint mem_get_num_pages(void)
+{
+  return total_pages;
+}
+
+void mem_set_labels(uint page, void *labels)
+{
+  if(page < total_pages) {
+    pages[page].labels = labels;
+  }
+}
+
+void *mem_get_labels(uint page)
+{
+  if(page < total_pages) {
+    return pages[page].labels;
+  } else {
+    return NULL;
+  }
+}
+
 void mem_set_invalid_value(uint8_t val)
 {
   invalid8 = val;
@@ -504,7 +522,7 @@ memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
   }
 
   /* alloc memory */
-  size_t byte_size = num_pages * PAGE_SIZE;
+  size_t byte_size = num_pages * MEM_PAGE_SIZE;
   uint8_t *data = (uint8_t *)malloc(byte_size);
   if(data == NULL) {
     return NULL;
@@ -565,8 +583,8 @@ memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
     page->special_entry = NULL;
     page->data = &data[offset];
     page->byte_left = remain;
-    offset += PAGE_SIZE;
-    remain -= PAGE_SIZE;
+    offset += MEM_PAGE_SIZE;
+    remain -= MEM_PAGE_SIZE;
 
     page++;
   }
@@ -701,14 +719,14 @@ void mem_set_api_trace_func(api_trace_func_t func)
 
 uint8_t *mem_get_range(uint32_t address, uint32_t size)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return NULL;
   } else {
     page_entry_t *page = &pages[page_no];
     if(page->memory_entry != NULL) {
       /* check size */
-      uint32_t offset = address & PAGE_MASK;
+      uint32_t offset = address & MEM_PAGE_MASK;
       uint32_t left = page->byte_left - offset;
       if(size <= left) {
         return page->data + offset;
@@ -723,13 +741,13 @@ uint8_t *mem_get_range(uint32_t address, uint32_t size)
 
 uint8_t *mem_get_max_range(uint32_t address, uint32_t *size)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return NULL;
   } else {
     page_entry_t *page = &pages[page_no];
     if(page->memory_entry != NULL) {
-      uint32_t offset = address & PAGE_MASK;
+      uint32_t offset = address & MEM_PAGE_MASK;
       *size = page->byte_left - offset;
       return page->data + offset;
     } else {
@@ -740,7 +758,7 @@ uint8_t *mem_get_max_range(uint32_t address, uint32_t *size)
 
 int mem_get_memory_flags(uint32_t address)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
@@ -909,7 +927,7 @@ int mem_w_bstr(uint32_t address, const uint8_t *str, uint32_t length)
 
 int mem_r8(uint32_t address, uint8_t *value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
@@ -931,7 +949,7 @@ int mem_r8(uint32_t address, uint8_t *value)
 
 int mem_r16(uint32_t address, uint16_t *value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
@@ -953,7 +971,7 @@ int mem_r16(uint32_t address, uint16_t *value)
 
 int mem_r32(uint32_t address, uint32_t *value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
@@ -975,7 +993,7 @@ int mem_r32(uint32_t address, uint32_t *value)
 
 int mem_rb32(uint32_t address, uint32_t *value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
@@ -999,7 +1017,7 @@ int mem_rb32(uint32_t address, uint32_t *value)
 
 int mem_w8(uint32_t address, uint8_t value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
@@ -1021,7 +1039,7 @@ int mem_w8(uint32_t address, uint8_t value)
 
 int mem_w16(uint32_t address, uint16_t value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
@@ -1043,7 +1061,7 @@ int mem_w16(uint32_t address, uint16_t value)
 
 int mem_w32(uint32_t address, uint32_t value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
@@ -1065,7 +1083,7 @@ int mem_w32(uint32_t address, uint32_t value)
 
 int mem_wb32(uint32_t address, uint32_t value)
 {
-  uint page_no = address >> 16;
+  uint page_no = address >> MEM_PAGE_SHIFT;
   if(page_no >= total_pages) {
     return 0;
   } else {
