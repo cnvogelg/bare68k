@@ -150,7 +150,8 @@ int label_init(void)
   num_pages = mem_get_num_pages();
 
   /* alloc a list per page */
-  for(uint i=0;i<num_pages;i++) {
+  uint i;
+  for(i=0;i<num_pages;i++) {
     label_list_t *list = (label_list_t *)malloc(sizeof(label_list_t));
     if(list == NULL) {
       label_free();
@@ -168,7 +169,8 @@ int label_init(void)
 
 void label_free(void)
 {
-  for(uint i=0;i<num_pages;i++) {
+  uint i;
+  for(i=0;i<num_pages;i++) {
     label_list_t *list = (label_list_t *)mem_get_labels(i);
     if(list != NULL) {
       label_node_t *node = list->first;
@@ -213,7 +215,8 @@ label_entry_t **label_get_all(uint *res_num)
   /* run throug all label lists and visit all nodes.
      pick the last one in the node chains and store their entries */
   uint off = 0;
-  for(uint i=0;i<num_pages;i++) {
+  uint i;
+  for(i=0;i<num_pages;i++) {
     label_list_t *list = (label_list_t *)mem_get_labels(i);
     if(list != NULL) {
       label_node_t *node = list->first;
@@ -380,7 +383,8 @@ int label_remove_inside(uint addr, uint size)
   uint end_page = addr >> MEM_PAGE_SHIFT;
 
   uint num = 0;
-  for(uint page=start_page;page<=end_page;page++) {
+  uint page;
+  for(page=start_page;page<=end_page;page++) {
     /* get page list */
     label_list_t *list = (label_list_t *)mem_get_labels(page);
     assert(list != NULL);
@@ -523,7 +527,8 @@ label_entry_t **label_find_intersecting(uint addr, uint size, uint *res_size)
 
   /* first count total intersects */
   uint num = 0;
-  for(uint page=start_page;page<=end_page;page++) {
+  uint page;
+  for(page=start_page;page<=end_page;page++) {
     num += count_intersects(page, addr, end);
   }
 
@@ -541,7 +546,7 @@ label_entry_t **label_find_intersecting(uint addr, uint size, uint *res_size)
 
   /* finally store intersects */
   uint got = 0;
-  for(uint page=start_page;page<=end_page;page++) {
+  for(page=start_page;page<=end_page;page++) {
     got += store_intersects(page, addr, end, &result[got]);
   }
 
