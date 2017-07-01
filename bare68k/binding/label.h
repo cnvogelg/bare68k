@@ -9,7 +9,12 @@
 #ifndef _LABEL_H
 #define _LABEL_H
 
-#include "mem.h"
+#include <stdint.h>
+
+#ifndef UINT_TYPE
+#define UINT_TYPE
+typedef unsigned int uint;
+#endif
 
 struct label_node;
 
@@ -24,7 +29,7 @@ typedef struct label_entry
 
 typedef void (*label_cleanup_func_t)(label_entry_t *);
 
-extern int  label_init(void);
+extern int  label_init(uint num_pages, uint page_shift);
 extern void label_free(void);
 
 extern int  label_get_num_labels(void);

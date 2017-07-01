@@ -481,20 +481,9 @@ uint mem_get_num_pages(void)
   return total_pages;
 }
 
-void mem_set_labels(uint page, void *labels)
+uint mem_get_page_shift(void)
 {
-  if(page < total_pages) {
-    pages[page].labels = labels;
-  }
-}
-
-void *mem_get_labels(uint page)
-{
-  if(page < total_pages) {
-    return pages[page].labels;
-  } else {
-    return NULL;
-  }
+  return MEM_PAGE_SHIFT;
 }
 
 void mem_set_invalid_value(uint8_t val)

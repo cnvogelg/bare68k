@@ -26,7 +26,7 @@ def init(int cpu_type, int num_pages, bool with_labels=False):
   tools.tools_init()
 
   if with_labels:
-    label.label_init()
+    label.label_init(mem.mem_get_num_pages(), mem.mem_get_page_shift())
     label.label_set_cleanup_func(cleanup_label)
 
   cpu.cpu_set_cleanup_event_func(cleanup_event)

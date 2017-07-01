@@ -12,7 +12,7 @@ cdef extern from "binding/label.h":
 
   ctypedef void (*label_cleanup_func_t)(label_entry_t *)
 
-  int  label_init()
+  int  label_init(uint num_pages, uint page_shift)
   void label_free()
 
   int  label_get_num_labels()

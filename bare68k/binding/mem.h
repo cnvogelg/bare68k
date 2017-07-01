@@ -116,7 +116,6 @@ typedef struct page_entry {
   special_entry_t *special_entry;
   uint8_t        *data; /* if memory then pointer to mem of this page */
   uint32_t       byte_left; /* if memory then remaining bytes */
-  void           *labels; /* used for labels */
 } page_entry_t;
 
 
@@ -124,9 +123,8 @@ typedef struct page_entry {
 extern int  mem_init(uint num_pages);
 extern void mem_free(void);
 
+extern uint mem_get_page_shift(void);
 extern uint mem_get_num_pages(void);
-extern void mem_set_labels(uint page, void *labels);
-extern void *mem_get_labels(uint page);
 
 extern void mem_set_invalid_value(uint8_t val);
 extern void mem_set_empty_value(uint8_t val);

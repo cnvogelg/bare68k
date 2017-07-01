@@ -27,6 +27,9 @@ cdef extern from "binding/mem.h":
   int  mem_init(unsigned int ram_size_kib)
   void mem_free()
 
+  unsigned int mem_get_page_shift()
+  unsigned int mem_get_num_pages()
+
   memory_entry_t *mem_add_memory(unsigned int start_page, unsigned int num_pages, int flags)
 
   void mem_set_special_cleanup(special_cleanup_func_t f)

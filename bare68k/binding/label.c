@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "mem.h"
 #include "label.h"
 
 /* ----- types ----- */
@@ -31,6 +30,8 @@ typedef struct label_list
 } label_list_t;
 
 /* ----- globals ----- */
+static label_list_t *page_lists;
+static uint page_shift;
 static uint num_pages;
 static label_cleanup_func_t cleanup_func;
 static uint total_labels;
@@ -145,25 +146,18 @@ void list_remove_node(label_list_t *l, label_node_t *n)
 }
 
 /* ----- API ----- */
-int label_init(void)
+int label_init(uint np, uint ps)
 {
-  num_pages = mem_get_num_pages();
+  num_pages = np;
+  page_shift = ps;
 
-  /* alloc a list per page */
-  uint i;
-  for(i=0;i<num_pages;i++) {
-    label_list_t *list = (label_list_t *)malloc(sizeof(label_list_t));
-    if(list == NULL) {
-      label_free();
-      return 0;
-    }
-
-    list->first = NULL;
-    list->last = NULL;
-    list->num_nodes = 0;
-
-    mem_set_labels(i, list);
+  /* alloce list array */
+  size_t num_bytes = sizeof(label_list_t) * num_pages;
+  page_lists = (label_list_t *)malloc(num_bytes);
+  if(page_lists == NULL) {
+    return 0;
   }
+  bzero(page_lists, num_bytes);
   return 1;
 }
 
@@ -171,25 +165,23 @@ void label_free(void)
 {
   uint i;
   for(i=0;i<num_pages;i++) {
-    label_list_t *list = (label_list_t *)mem_get_labels(i);
-    if(list != NULL) {
-      label_node_t *node = list->first;
-      while(node != NULL) {
-        label_node_t *next = node->next;
-        label_entry_t *entry = node->entry;
-        if(entry != NULL) {
-          if(cleanup_func != NULL) {
-            cleanup_func(entry);
-          }
-          free(entry);
+    label_list_t *list = &page_lists[i];
+    label_node_t *node = list->first;
+    while(node != NULL) {
+      label_node_t *next = node->next;
+      label_entry_t *entry = node->entry;
+      if(entry != NULL) {
+        if(cleanup_func != NULL) {
+          cleanup_func(entry);
         }
-        free(node);
-        node = next;
+        free(entry);
       }
-      free(list);
-      mem_set_labels(i, NULL);
+      free(node);
+      node = next;
     }
   }
+  free(page_lists);
+  page_lists = NULL;
   total_labels = 0;
 }
 
@@ -217,17 +209,15 @@ label_entry_t **label_get_all(uint *res_num)
   uint off = 0;
   uint i;
   for(i=0;i<num_pages;i++) {
-    label_list_t *list = (label_list_t *)mem_get_labels(i);
-    if(list != NULL) {
-      label_node_t *node = list->first;
-      while(node != NULL) {
-        label_entry_t *entry = node->entry;
-        /* only account first node(page_link==0) of this entry in the page chain */
-        if((entry != NULL) && (node->page_link == NULL)) {
-          result[off++] = entry;
-        }
-        node = node->next;
+    label_list_t *list = &page_lists[i];
+    label_node_t *node = list->first;
+    while(node != NULL) {
+      label_entry_t *entry = node->entry;
+      /* only account first node(page_link==0) of this entry in the page chain */
+      if((entry != NULL) && (node->page_link == NULL)) {
+        result[off++] = entry;
       }
+      node = node->next;
     }
   }
 
@@ -239,11 +229,11 @@ label_entry_t **label_get_all(uint *res_num)
 
 label_entry_t **label_get_for_page(uint page, uint *res_num)
 {
-  label_list_t *list = (label_list_t *)mem_get_labels(page);
-  if(list == NULL) {
+  if(page >= num_pages) {
     *res_num = 0;
     return NULL;
   }
+  label_list_t *list = &page_lists[page];
 
   /* no entries in list? */
   uint n = list->num_nodes;
@@ -286,6 +276,13 @@ label_entry_t *label_add(uint addr, uint size, void *data)
 
   uint end = addr + size - 1;
 
+  /* get page range the entry covers */
+  uint start_page = addr >> page_shift;
+  uint end_page = end >> page_shift;
+  if(end_page >= num_pages) {
+    return NULL;
+  }
+
   /* create new entry */
   label_entry_t *entry = (label_entry_t *)malloc(sizeof(label_entry_t));
   if(entry == NULL) {
@@ -297,13 +294,9 @@ label_entry_t *label_add(uint addr, uint size, void *data)
   entry->data = data;
   entry->node = NULL;
 
-  /* get page range the entry covers */
-  uint start_page = addr >> MEM_PAGE_SHIFT;
-  uint end_page = end >> MEM_PAGE_SHIFT;
   if(start_page == end_page) {
     /* single page entry */
-    label_list_t *list = (label_list_t *)mem_get_labels(start_page);
-    assert(list != NULL);
+    label_list_t *list = &page_lists[start_page];
     if(list_add_sorted(list, entry)) {
       total_labels++;
       return entry;
@@ -315,8 +308,7 @@ label_entry_t *label_add(uint addr, uint size, void *data)
     /* multi page entry */
     uint page = start_page;
     /* first page node is added with sorting */
-    label_list_t *list = (label_list_t *)mem_get_labels(page);
-    assert(list != NULL);
+    label_list_t *list = &page_lists[page];
     label_node_t *n = list_add_sorted(list, entry);
     if(n == NULL) {
       free(entry);
@@ -326,8 +318,7 @@ label_entry_t *label_add(uint addr, uint size, void *data)
     page++;
     /* other page nodes are added to front of list */
     while(page <= end_page) {
-      list = (label_list_t *)mem_get_labels(page);
-      assert(list != NULL);
+      list = &page_lists[page];
       n = list_add_first(list, entry);
       if(n==NULL) {
         label_remove(entry);
@@ -379,15 +370,14 @@ int label_remove_inside(uint addr, uint size)
 
   uint end = addr + size - 1;
 
-  uint start_page = addr >> MEM_PAGE_SHIFT;
-  uint end_page = addr >> MEM_PAGE_SHIFT;
+  uint start_page = addr >> page_shift;
+  uint end_page = addr >> page_shift;
 
   uint num = 0;
   uint page;
   for(page=start_page;page<=end_page;page++) {
     /* get page list */
-    label_list_t *list = (label_list_t *)mem_get_labels(page);
-    assert(list != NULL);
+    label_list_t *list = &page_lists[page];
 
     label_node_t *node = list->first;
     while(node != NULL) {
@@ -411,13 +401,13 @@ int label_remove_inside(uint addr, uint size)
 
 label_entry_t *label_find(uint addr)
 {
-  uint page = addr >> MEM_PAGE_SHIFT;
-
-  /* get associated page label list */
-  label_list_t *list = (label_list_t *)mem_get_labels(page);
-  if(list == NULL) {
+  uint page = addr >> page_shift;
+  if(page >= num_pages) {
     return NULL;
   }
+
+  /* get associated page label list */
+  label_list_t *list = &page_lists[page];
 
   /* run through list */
   label_node_t *node = list->first;
@@ -447,10 +437,7 @@ label_entry_t *label_find(uint addr)
 static uint count_intersects(uint page, uint addr, uint end)
 {
    /* get associated page label list */
-  label_list_t *list = (label_list_t *)mem_get_labels(page);
-  if(list == NULL) {
-    return 0;
-  }
+  label_list_t *list = &page_lists[page];
 
   uint num = 0;
 
@@ -482,10 +469,7 @@ static uint count_intersects(uint page, uint addr, uint end)
 static int store_intersects(uint page, uint addr, uint end, label_entry_t **result)
 {
    /* get associated page label list */
-  label_list_t *list = (label_list_t *)mem_get_labels(page);
-  if(list == NULL) {
-    return 0;
-  }
+  label_list_t *list = &page_lists[page];
 
   uint num = 0;
 
@@ -522,8 +506,8 @@ label_entry_t **label_find_intersecting(uint addr, uint size, uint *res_size)
   }
 
   uint end = addr + size - 1;
-  uint start_page = addr >> MEM_PAGE_SHIFT;
-  uint end_page = end >> MEM_PAGE_SHIFT;
+  uint start_page = addr >> page_shift;
+  uint end_page = end >> page_shift;
 
   /* first count total intersects */
   uint num = 0;
