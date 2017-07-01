@@ -11,21 +11,28 @@ cdef class Label:
     l.entry = e
     return l
 
-  def addr(self):
+  def addr(Label self):
     return self.entry.addr
 
-  def end(self):
+  def end(Label self):
     return self.entry.end
 
-  def size(self):
+  def size(Label self):
     return self.entry.size
 
-  def data(self):
+  def data(Label self):
     return <object>self.entry.data
 
-  def __repr__(self):
+  def __repr__(Label self):
     return "Label[@%08x+%08x,%08x,%s]" % \
       (self.entry.addr, self.entry.size, self.entry.end, <object>self.entry.data)
+
+  def __richcmp__(Label self, Label other, int op):
+    if op == 2: # __eq__
+      return self.entry == other.entry
+    else:
+      err_msg = "op {0} isn't implemented yet".format(op)
+      raise NotImplementedError(err_msg)
 
 # helper funcs
 
@@ -38,6 +45,9 @@ cdef void cleanup_label(label.label_entry_t *entry):
 
 def get_num_labels():
   return label.label_get_num_labels()
+
+def get_num_page_labels(uint32_t page):
+  return label.label_get_num_page_labels(page)
 
 def get_all_labels():
   cdef label.label_entry_t **result
@@ -52,7 +62,7 @@ def get_all_labels():
   free(result)
   return res
 
-def get_page_labels(uint16_t page):
+def get_page_labels(uint32_t page):
   cdef label.label_entry_t **result
   cdef label.uint res_size
   result = label.label_get_for_page(page, &res_size)

@@ -33,6 +33,7 @@ extern int  label_init(uint num_pages, uint page_shift);
 extern void label_free(void);
 
 extern int  label_get_num_labels(void);
+extern int  label_get_num_page_labels(uint page);
 extern label_entry_t **label_get_all(uint *res_num);
 extern label_entry_t **label_get_for_page(uint page, uint *res_num);
 

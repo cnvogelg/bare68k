@@ -143,6 +143,7 @@ void list_remove_node(label_list_t *l, label_node_t *n)
   if(n->next != NULL) {
     n->next->prev = n->prev;
   }
+  l->num_nodes--;
 }
 
 /* ----- API ----- */
@@ -169,13 +170,18 @@ void label_free(void)
     label_node_t *node = list->first;
     while(node != NULL) {
       label_node_t *next = node->next;
-      label_entry_t *entry = node->entry;
-      if(entry != NULL) {
-        if(cleanup_func != NULL) {
-          cleanup_func(entry);
+
+      /* remove attached entry only at beginning of chain */
+      if(node->page_link == NULL) {
+        label_entry_t *entry = node->entry;
+        if(entry != NULL) {
+          if(cleanup_func != NULL) {
+            cleanup_func(entry);
+          }
+          free(entry);
         }
-        free(entry);
       }
+
       free(node);
       node = next;
     }
@@ -188,6 +194,15 @@ void label_free(void)
 int label_get_num_labels(void)
 {
   return total_labels;
+}
+
+int label_get_num_page_labels(uint page)
+{
+  if(page >= num_pages) {
+    return 0;
+  }
+  label_list_t *list = &page_lists[page];
+  return list->num_nodes;
 }
 
 label_entry_t **label_get_all(uint *res_num)
@@ -260,7 +275,7 @@ label_entry_t **label_get_for_page(uint page, uint *res_num)
   assert(off == n);
 
   *res_num = n;
-  return NULL;
+  return result;
 }
 
 void label_set_cleanup_func(label_cleanup_func_t func)
@@ -297,7 +312,9 @@ label_entry_t *label_add(uint addr, uint size, void *data)
   if(start_page == end_page) {
     /* single page entry */
     label_list_t *list = &page_lists[start_page];
-    if(list_add_sorted(list, entry)) {
+    label_node_t *n = list_add_sorted(list, entry);
+    if(n != NULL) {
+      entry->node = n;
       total_labels++;
       return entry;
     } else {
@@ -329,6 +346,8 @@ label_entry_t *label_add(uint addr, uint size, void *data)
       last = n;
       page++;
     }
+    /* store last node as begin of chain */
+    entry->node = n;
     total_labels++;
     return entry;
   }
@@ -339,6 +358,7 @@ int label_remove(label_entry_t *label)
   if(label == NULL) {
     return 0;
   }
+
   /* get node chain of entry */
   label_node_t *node = label->node;
   while(node != NULL) {
@@ -423,7 +443,7 @@ label_entry_t *label_find(uint addr)
     uint e_end = entry->end;
 
     /* addr inside label entry? gotcha! */
-    if((e_addr >= addr) && (addr <= e_end)) {
+    if((e_addr <= addr) && (addr <= e_end)) {
       return entry;
     }
 

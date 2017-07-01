@@ -16,6 +16,7 @@ cdef extern from "binding/label.h":
   void label_free()
 
   int  label_get_num_labels()
+  int  label_get_num_page_labels(uint page)
   label_entry_t **label_get_all(uint *res_num)
   label_entry_t **label_get_for_page(uint page, uint *res_num)
 
