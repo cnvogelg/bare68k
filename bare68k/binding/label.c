@@ -481,6 +481,7 @@ static uint count_intersects(uint page, uint addr, uint end)
         num++;
       }
     }
+    node = node->next;
   }
 
   return num;
@@ -513,6 +514,7 @@ static int store_intersects(uint page, uint addr, uint end, label_entry_t **resu
         result[num++] = entry;
       }
     }
+    node = node->next;
   }
 
   return num;
@@ -557,5 +559,5 @@ label_entry_t **label_find_intersecting(uint addr, uint size, uint *res_size)
   assert(num == got);
 
   *res_size = num;
-  return NULL;
+  return result;
 }

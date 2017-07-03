@@ -127,3 +127,18 @@ def test_label_cross_add_remove(mach):
   assert None == get_all_labels()
   assert None == get_page_labels(0)
   assert None == get_page_labels(1)
+
+def test_label_remove_inside(mach):
+  labels = _create_random(1024, 128)
+  assert 1024 == get_num_labels()
+  remove_labels_inside(128, 128*2)
+  assert 1022 == get_num_labels()
+
+def test_label_find_intersecting(mach):
+  labels = _create_random(1024, 128)
+  l1 = find_intersecting_labels(128, 128)
+  assert l1 == [labels[1]]
+  l2 = find_intersecting_labels(128, 129)
+  assert l2 == [labels[1], labels[2]]
+  l3 = find_intersecting_labels(150, 128)
+  assert l3 == [labels[1], labels[2]]
