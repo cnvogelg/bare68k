@@ -14,7 +14,7 @@ import os
 
 from bare68k import *
 from bare68k.api import *
-from bare68k.api.consts import *
+from bare68k.consts import *
 
 def ppunpack(data, unpacker_code, do_trace=False):
   """unpack the given data blob and return the unpacked data"""

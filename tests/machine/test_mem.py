@@ -3,7 +3,7 @@ from __future__ import print_function
 import pytest
 import traceback
 
-from bare68k.api.consts import *
+from bare68k.consts import *
 from bare68k.machine import *
 
 @pytest.fixture(params=[1,2,3],

@@ -1,6 +1,6 @@
 import pytest
 from bare68k import *
-from bare68k.api.consts import *
+from bare68k.consts import *
 from bare68k.errors import *
 
 def test_cpu_default():
