@@ -33,17 +33,18 @@ def read(*parts):
   return open(os.path.join(here, *parts), 'r').read()
 
 gen_src = [
-  'gen/m68kopac.c',
-  'gen/m68kopdm.c',
-  'gen/m68kopnz.c',
-  'gen/m68kops.c'
+  'm68kopac.c',
+  'm68kopdm.c',
+  'm68kopnz.c',
+  'm68kops.c'
 ]
 
 gen_tool = "build/m68kmake"
-gen_tool_src = "bare68k/musashi/m68kmake.c"
-gen_tool_obj = "build/bare68k/musashi/m68kmake.o"
-gen_input = "bare68k/musashi/m68k_in.c"
-gen_dir = "gen"
+gen_tool_src = "bare68k/machine_src/musashi/m68kmake.c"
+gen_tool_obj = "build/bare68k/machine_src/musashi/m68kmake.o"
+gen_input = "bare68k/machine_src/musashi/m68k_in.c"
+gen_dir = "bare68k/machine_src/gen"
+gen_src = map(lambda x : os.path.join(gen_dir,x), gen_src)
 build_dir = "build"
 
 
@@ -115,48 +116,52 @@ cmdclass = {
 }
 
 if use_cython:
-  cython_src = 'bare68k/cython/machine.pyx'
+  cython_src = 'bare68k/machine.pyx'
 else:
-  cython_src = 'bare68k/cython/machine.c'
+  cython_src = 'bare68k/machine.c'
 
 sourcefiles = gen_src + [
   cython_src,
 
-  'bare68k/binding/cpu.c',
-  'bare68k/binding/mem.c',
-  'bare68k/binding/traps.c',
-  'bare68k/binding/tools.c',
-  'bare68k/binding/label.c',
+  'bare68k/machine_src/glue/cpu.c',
+  'bare68k/machine_src/glue/mem.c',
+  'bare68k/machine_src/glue/traps.c',
+  'bare68k/machine_src/glue/tools.c',
+  'bare68k/machine_src/glue/label.c',
 
-  'bare68k/musashi/m68kcpu.c',
-  'bare68k/musashi/m68kdasm.c',
+  'bare68k/machine_src/musashi/m68kcpu.c',
+  'bare68k/machine_src/musashi/m68kdasm.c',
 ]
 depends = [
-  'bare68k/cython/cpu.pxd',
-  'bare68k/cython/mem.pxd',
-  'bare68k/cython/traps.pxd',
-  'bare68k/cython/tools.pxd',
-  'bare68k/cython/label.pxd',
+  'bare68k/machine_src/cpu.pxd',
+  'bare68k/machine_src/mem.pxd',
+  'bare68k/machine_src/traps.pxd',
+  'bare68k/machine_src/tools.pxd',
+  'bare68k/machine_src/label.pxd',
 
-  'bare68k/cython/cpu.pyx',
-  'bare68k/cython/mem.pyx',
-  'bare68k/cython/traps.pyx',
-  'bare68k/cython/tools.pyx',
-  'bare68k/cython/disasm.pyx',
-  'bare68k/cython/label.pyx',
+  'bare68k/machine_src/cpu.pyx',
+  'bare68k/machine_src/mem.pyx',
+  'bare68k/machine_src/traps.pyx',
+  'bare68k/machine_src/tools.pyx',
+  'bare68k/machine_src/disasm.pyx',
+  'bare68k/machine_src/label.pyx',
 
-  'bare68k/binding/cpu.h',
-  'bare68k/binding/mem.h',
-  'bare68k/binding/traps.h',
-  'bare68k/binding/tools.h'
+  'bare68k/machine_src/glue/cpu.h',
+  'bare68k/machine_src/glue/mem.h',
+  'bare68k/machine_src/glue/traps.h',
+  'bare68k/machine_src/glue/tools.h',
+  'bare68k/machine_src/glue/tool'
 ]
 inc_dirs = [
-  'bare68k/musashi', 'bare68k/binding', 'bare68k', 'gen'
+  'bare68k/machine_src',
+  'bare68k/machine_src/musashi',
+  'bare68k/machine_src/glue',
+  gen_dir
 ]
 
 extensions = [Extension("bare68k.machine", sourcefiles, depends=depends, include_dirs=inc_dirs)]
 if use_cython:
-  extensions = cythonize(extensions)
+  extensions = cythonize(extensions, include_path=['bare68k/machine_src'])
 
 setup(
     name = "bare68k",

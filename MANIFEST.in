@@ -1,7 +1,6 @@
 include MANIFEST.in
 include README.md
-recursive-include bare68k/cython *.pyx *.pxd
-recursive-include bare68k/musashi *.c *.h readme.txt history.txt
-recursive-include bare68k/binding *.c *.h
+recursive-include bare68k *.pyx *.pxd *.c *.h
+recursive-include bare68k/machine_src/musashi readme.txt history.txt
 recursive-include gen *.c *.h
 recursive-include samples *.bin *.s *.py

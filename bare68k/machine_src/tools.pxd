@@ -1,7 +1,7 @@
 from libc.stdint cimport uint32_t
 
 # tools.h
-cdef extern from "binding/tools.h":
+cdef extern from "glue/tools.h":
 
   ctypedef void (*free_func_t)(void *data)
 

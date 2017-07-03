@@ -1,7 +1,7 @@
 from libc.stdint cimport uint16_t
 
 # traps.h
-cdef extern from "binding/traps.h":
+cdef extern from "glue/traps.h":
 
   cdef enum:
     TRAP_DEFAULT  = 0

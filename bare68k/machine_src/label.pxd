@@ -1,5 +1,5 @@
 # label.h
-cdef extern from "binding/label.h":
+cdef extern from "glue/label.h":
 
   ctypedef unsigned int uint
 

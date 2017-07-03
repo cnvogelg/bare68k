@@ -1,7 +1,7 @@
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 
 # mem.h
-cdef extern from "binding/mem.h":
+cdef extern from "glue/mem.h":
   ctypedef int (*cpu_trace_func_t)(int flag, uint32_t addr, uint32_t val, void **data)
   ctypedef void (*api_trace_func_t)(int flag, uint32_t addr, uint32_t val, uint32_t extra)
   ctypedef int (*special_read_func_t)(int access, uint32_t addr, uint32_t *val, void *in_data, void **out_data)

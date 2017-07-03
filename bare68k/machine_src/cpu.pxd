@@ -1,7 +1,7 @@
 from libc.stdint cimport uint32_t, uint64_t
 
 # cpu.h
-cdef extern from "binding/cpu.h":
+cdef extern from "glue/cpu.h":
 
   cdef enum:
     CPU_EVENT_CALLBACK_ERROR = 0
