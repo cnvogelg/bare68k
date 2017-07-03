@@ -1,4 +1,3 @@
-import consts
 import cpu
 import disasm
 import mem
