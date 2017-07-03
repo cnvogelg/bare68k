@@ -5,8 +5,8 @@ import time
 import logging
 
 import bare68k.machine as mach
-import bare68k.cpu as cpu
-import bare68k.mem as mem
+import bare68k.api.cpu as cpu
+import bare68k.api.mem as mem
 from bare68k.memcfg import *
 from bare68k.consts import *
 from bare68k.errors import *
