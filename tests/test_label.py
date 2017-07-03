@@ -4,7 +4,7 @@ import pytest
 import traceback
 import random
 
-from bare68k.consts import *
+from bare68k.api.consts import *
 from bare68k.machine import *
 
 use_labels = True

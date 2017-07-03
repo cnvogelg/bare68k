@@ -3,7 +3,7 @@ from __future__ import print_function
 import pytest
 
 from bare68k import *
-from bare68k.consts import *
+from bare68k.api.consts import *
 
 def test_get_current_pc_line(mach):
     line = dump.get_current_pc_line()

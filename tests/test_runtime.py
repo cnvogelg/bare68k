@@ -2,7 +2,8 @@ import pytest
 import traceback
 
 from bare68k import *
-from bare68k.consts import *
+from bare68k.api import *
+from bare68k.api.consts import *
 
 RESET_OPCODE = 0x4e70
 NOP_OPCODE = 0x4e71
