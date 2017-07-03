@@ -3,10 +3,11 @@
 import logging
 
 import bare68k.machine as mach
-import bare68k.cpu as cpu
-import bare68k.mem as mem
-import bare68k.dump as dump
+import bare68k.api.cpu as cpu
+import bare68k.api.mem as mem
 from bare68k.consts import *
+
+import dump
 
 # globals
 _log_instr = logging.getLogger(__name__ + ".instr")

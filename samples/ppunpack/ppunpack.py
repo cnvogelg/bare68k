@@ -73,7 +73,7 @@ def ppunpack(data, unpacker_code, do_trace=False):
 
   # dump final CPU state
   print("final state:")
-  dump.print_cpu_state()
+  debug.dump.print_cpu_state()
 
   # clean up bare68k environment
   runtime.shutdown()

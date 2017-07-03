@@ -1,10 +1,7 @@
 from __future__ import print_function
 
-import struct
-
 import bare68k.machine as mach
-import bare68k.cpu as cpu
-import bare68k.mem as mem
+import bare68k.api.cpu as cpu
 
 def default_instr_annotate(pc, words):
   # get raw words

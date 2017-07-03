@@ -4,6 +4,7 @@ import pytest
 
 from bare68k import *
 from bare68k.consts import *
+from bare68k.debug import *
 
 def test_get_current_pc_line(mach):
     line = dump.get_current_pc_line()
