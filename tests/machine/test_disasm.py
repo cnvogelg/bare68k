@@ -4,7 +4,6 @@ import pytest
 
 from bare68k.api.consts import *
 from bare68k.machine import *
-from bare68k.api import disasm
 
 def test_disassemble(mach):
   w16(0x100, 0x4e75) # rts
@@ -34,7 +33,7 @@ def test_disassemble(mach):
 
 def test_disassemble_api(mach):
   w16(0x100, 0x4e75) # rts
-  pc, words, line = disasm.disassemble(0x100)
+  pc, words, line = disassemble(0x100)
   print(words, line)
   w1 = [0x4e75]
   l1 = "rts"
@@ -44,7 +43,7 @@ def test_disassemble_api(mach):
 
   w16(0x102, 0x4eb9) # jsr
   w32(0x104, 0xdeadbeef)
-  pc, words, line = disasm.disassemble(0x102)
+  pc, words, line = disassemble(0x102)
   print(words, line)
   w2 = [0x4eb9, 0xdead, 0xbeef]
   l2 = "jsr     $deadbeef.l"
@@ -53,7 +52,7 @@ def test_disassemble_api(mach):
   assert pc == 0x102
 
   # test range
-  res = disasm.disassemble_range(0x100, 0x108)
+  res = disassemble_range(0x100, 0x108)
   print("range:", res)
   assert res == [(0x100, w1, l1), (0x102, w2, l2)]
 
@@ -97,8 +96,8 @@ def test_disassemble_buffer(mach):
 
 def test_disassemble_buffer_api(mach):
   buf1 = b"\x4e\x75"
-  disasm.disassemble_buffer(buf1)
-  pc, words, line = disasm.disassemble(0)
+  disassemble_buffer(buf1)
+  pc, words, line = disassemble(0)
   print(words, line)
   w1 = [0x4e75]
   l1 = "rts"
@@ -107,8 +106,8 @@ def test_disassemble_buffer_api(mach):
   assert pc == 0
 
   buf2 = b"\x4e\xb9\xde\xad\xbe\xef"
-  disasm.disassemble_buffer(buf2)
-  pc, words, line = disasm.disassemble(0)
+  disassemble_buffer(buf2)
+  pc, words, line = disassemble(0)
   print(words, line)
   w2 = [0x4eb9, 0xdead, 0xbeef]
   l2 = "jsr     $deadbeef.l"
@@ -118,13 +117,13 @@ def test_disassemble_buffer_api(mach):
 
   # test range
   buf3 = buf1 + buf2
-  disasm.disassemble_buffer(buf3)
-  res = disasm.disassemble_range(0,8)
+  disassemble_buffer(buf3)
+  res = disassemble_range(0,8)
   assert res == [(0, w1, l1), (2, w2, l2)]
 
   # back to mem disassembly
-  disasm.disassemble_memory()
-  pc, words, line = disasm.disassemble(0)
+  disassemble_memory()
+  pc, words, line = disassemble(0)
   print(words, line)
   assert words == [0, 0]
   assert line == "ori.b   #$0, D0"
