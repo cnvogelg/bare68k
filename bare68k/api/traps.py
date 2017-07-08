@@ -2,14 +2,14 @@
 
 import bare68k.machine as mach
 
-setup = mach.trap_setup
-setup_abs = mach.trap_setup_abs
-free = mach.trap_free
+trap_setup = mach.trap_setup
+trap_setup_abs = mach.trap_setup_abs
+trap_free = mach.trap_free
 
-get_num_free = mach.traps_get_num_free
+traps_get_num_free = mach.traps_get_num_free
 
-enable = mach.trap_enable
-disable = mach.trap_disable
+trap_enable = mach.trap_enable
+trap_disable = mach.trap_disable
 
-global_enable = mach.traps_global_enable
-global_disable = mach.traps_global_disable
+traps_global_enable = mach.traps_global_enable
+traps_global_disable = mach.traps_global_disable

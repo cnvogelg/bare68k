@@ -74,7 +74,7 @@ def test_rt_trap_cpu(rt):
 def test_rt_trap_unbound(rt):
   """enable unbound trap and get a ALINE_TRAP event"""
   PROG_BASE = rt.get_reset_pc()
-  traps.enable(0xa000)
+  traps.trap_enable(0xa000)
   mem.w16(PROG_BASE, 0xa000)
   ri = rt.run()
   assert ri.get_last_result() == CPU_EVENT_ALINE_TRAP
@@ -89,7 +89,7 @@ def test_rt_trap_setup(rt):
   """setup a bound trap that gets called automatically"""
   PROG_BASE = rt.get_reset_pc()
   th = TrapHelper()
-  op = traps.setup(TRAP_DEFAULT, th)
+  op = traps.trap_setup(TRAP_DEFAULT, th)
   mem.w16(PROG_BASE, op)
   mem.w16(PROG_BASE + 2, RESET_OPCODE)
   ri = rt.run()
@@ -101,7 +101,7 @@ def test_rt_trap_fail(rt):
   PROG_BASE = rt.get_reset_pc()
   def fail(event):
     raise ValueError("failed!")
-  op = traps.setup(TRAP_DEFAULT, fail)
+  op = traps.trap_setup(TRAP_DEFAULT, fail)
   mem.w16(PROG_BASE, op)
   mem.w16(PROG_BASE + 2, RESET_OPCODE)
   with pytest.raises(ValueError):
@@ -112,7 +112,7 @@ def test_rt_trap_catch(rt):
   PROG_BASE = rt.get_reset_pc()
   def fail(event):
     raise ValueError("failed!")
-  op = traps.setup(TRAP_DEFAULT, fail)
+  op = traps.trap_setup(TRAP_DEFAULT, fail)
   mem.w16(PROG_BASE, op)
   mem.w16(PROG_BASE + 2, RESET_OPCODE)
   try:

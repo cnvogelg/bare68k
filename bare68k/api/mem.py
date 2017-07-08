@@ -31,3 +31,28 @@ ws32 = mach.ws32
 rs8 = mach.rs8
 rs16 = mach.rs16
 rs32 = mach.rs32
+
+# configure mem
+add_memory = mach.add_memory
+add_special = mach.add_special
+set_empty_value = mach.set_empty_value
+add_empty = mach.add_empty
+
+# trace
+set_mem_cpu_trace_func = mach.set_mem_cpu_trace_func
+set_mem_api_trace_func = mach.set_mem_api_trace_func
+
+# dump
+get_cpu_fc_str = mach.get_cpu_fc_str
+get_cpu_access_str = mach.get_cpu_access_str
+get_cpu_mem_str = mach.get_cpu_mem_str
+get_api_access_str = mach.get_api_access_str
+get_api_mem_str = mach.get_api_mem_str
+
+# testing cpu access
+cpu_w8 = mach.cpu_w8
+cpu_w16 = mach.cpu_w16
+cpu_w32 = mach.cpu_w32
+cpu_r8 = mach.cpu_r8
+cpu_r16 = mach.cpu_r16
+cpu_r32 = mach.cpu_r32

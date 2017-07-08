@@ -7,11 +7,10 @@ import logging
 import bare68k.machine as mach
 import bare68k.api.cpu as cpu
 import bare68k.api.mem as mem
-from bare68k.memcfg import *
 from bare68k.consts import *
 from bare68k.errors import *
-from bare68k.cpucfg import CPUConfig
-from bare68k.memcfg import MemoryConfig
+from bare68k.cpucfg import *
+from bare68k.memcfg import *
 
 # globals
 _cpu_cfg = None

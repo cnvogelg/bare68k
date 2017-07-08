@@ -3,8 +3,8 @@
 import bare68k.machine as mach
 
 # context handling
-get_context = mach.get_cpu_context
-set_context = mach.set_cpu_context
+get_cpu_context = mach.get_cpu_context
+set_cpu_context = mach.set_cpu_context
 
 # register access
 r_reg = mach.r_reg
@@ -21,3 +21,29 @@ r_sp = mach.r_sp
 w_sp = mach.w_sp
 r_sr = mach.r_sr
 w_sr = mach.w_sr
+
+# debug
+get_sr_str = mach.get_sr_str
+get_regs = mach.get_regs
+get_instr_str = mach.get_instr_str
+
+# hooks
+set_instr_hook_func = mach.set_instr_hook_func
+
+# irq handling
+set_irq = mach.set_irq
+set_int_ack_func = mach.set_int_ack_func
+
+# run
+pulse_reset = mach.pulse_reset
+execute = mach.execute
+execute_to_event = mach.execute
+execute_to_event_checked = mach.execute_to_event_checked
+
+# run info
+get_info = mach.get_info
+get_num_events = mach.get_num_events
+get_event = mach.get_event
+get_done_cycles = mach.get_done_cycles
+get_total_cycles = mach.get_total_cycles
+clear_info = mach.clear_info
