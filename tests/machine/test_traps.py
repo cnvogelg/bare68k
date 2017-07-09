@@ -78,8 +78,8 @@ def test_empty_trap(mach):
 def test_empty_trap_def_handler(mach):
   def huhu():
     print("huhu")
-  event_handlers[CPU_EVENT_ALINE_TRAP] = huhu
-  assert event_handlers[CPU_EVENT_ALINE_TRAP] is huhu
+  set_event_handler(CPU_EVENT_ALINE_TRAP, huhu)
+  assert get_event_handler(CPU_EVENT_ALINE_TRAP) is huhu
   w_pc(0x100)
   w16(0x100, 0xa000)
   trap_enable(0xa000)

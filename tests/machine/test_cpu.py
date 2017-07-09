@@ -109,7 +109,7 @@ def test_reset(mach):
 def test_reset_def_handler(mach):
   def bla():
     print("bla")
-  event_handlers[CPU_EVENT_RESET] = bla
+  set_event_handler(CPU_EVENT_RESET, bla)
   w16(0x100, RESET_OPCODE)
   assert r16(0x100) == RESET_OPCODE
   w_pc(0x100)

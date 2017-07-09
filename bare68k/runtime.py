@@ -4,7 +4,7 @@
 import time
 import logging
 
-import bare68k.machine as mach
+import bare68k.api.machine as mach
 import bare68k.api.cpu as cpu
 import bare68k.api.mem as mem
 from bare68k.consts import *
@@ -110,23 +110,23 @@ def _setup_mem(mem_cfg):
       flags = MEM_FLAGS_RW
       if mr.traps:
         flags |= MEM_FLAGS_TRAPS
-      mach.add_memory(start, size, flags)
+      mem.add_memory(start, size, flags)
       _log.info("memory: RAM @%04x +%04x flags=%x", start, size, flags)
     elif mt == MEM_ROM:
       flags = MEM_FLAGS_READ
       if mr.traps:
         flags |= MEM_FLAGS_TRAPS
-      mach.add_memory(start, size, flags)
+      mem.add_memory(start, size, flags)
       data = mr.opts
       if data is not None:
         mem.w_block(mr.start_addr, mr.opts)
       _log.info("memory: ROM @%04x +%04x flags=%x", start, size, flags)
     elif mt == MEM_SPECIAL:
       r_func, w_func = mr.opts
-      mach.add_special(start, size, r_func, w_func)
+      mem.add_special(start, size, r_func, w_func)
       _log.info("memory: spc @%04x +%04x", start, size)
     elif mt == MEM_EMPTY:
-      mach.add_empty(start, size, MEM_FLAGS_RW)
+      mem.add_empty(start, size, MEM_FLAGS_RW)
       _log.info("memory: --- @%04x +%04x", start, size)
     else:
       raise ValueError("Invalid memory type: %d" % mt)
@@ -159,9 +159,9 @@ def reset(init_pc, init_sp=0x400):
   mem.w32(0, init_sp)
   mem.w32(4, init_pc)
   # now pulse reset
-  mach.pulse_reset()
+  cpu.pulse_reset()
   # clear info to reset cycle counts
-  mach.clear_info()
+  cpu.clear_info()
   _log.info("reset: pc=%08x, sp=%08x", init_pc, init_sp)
 
 def get_reset_pc():
@@ -199,10 +199,10 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True, max_cycles=None
       start = timer()
       if max_cycles is None:
         # execute CPU code until event occurs
-        num_events = mach.execute_to_event_checked(cycles_per_run)
+        num_events = cpu.execute_to_event_checked(cycles_per_run)
       else:
         # run for a given number of cycles
-        num_events = mach.execute(max_cycles)
+        num_events = cpu.execute(max_cycles)
         stay = False
     except KeyboardInterrupt as e:
       # either abort execution (default) or re-raise exception
@@ -216,7 +216,7 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True, max_cycles=None
       cpu_time += end - start
 
     # dispatch events
-    run_info = mach.get_info()
+    run_info = cpu.get_info()
     results = []
     for event in run_info.events:
       handler = event.handler
@@ -237,29 +237,30 @@ def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True, max_cycles=None
 
   # final timing
   total_time = total_end - total_start
-  return RunInfo(total_time, cpu_time, mach.get_total_cycles(), results)
+  return RunInfo(total_time, cpu_time, cpu.get_total_cycles(), results)
 
 def _setup_handlers():
   """internal setter for all machine event handlers"""
-  eh = mach.event_handlers
-  eh[CPU_EVENT_CALLBACK_ERROR] = handler_cb_error
-  eh[CPU_EVENT_RESET] = handler_reset
-  eh[CPU_EVENT_ALINE_TRAP] = handler_aline_trap
-  eh[CPU_EVENT_MEM_ACCESS] = handler_mem_access
-  eh[CPU_EVENT_MEM_BOUNDS] = handler_mem_bounds
-  eh[CPU_EVENT_MEM_TRACE] = handler_mem_trace
-  eh[CPU_EVENT_MEM_SPECIAL] = handler_mem_special
-  eh[CPU_EVENT_INSTR_HOOK] = handler_instr_hook
-  eh[CPU_EVENT_INT_ACK] = handler_int_ack
-  eh[CPU_EVENT_BREAKPOINT] = handler_breakpoint
-  eh[CPU_EVENT_WATCHPOINT] = handler_watchpoint
-  eh[CPU_EVENT_TIMER] = handler_timer
+  eh = {
+    CPU_EVENT_CALLBACK_ERROR: handler_cb_error,
+    CPU_EVENT_RESET: handler_reset,
+    CPU_EVENT_ALINE_TRAP: handler_aline_trap,
+    CPU_EVENT_MEM_ACCESS: handler_mem_access,
+    CPU_EVENT_MEM_BOUNDS: handler_mem_bounds,
+    CPU_EVENT_MEM_TRACE: handler_mem_trace,
+    CPU_EVENT_MEM_SPECIAL: handler_mem_special,
+    CPU_EVENT_INSTR_HOOK: handler_instr_hook,
+    CPU_EVENT_INT_ACK: handler_int_ack,
+    CPU_EVENT_BREAKPOINT: handler_breakpoint,
+    CPU_EVENT_WATCHPOINT: handler_watchpoint,
+    CPU_EVENT_TIMER: handler_timer
+  }
+  for e in eh:
+    cpu.set_event_handler(e, eh[e])
 
 def set_handler(event_type, handler):
   """set a custom handler for an event type and overwrite default handler"""
-  if event_type < 0 or event_type >= CPU_NUM_EVENTS:
-    raise ValueError("Invalid event type")
-  mach.event_handlers[event_type] = handler
+  cpu.set_event_handler(event_type, handler)
 
 # ----- default handlers -----
 
@@ -304,14 +305,14 @@ def handler_aline_trap(event):
 
 def handler_mem_access(event):
   """default handler for invalid memory accesses"""
-  mem_str = mach.get_cpu_mem_str(event.flags, event.addr, event.value)
+  mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
   _log.error("MEM ACCESS: %s", mem_str)
   # quit run loop:
   return CPU_EVENT_MEM_ACCESS
 
 def handler_mem_bounds(event):
   """default handler for invalid memory accesses beyond max pages"""
-  mem_str = mach.get_cpu_mem_str(event.flags, event.addr, event.value)
+  mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
   _log.error("MEM BOUNDS: %s", mem_str)
   # quit run loop:
   return CPU_EVENT_MEM_BOUNDS
@@ -332,7 +333,7 @@ def handler_breakpoint(event):
   addr = event.addr
   bp_id = event.value
   mem_flags = event.flags
-  mf_str = mach.get_cpu_fc_str(mem_flags)
+  mf_str = mem.get_cpu_fc_str(mem_flags)
   user_data = event.data
   _log.info("BREAKPOINT: @%08x #%d flags=%s data=%s",
             addr, bp_id, mf_str, user_data)
@@ -342,7 +343,7 @@ def handler_watchpoint(event):
   addr = event.addr
   bp_id = event.value
   mem_flags = event.flags
-  mf_str = mach.get_cpu_access_str(mem_flags)
+  mf_str = mem.get_cpu_access_str(mem_flags)
   user_data = event.data
   _log.info("WATCHPOINT: @%08x #%d flags=%s data=%s",
             addr, bp_id, mf_str, user_data)

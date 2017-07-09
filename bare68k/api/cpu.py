@@ -47,3 +47,8 @@ get_event = mach.get_event
 get_done_cycles = mach.get_done_cycles
 get_total_cycles = mach.get_total_cycles
 clear_info = mach.clear_info
+
+# events
+set_event_handler = mach.set_event_handler
+get_event_handler = mach.get_event_handler
+clear_event_handlers = mach.clear_event_handlers

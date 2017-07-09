@@ -15,11 +15,36 @@ import sys
 
 # globals
 
-event_handlers = [None] * cpu.CPU_NUM_EVENTS
+cdef object event_handlers = [None] * cpu.CPU_NUM_EVENTS
+cdef int is_init = 0
+
+# ---- handler access -----
+
+cpdef clear_event_handlers():
+  global event_handlers
+  for i in range(len(event_handlers)):
+    event_handlers[i] = None
+
+cpdef set_event_handler(int offset, object handler):
+  global event_handlers
+  if offset < 0 or offset >= cpu.CPU_NUM_EVENTS:
+    raise ValueError("invalid handler offset")
+  event_handlers[offset] = handler
+
+cpdef get_event_handler(int offset):
+  global event_handlers
+  if offset < 0 or offset >= cpu.CPU_NUM_EVENTS:
+    raise ValueError("invalid handler offset")
+  return event_handlers[offset]
 
 # ----- API -----
 
 def init(int cpu_type, int num_pages, bool with_labels=False):
+  global is_init
+  if is_init == 1:
+    raise RuntimeError("already init called")
+  is_init = 1
+
   cpu.cpu_init(cpu_type)
   mem.mem_init(num_pages)
   traps.traps_init()
@@ -32,12 +57,14 @@ def init(int cpu_type, int num_pages, bool with_labels=False):
   cpu.cpu_set_cleanup_event_func(cleanup_event)
   mem.mem_set_special_cleanup(mem_special_cleanup)
 
-  # clear handlers
-  global event_handlers
-  for i in range(len(event_handlers)):
-    event_handlers[i] = None
+  clear_event_handlers()
 
 def shutdown(bool with_labels=False):
+  global is_init
+  if is_init == 0:
+    raise RuntimeError("call init first")
+  is_init = 0
+
   set_mem_cpu_trace_func(None)
   set_mem_api_trace_func(None)
   set_instr_hook_func(None)
@@ -51,6 +78,11 @@ def shutdown(bool with_labels=False):
   mem.mem_free()
   traps.traps_shutdown()
   tools.tools_free()
+
+  clear_event_handlers()
+
+def is_initialized():
+  return is_init
 
 # modules
 include "cpu.pyx"

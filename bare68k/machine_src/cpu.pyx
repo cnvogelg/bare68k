@@ -26,11 +26,10 @@ cdef class Event:
        self.data, self.handler)
 
 cdef Event create_event(cpu.event_t *event):
-  global event_handlers
   cdef int ev_type = event.type
   cdef object data = None
   # lookup handler
-  cdef object handler = event_handlers[ev_type]
+  cdef object handler = get_event_handler(ev_type)
 
   # extract python object
   if event.data != NULL:
