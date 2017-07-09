@@ -22,7 +22,7 @@ def ppunpack(data, unpacker_code, do_trace=False):
 
   # setup bare68k
   runtime.log_setup()
-  runtime.init_quick(ram_pages=1)
+  rt = runtime.init_quick(ram_pages=1)
 
   # write unpacker code to simulated RAM
   code_addr = 0x1000
@@ -38,7 +38,7 @@ def ppunpack(data, unpacker_code, do_trace=False):
   data_out_addr = data_in_addr + data_in_size
 
   # perform reset of virtual CPU
-  runtime.reset(code_addr, stack_addr)
+  rt.reset(code_addr, stack_addr)
 
   # place a RESET opcode at address 0 so the RTS in the code jumps to
   # this end of run()
@@ -61,7 +61,7 @@ def ppunpack(data, unpacker_code, do_trace=False):
   tools.setup_pc_trace(16)
 
   # go!
-  ri = runtime.run()
+  ri = rt.run()
   if ri.is_done():
     print(ri, "CPU MHZ=", ri.calc_cpu_mhz())
     # get result in reg D0
@@ -76,7 +76,7 @@ def ppunpack(data, unpacker_code, do_trace=False):
   debug.dump.print_cpu_state()
 
   # clean up bare68k environment
-  runtime.shutdown()
+  rt.shutdown()
 
   return data_out
 

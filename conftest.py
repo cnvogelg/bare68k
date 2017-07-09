@@ -28,7 +28,8 @@ def rt(request):
   mem_cfg = MemoryConfig()
   mem_cfg.add_ram_range(0, 1)
   mem_cfg.add_rom_range(2, 1)
-  runtime.init(cpu_cfg, mem_cfg)
-  runtime.reset(PROG_BASE, STACK)
-  yield runtime
-  runtime.shutdown()
+  run_cfg = RunConfig()
+  rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
+  rt.reset(PROG_BASE, STACK)
+  yield rt
+  rt.shutdown()

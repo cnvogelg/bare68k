@@ -7,26 +7,15 @@ import logging
 import bare68k.api.machine as mach
 import bare68k.api.cpu as cpu
 import bare68k.api.mem as mem
+
 from bare68k.consts import *
 from bare68k.errors import *
 from bare68k.cpucfg import *
 from bare68k.memcfg import *
-
-# globals
-_cpu_cfg = None
-_mem_cfg = None
-_reset_pc = None
-_reset_sp = None
-
-# logging setup
-_log = logging.getLogger(__name__)
-
-# global vars to modify run() loop
-_reset_end_pc = None
-_catch_kb_intr = True
+from bare68k.runcfg import RunConfig
 
 
-class RunInfo:
+class RunInfo(object):
   """RunInfo returns information about the CPU run last performed"""
   def __init__(self, total_time, cpu_time, total_cycles, results):
     self.total_time = total_time
@@ -59,295 +48,222 @@ def log_setup(level=logging.DEBUG):
   FORMAT = '%(asctime)-15s %(name)24s:%(levelname)7s:  %(message)s'
   logging.basicConfig(format=FORMAT, level=level)
 
-def init(cpu_cfg, mem_cfg):
-  """setup runtime.
-
-  before you can run your system emulation you have to init() the system
-  by providing a configuration for the CPU and the memory layout
-  """
-  global _cpu_cfg, _mem_cfg
-  _cpu_cfg = cpu_cfg
-  _mem_cfg = mem_cfg
-  # check mem config
-  max_pages = cpu_cfg.get_max_pages()
-  mem_cfg.check(max_pages=max_pages)
-  # init machine
-  cpu = cpu_cfg.get_cpu_type()
-  num_pages = mem_cfg.get_num_pages()
-  mach.init(cpu, num_pages)
-  # realize mem config
-  _setup_mem(mem_cfg)
-  # setup machine event handlers
-  _setup_handlers()
-
-def get_cpu_cfg():
-  """access the current CPU configuration"""
-  return _cpu_cfg
-
-def get_mem_cfg():
-  """access the current memory configuration"""
-  return _mem_cfg
 
 def init_quick(cpu_type=M68K_CPU_TYPE_68000, ram_pages=1):
   """a simplified init.
 
-  In contrast to init() this call is simplified and uses a basic memory
+  Create a Runtime() instance which is simplified and uses a basic memory
   setup with only a RAM region starting at 0 with given number of pages.
   """
   cpu_cfg = CPUConfig(cpu_type)
   mem_cfg = MemoryConfig()
   mem_cfg.add_ram_range(0, ram_pages)
-  init(cpu_cfg, mem_cfg)
+  run_cfg = RunConfig()
+  return Runtime(cpu_cfg, mem_cfg, run_cfg)
 
-def _setup_mem(mem_cfg):
-  """internal helper to realize the memory configuration"""
-  mem_ranges = mem_cfg.get_range_list()
-  for mr in mem_ranges:
-    mt = mr.mem_type
-    start = mr.start_page
-    size = mr.num_pages
-    if mt == MEM_RAM:
-      flags = MEM_FLAGS_RW
-      if mr.traps:
-        flags |= MEM_FLAGS_TRAPS
-      mem.add_memory(start, size, flags)
-      _log.info("memory: RAM @%04x +%04x flags=%x", start, size, flags)
-    elif mt == MEM_ROM:
-      flags = MEM_FLAGS_READ
-      if mr.traps:
-        flags |= MEM_FLAGS_TRAPS
-      mem.add_memory(start, size, flags)
-      data = mr.opts
-      if data is not None:
-        mem.w_block(mr.start_addr, mr.opts)
-      _log.info("memory: ROM @%04x +%04x flags=%x", start, size, flags)
-    elif mt == MEM_SPECIAL:
-      r_func, w_func = mr.opts
-      mem.add_special(start, size, r_func, w_func)
-      _log.info("memory: spc @%04x +%04x", start, size)
-    elif mt == MEM_EMPTY:
-      mem.add_empty(start, size, MEM_FLAGS_RW)
-      _log.info("memory: --- @%04x +%04x", start, size)
+
+class Runtime(object):
+
+  def __init__(self, cpu_cfg, mem_cfg, run_cfg, log_channel=None):
+    """setup runtime.
+
+    before you can run your system emulation you have to init() the system
+    by providing a configuration for the CPU and the memory layout
+    """
+    # setup logging
+    if log_channel is None:
+      self._log = logging.getLogger(__name__)
     else:
-      raise ValueError("Invalid memory type: %d" % mt)
-  _log.info("memory: done. max_pages=%04x", mem_cfg.get_num_pages())
+      self._log = log_channel
+    # remember configs
+    self._cpu_cfg = cpu_cfg
+    self._mem_cfg = mem_cfg
+    self._run_cfg = run_cfg
+    # check mem config
+    max_pages = cpu_cfg.get_max_pages()
+    mem_cfg.check(max_pages=max_pages)
+    # init machine
+    cpu = cpu_cfg.get_cpu_type()
+    num_pages = mem_cfg.get_num_pages()
+    mach.init(cpu, num_pages)
+    # realize mem config
+    self._setup_mem(mem_cfg)
+    # setup cpu event handlers
+    self._setup_handlers()
+    # clear state
+    self._reset_pc = None
+    self._reset_sp = None
 
-def shutdown():
-  """shutdown runtime
+  def get_cpu_cfg(self):
+    """access the current CPU configuration"""
+    return self._cpu_cfg
 
-  after using the runtime you have to shut it down. this frees the allocated
-  resources. After that you can init() again for a new run
-  """
-  global _cpu_cfg, _mem_cfg
-  _cpu_cfg = None
-  _mem_cfg = None
-  mach.shutdown()
-  _log.info("shutdown")
+  def get_mem_cfg(self):
+    """access the current memory configuration"""
+    return self._mem_cfg
 
-def reset(init_pc, init_sp=0x400):
-  """reset the CPU
+  def _setup_mem(self, mem_cfg):
+    """internal helper to realize the memory configuration"""
+    mem_ranges = mem_cfg.get_range_list()
+    for mr in mem_ranges:
+      mt = mr.mem_type
+      start = mr.start_page
+      size = mr.num_pages
+      if mt == MEM_RAM:
+        flags = MEM_FLAGS_RW
+        if mr.traps:
+          flags |= MEM_FLAGS_TRAPS
+        mem.add_memory(start, size, flags)
+        self._log.info("memory: RAM @%04x +%04x flags=%x", start, size, flags)
+      elif mt == MEM_ROM:
+        flags = MEM_FLAGS_READ
+        if mr.traps:
+          flags |= MEM_FLAGS_TRAPS
+        mem.add_memory(start, size, flags)
+        data = mr.opts
+        if data is not None:
+          mem.w_block(mr.start_addr, mr.opts)
+        self._log.info("memory: ROM @%04x +%04x flags=%x", start, size, flags)
+      elif mt == MEM_SPECIAL:
+        r_func, w_func = mr.opts
+        mem.add_special(start, size, r_func, w_func)
+        self._log.info("memory: spc @%04x +%04x", start, size)
+      elif mt == MEM_EMPTY:
+        mem.add_empty(start, size, MEM_FLAGS_RW)
+        self._log.info("memory: --- @%04x +%04x", start, size)
+      else:
+        raise ValueError("Invalid memory type: %d" % mt)
+    self._log.info("memory: done. max_pages=%04x", mem_cfg.get_num_pages())
 
-  before you can run the CPU you have to reset it. This will write the initial
-  SP and the initial PC to locations 0 and 4 in RAM and pulse a reset in the
-  CPU emulation. After this operation you are free to overwrite these values
-  again. Now proceed to call run().
-  """
-  global _reset_pc, _reset_sp
-  _reset_pc = init_pc
-  _reset_sp = init_sp
-  # place SP and PC in memory
-  mem.w32(0, init_sp)
-  mem.w32(4, init_pc)
-  # now pulse reset
-  cpu.pulse_reset()
-  # clear info to reset cycle counts
-  cpu.clear_info()
-  _log.info("reset: pc=%08x, sp=%08x", init_pc, init_sp)
+  def shutdown(self):
+    """shutdown runtime
 
-def get_reset_pc():
-  return _reset_pc
+    after using the runtime you have to shut it down. this frees the allocated
+    resources. After that you can init() again for a new run
+    """
+    self._cpu_cfg = None
+    self._mem_cfg = None
+    self._run_cfg = None
+    mach.shutdown()
+    self._log.info("shutdown")
 
-def get_reset_sp():
-  return _reset_sp
+  def reset(self, init_pc, init_sp=0x800):
+    """reset the CPU
 
-def run(cycles_per_run=0, reset_end_pc=None, catch_kb_intr=True, max_cycles=None):
-  """run the CPU until emulation ends
+    before you can run the CPU you have to reset it. This will write the initial
+    SP and the initial PC to locations 0 and 4 in RAM and pulse a reset in the
+    CPU emulation. After this operation you are free to overwrite these values
+    again. Now proceed to call run().
+    """
+    self._reset_pc = init_pc
+    self._reset_sp = init_sp
+    # place SP and PC in memory
+    mem.w32(0, init_sp)
+    mem.w32(4, init_pc)
+    # now pulse reset
+    cpu.pulse_reset()
+    # clear info to reset cycle counts
+    cpu.clear_info()
+    self._log.info("reset: pc=%08x, sp=%08x", init_pc, init_sp)
 
-  This is the main loop of your emulation. The CPU emulation is run and
-  events are processed. The events are dispatched and the associated handlers
-  are called. If a reset opcode is encountered then the execution is terminated.
+  def get_reset_pc(self):
+    return self._reset_pc
 
-  Returns a RunInfo instance giving you timing information.
-  """
-  global _reset_end_pc, _catch_kb_intr
+  def get_reset_sp(self):
+    return self._reset_sp
 
-  # timer function
-  timer = time.time
+  def run(self, reset_end_pc=None):
+    """run the CPU until emulation ends
 
-  cpu_time = 0
-  _reset_end_pc = reset_end_pc
-  _catch_kb_intr = catch_kb_intr
+    This is the main loop of your emulation. The CPU emulation is run and
+    events are processed. The events are dispatched and the associated handlers
+    are called. If a reset opcode is encountered then the execution is terminated.
 
-  # main loop
-  _log.debug("enter main loop")
-  total_start = timer()
+    Returns a RunInfo instance giving you timing information.
+    """
+    # get some config values
+    catch_kb_intr = self._run_cfg._catch_kb_intr
+    cycles_per_run = self._run_cfg._cycles_per_run
 
-  results = []
-  stay = True
-  while stay:
-    try:
-      start = timer()
-      if max_cycles is None:
+    # timer function
+    timer = time.time
+
+    # prepare end pc
+    if reset_end_pc is not None:
+      self._run_cfg.push_end_pc(reset_end_pc)
+
+    cpu_time = 0
+
+    # main loop
+    self._log.debug("enter run loop")
+    total_start = timer()
+
+    results = []
+    stay = True
+    while stay:
+      try:
+        start = timer()
         # execute CPU code until event occurs
         num_events = cpu.execute_to_event_checked(cycles_per_run)
-      else:
-        # run for a given number of cycles
-        num_events = cpu.execute(max_cycles)
-        stay = False
-    except KeyboardInterrupt as e:
-      # either abort execution (default) or re-raise exception
-      _log.debug("keyboard interrupt")
-      if not catch_kb_intr:
-        raise e
-      results.append((CPU_EVENT_USER_ABORT, None))
-      break
-    finally:
-      end = timer()
-      cpu_time += end - start
+      except KeyboardInterrupt as e:
+        # either abort execution (default) or re-raise exception
+        self._log.debug("keyboard interrupt")
+        if not catch_kb_intr:
+          raise e
+        results.append((CPU_EVENT_USER_ABORT, None))
+        break
+      finally:
+        end = timer()
+        cpu_time += end - start
 
-    # dispatch events
-    run_info = cpu.get_info()
-    results = []
-    for event in run_info.events:
-      handler = event.handler
-      if handler is not None:
-        result = handler(event)
-        # handler wants to
-        if result is not None:
-          results.append((result, event))
-          stay = False
-          _log.debug("leave run loop: result=%s (event=%r)",
-                     CPU_EVENT_NAMES[result], event)
-      else:
-        _log.warning("no handler: result=%s (event=%r)",
-                     CPU_EVENT_NAMES[event.ev_type], event)
+      # dispatch events
+      run_info = cpu.get_info()
+      results = []
+      for event in run_info.events:
+        handler = event.handler
+        if handler is not None:
+          result = handler(event)
+          # handler wants to
+          if result is not None:
+            results.append((result, event))
+            stay = False
+            self._log.debug("leave run loop: result=%s (event=%r)",
+                            CPU_EVENT_NAMES[result], event)
+        else:
+          self._log.warning("no handler: result=%s (event=%r)",
+                            CPU_EVENT_NAMES[event.ev_type], event)
 
-  total_end = timer()
-  _log.debug("leave main loop")
+    total_end = timer()
+    self._log.debug("leave run loop")
 
-  # final timing
-  total_time = total_end - total_start
-  return RunInfo(total_time, cpu_time, cpu.get_total_cycles(), results)
+    # pop end pc
+    if reset_end_pc is not None:
+      self._run_cfg.pop_end_pc()
 
-def _setup_handlers():
-  """internal setter for all machine event handlers"""
-  eh = {
-    CPU_EVENT_CALLBACK_ERROR: handler_cb_error,
-    CPU_EVENT_RESET: handler_reset,
-    CPU_EVENT_ALINE_TRAP: handler_aline_trap,
-    CPU_EVENT_MEM_ACCESS: handler_mem_access,
-    CPU_EVENT_MEM_BOUNDS: handler_mem_bounds,
-    CPU_EVENT_MEM_TRACE: handler_mem_trace,
-    CPU_EVENT_MEM_SPECIAL: handler_mem_special,
-    CPU_EVENT_INSTR_HOOK: handler_instr_hook,
-    CPU_EVENT_INT_ACK: handler_int_ack,
-    CPU_EVENT_BREAKPOINT: handler_breakpoint,
-    CPU_EVENT_WATCHPOINT: handler_watchpoint,
-    CPU_EVENT_TIMER: handler_timer
-  }
-  for e in eh:
-    cpu.set_event_handler(e, eh[e])
+    # final timing
+    total_time = total_end - total_start
+    return RunInfo(total_time, cpu_time, cpu.get_total_cycles(), results)
 
-def set_handler(event_type, handler):
-  """set a custom handler for an event type and overwrite default handler"""
-  cpu.set_event_handler(event_type, handler)
+  def _setup_handlers(self):
+    """internal setter for all machine event handlers"""
+    cfg = self._run_cfg
+    eh = {
+      CPU_EVENT_CALLBACK_ERROR: cfg.handler_cb_error,
+      CPU_EVENT_RESET: cfg.handler_reset,
+      CPU_EVENT_ALINE_TRAP: cfg.handler_aline_trap,
+      CPU_EVENT_MEM_ACCESS: cfg.handler_mem_access,
+      CPU_EVENT_MEM_BOUNDS: cfg.handler_mem_bounds,
+      CPU_EVENT_MEM_TRACE: cfg.handler_mem_trace,
+      CPU_EVENT_MEM_SPECIAL: cfg.handler_mem_special,
+      CPU_EVENT_INSTR_HOOK: cfg.handler_instr_hook,
+      CPU_EVENT_INT_ACK: cfg.handler_int_ack,
+      CPU_EVENT_BREAKPOINT: cfg.handler_breakpoint,
+      CPU_EVENT_WATCHPOINT: cfg.handler_watchpoint,
+      CPU_EVENT_TIMER: cfg.handler_timer
+    }
+    for e in eh:
+      cpu.set_event_handler(e, eh[e])
 
-# ----- default handlers -----
-
-def handler_cb_error(event):
-  """a callback running your code raised an exception"""
-  global _catch_kb_intr
-  # get exception info
-  exc_info = event.data
-  # keyboard interrupt
-  if exc_info[0] is KeyboardInterrupt:
-    if _catch_kb_intr:
-      _log.debug("keyboard interrupt (in callback)")
-      return CPU_EVENT_USER_ABORT
-  # re-raise other error
-  _log.error("handle CALLBACK raised: %s", exc_info[0])
-  raise exc_info[0], exc_info[1], exc_info[2]
-
-def handler_reset(event):
-  """default handler for reset opcode"""
-  global _reset_end_pc
-  pc = event.addr
-  _log.info("handle RESET @%08x", pc)
-  # check if final PC reached to end run loop
-  if _reset_end_pc is None or _reset_end_pc == pc:
-    # quit run loop:
-    return CPU_EVENT_DONE
-  else:
-    return CPU_EVENT_RESET
-
-def handler_aline_trap(event):
-  """an unbound aline trap was encountered"""
-  # bound handler?
-  bound_handler = event.data
-  pc = event.addr
-  op = event.value
-  if bound_handler is not None:
-    _log.debug("bound ALINE handler: @%08x: %04x -> %r", pc, op, bound_handler)
-    bound_handler(event)
-  else:
-    _log.warn("unbound ALINE encountered: @%08x: %04x", pc, op)
-    return CPU_EVENT_ALINE_TRAP
-
-def handler_mem_access(event):
-  """default handler for invalid memory accesses"""
-  mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
-  _log.error("MEM ACCESS: %s", mem_str)
-  # quit run loop:
-  return CPU_EVENT_MEM_ACCESS
-
-def handler_mem_bounds(event):
-  """default handler for invalid memory accesses beyond max pages"""
-  mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
-  _log.error("MEM BOUNDS: %s", mem_str)
-  # quit run loop:
-  return CPU_EVENT_MEM_BOUNDS
-
-def handler_mem_trace(event):
-  pass
-
-def handler_mem_special(event):
-  pass
-
-def handler_instr_hook(event):
-  pass
-
-def handler_int_ack(event):
-  pass
-
-def handler_breakpoint(event):
-  addr = event.addr
-  bp_id = event.value
-  mem_flags = event.flags
-  mf_str = mem.get_cpu_fc_str(mem_flags)
-  user_data = event.data
-  _log.info("BREAKPOINT: @%08x #%d flags=%s data=%s",
-            addr, bp_id, mf_str, user_data)
-  return CPU_EVENT_BREAKPOINT
-
-def handler_watchpoint(event):
-  addr = event.addr
-  bp_id = event.value
-  mem_flags = event.flags
-  mf_str = mem.get_cpu_access_str(mem_flags)
-  user_data = event.data
-  _log.info("WATCHPOINT: @%08x #%d flags=%s data=%s",
-            addr, bp_id, mf_str, user_data)
-  return CPU_EVENT_WATCHPOINT
-
-def handler_timer(event):
-  _log.info("TIMER")
+  def set_handler(self, event_type, handler):
+    """set a custom handler for an event type and overwrite default handler"""
+    cpu.set_event_handler(event_type, handler)
