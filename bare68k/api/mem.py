@@ -33,9 +33,9 @@ rs16 = mach.rs16
 rs32 = mach.rs32
 
 # configure mem
+set_invalid_value = mach.set_invalid_value
 add_memory = mach.add_memory
 add_special = mach.add_special
-set_empty_value = mach.set_empty_value
 add_empty = mach.add_empty
 
 # trace

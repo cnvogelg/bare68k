@@ -351,14 +351,13 @@ def test_special_none(mach):
   assert ri.num_events == 0
 
 def test_empty_val(mach):
-  set_empty_value(0x10)
-  add_empty(0, 1, MEM_FLAGS_READ)
+  add_empty(0, 1, MEM_FLAGS_READ, 0x40302010)
   assert r8(0) == 0x10
-  assert r16(0) == 0x1010
-  assert r32(0) == 0x10101010
+  assert r16(0) == 0x2010
+  assert r32(0) == 0x40302010
 
 def test_empty_ro(mach):
-  add_empty(0, 1, MEM_FLAGS_READ)
+  add_empty(0, 1, MEM_FLAGS_READ, 0xffffffff)
   assert r8(0) == 0xff
   assert r16(0) == 0xffff
   assert r32(0) == 0xffffffff
@@ -393,7 +392,7 @@ def test_empty_ro(mach):
   assert ev.flags == MEM_ACCESS_W32 | MEM_FC_SUPER_PROG
 
 def test_empty_rw(mach):
-  add_empty(0, 1, MEM_FLAGS_RW)
+  add_empty(0, 1, MEM_FLAGS_RW, 0xffffffff)
   assert r8(0) == 0xff
   assert r16(0) == 0xffff
   assert r32(0) == 0xffffffff

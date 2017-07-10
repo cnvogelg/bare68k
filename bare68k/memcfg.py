@@ -1,7 +1,7 @@
 from bare68k.consts import *
 from bare68k.errors import *
 
-MEM_EMPTY= '_'
+MEM_NOALLOC = '_'
 MEM_RAM = 'a'
 MEM_ROM = 'o'
 MEM_SPECIAL = 'S'
@@ -167,8 +167,8 @@ class MemoryConfig(object):
     opts = (r_func, w_func)
     return self._store_page_range(begin_page, num_pages, MEM_SPECIAL, opts=opts)
 
-  def add_empty_range(self, begin_page, num_pages):
-    return self._store_page_range(begin_page, num_pages, MEM_EMPTY)
+  def add_empty_range(self, begin_page, num_pages, value=0xffffffff):
+    return self._store_page_range(begin_page, num_pages, MEM_EMPTY, opts=value)
 
   def add_reserve_range(self, begin_page, num_pages):
     return self._store_page_range(begin_page, num_pages, MEM_RESERVE)
@@ -190,10 +190,10 @@ class MemoryConfig(object):
     num_pages = self._get_num_pages(size, units)
     return self.add_special_range(begin_page, num_pages, r_func, w_func)
 
-  def add_empty_range_addr(self, begin_addr, size, units=1024):
+  def add_empty_range_addr(self, begin_addr, size, value=0xffffffff, units=1024):
     begin_page = self._get_page_addr(begin_addr)
     num_pages = self._get_num_pages(size, units)
-    return self.add_empty_range(begin_page, num_pages)
+    return self.add_empty_range(begin_page, num_pages, value)
 
   def add_reserve_range_addr(self, begin_addr, size, units=1024):
     begin_page = self._get_page_addr(begin_addr)
@@ -217,7 +217,7 @@ class MemoryConfig(object):
       pos = r.start_page
       space = pos - old_pos
       if space > 0:
-        s += MEM_EMPTY * space
+        s += MEM_NOALLOC * space
       np = r.num_pages
       s += r.mem_type * np
       old_pos = pos + r.num_pages

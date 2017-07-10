@@ -29,6 +29,7 @@ cdef extern from "glue/mem.h":
 
   unsigned int mem_get_page_shift()
   unsigned int mem_get_num_pages()
+  void mem_set_invalid_value(uint32_t value)
 
   memory_entry_t *mem_add_memory(unsigned int start_page, unsigned int num_pages, int flags)
 
@@ -37,8 +38,7 @@ cdef extern from "glue/mem.h":
                            special_read_func_t read_func, void *read_data,
                            special_write_func_t write_func, void *write_data)
 
-  void mem_set_empty_value(uint8_t val)
-  int mem_add_empty(unsigned int start_page, unsigned int num_pages, int flags)
+  int mem_add_empty(unsigned int start_page, unsigned int num_pages, int flags, uint32_t value)
 
   void mem_set_cpu_trace_func(cpu_trace_func_t func)
   void mem_set_api_trace_func(api_trace_func_t func)

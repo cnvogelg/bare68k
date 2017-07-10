@@ -21,13 +21,7 @@ static cpu_trace_func_t cpu_trace_func;
 static api_trace_func_t api_trace_func;
 static special_cleanup_func_t special_cleanup_func;
 
-static uint invalid8 = 0xff;
-static uint invalid16 = 0xffff;
-static uint invalid32 = 0xffffffff;
-
-static uint32_t empty8 = 0xff;
-static uint32_t empty16 = 0xffff;
-static uint32_t empty32 = 0xffffffff;
+static uint32_t invalid_value = 0xffffffff;
 
 static const uint8_t *disasm_buffer;
 static uint32_t disasm_size;
@@ -36,17 +30,20 @@ static uint32_t disasm_offset;
 /* ----- Empty Range ----- */
 static uint32_t r8_empty(struct page_entry *page, uint32_t addr)
 {
-  return empty8;
+  uint32_t value = page->byte_left;
+  return value & 0xff;
 }
 
 static uint32_t r16_empty(struct page_entry *page, uint32_t addr)
 {
-  return empty16;
+  uint32_t value = page->byte_left;
+  return value & 0xffff;
 }
 
 static uint32_t r32_empty(struct page_entry *page, uint32_t addr)
 {
-  return empty32;
+  uint32_t value = page->byte_left;
+  return value;
 }
 
 static void wx_empty(page_entry_t *page, uint32_t addr, uint32_t val)
@@ -252,13 +249,13 @@ uint m68k_read_memory_8(uint address)
   uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_R8 | cpu_current_fc;
   if(page_no >= total_pages) {
-    result = invalid8;
+    result = invalid_value & 0xff;
     memory_bounds(access, address, result);
   } else {
     page_entry_t *page = &pages[page_no];
     read_func_t rf = page->r_func[0];
     if(rf == NULL) {
-      result = invalid8;
+      result = invalid_value & 0xff;
       memory_access(access, address, result);
     } else {
       result = rf(page, address);
@@ -275,13 +272,13 @@ uint m68k_read_memory_16(uint address)
   uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_R16 | cpu_current_fc;
   if(page_no >= total_pages) {
-    result = invalid16;
+    result = invalid_value & 0xffff;
     memory_bounds(access, address, result);
   } else {
     page_entry_t *page = &pages[page_no];
     read_func_t rf = page->r_func[1];
     if(rf == NULL) {
-      result = invalid16;
+      result = invalid_value & 0xffff;
       memory_access(access, address, result);
     } else {
       result = rf(page, address);
@@ -298,13 +295,13 @@ uint m68k_read_memory_32(uint address)
   uint page_no = address >> MEM_PAGE_SHIFT;
   int access = MEM_ACCESS_R32 | cpu_current_fc;
   if(page_no >= total_pages) {
-    result = invalid32;
+    result = invalid_value;
     memory_bounds(access, address, result);
   } else {
     page_entry_t *page = &pages[page_no];
     read_func_t rf = page->r_func[2];
     if(rf == NULL) {
-      result = invalid32;
+      result = invalid_value;
       memory_access(access, address, result);
     } else {
       result = rf(page, address);
@@ -436,8 +433,7 @@ int mem_init(uint num_pages)
   total_pages = num_pages;
   bzero(pages, bytes);
 
-  mem_set_invalid_value(0xff);
-  mem_set_empty_value(0xff);
+  mem_set_invalid_value(0xffffffff);
   return 1;
 }
 
@@ -486,18 +482,9 @@ uint mem_get_page_shift(void)
   return MEM_PAGE_SHIFT;
 }
 
-void mem_set_invalid_value(uint8_t val)
+void mem_set_invalid_value(uint32_t val)
 {
-  invalid8 = val;
-  invalid16 = val << 8 | val;
-  invalid32 = val << 24 | val << 16 | val << 8 | val;
-}
-
-void mem_set_empty_value(uint8_t val)
-{
-  empty8 = val;
-  empty16 = val << 8 | val;
-  empty32 = val << 24 | val << 16 | val << 8 | val;
+  invalid_value = val;
 }
 
 memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
@@ -651,7 +638,7 @@ special_entry_t *mem_add_special(uint start_page, uint num_pages,
   return se;
 }
 
-int mem_add_empty(uint start_page, uint num_pages, int flags)
+int mem_add_empty(uint start_page, uint num_pages, int flags, uint32_t value)
 {
   /* check parameters */
   if((start_page + num_pages) > total_pages) {
@@ -688,7 +675,7 @@ int mem_add_empty(uint start_page, uint num_pages, int flags)
     }
 
     page->data = NULL;
-    page->byte_left = 0;
+    page->byte_left = value;
     page->memory_entry = NULL;
     page->special_entry = NULL;
     page++;

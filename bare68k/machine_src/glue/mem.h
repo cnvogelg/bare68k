@@ -126,8 +126,7 @@ extern void mem_free(void);
 extern uint mem_get_page_shift(void);
 extern uint mem_get_num_pages(void);
 
-extern void mem_set_invalid_value(uint8_t val);
-extern void mem_set_empty_value(uint8_t val);
+extern void mem_set_invalid_value(uint32_t value);
 
 extern memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags);
 
@@ -136,7 +135,7 @@ extern special_entry_t *mem_add_special(uint start_page, uint num_pages,
                            special_read_func_t read_func, void *read_data,
                            special_write_func_t write_func, void *write_data);
 
-extern int mem_add_empty(uint start_page, uint num_pages, int flags);
+extern int mem_add_empty(uint start_page, uint num_pages, int flags, uint32_t value);
 
 extern void mem_set_cpu_trace_func(cpu_trace_func_t func);
 extern void mem_set_api_trace_func(api_trace_func_t func);

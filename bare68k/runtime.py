@@ -133,8 +133,13 @@ class Runtime(object):
         mem.add_special(start, size, r_func, w_func)
         self._log.info("memory: spc @%04x +%04x", start, size)
       elif mt == MEM_EMPTY:
-        mem.add_empty(start, size, MEM_FLAGS_RW)
-        self._log.info("memory: --- @%04x +%04x", start, size)
+        value = mr.opts
+        mem.add_empty(start, size, MEM_FLAGS_RW, value)
+        self._log.info("memory: --- @%04x +%04x: %08x", start, size, value)
+      elif mt == MEM_NOALLOC:
+        self._log.info("memory: ??? @%04x +%04x", start, size)
+      elif mt == MEM_RESERVE:
+        self._log.info("memory: XXX @%04x +%04x", start, size)
       else:
         raise ValueError("Invalid memory type: %d" % mt)
     self._log.info("memory: done. max_pages=%04x", mem_cfg.get_num_pages())
