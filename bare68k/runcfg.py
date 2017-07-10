@@ -14,16 +14,8 @@ class RunConfig(object):
       self._log = logging.getLogger(__name__)
     else:
       self._log = log_channel
-    self._end_pcs = []
-
-  def push_end_pc(self, end_pc):
-    self._end_pcs.append(end_pc)
-
-  def pop_end_pc(self):
-    return self._end_pcs.pop()
-
-  def top_end_pc(self):
-    return self._end_pcs[-1]
+    # the runtime backref will be set when attached to runtime
+    self._runtime = None
 
   def handler_cb_error(self, event):
     """a callback running your code raised an exception"""
@@ -44,7 +36,8 @@ class RunConfig(object):
     pc = event.addr
     self._log.info("handle RESET @%08x", pc)
     # check if final PC reached to end run loop
-    if len(self._end_pcs) == 0 or self.top_end_pc() == pc:
+    top_pc = self._runtime.get_top_end_pc()
+    if top_pc is None or top_pc == pc:
       # quit run loop:
       return CPU_EVENT_DONE
     else:

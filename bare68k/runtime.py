@@ -79,6 +79,8 @@ class Runtime(object):
     self._cpu_cfg = cpu_cfg
     self._mem_cfg = mem_cfg
     self._run_cfg = run_cfg
+    # set runcfg backref to runtime
+    run_cfg._runtime = self
     # check mem config
     max_pages = cpu_cfg.get_max_pages()
     mem_cfg.check(max_pages=max_pages)
@@ -93,6 +95,8 @@ class Runtime(object):
     # clear state
     self._reset_pc = None
     self._reset_sp = None
+    self._end_pcs = []
+    self._cpu_states = []
 
   def get_cpu_cfg(self):
     """access the current CPU configuration"""
@@ -172,7 +176,13 @@ class Runtime(object):
   def get_reset_sp(self):
     return self._reset_sp
 
-  def run(self, reset_end_pc=None):
+  def get_top_end_pc(self):
+    if len(self._end_pcs) == 0:
+      return None
+    else:
+      return self._end_pcs[-1]
+
+  def run(self, reset_end_pc=None, start_pc=None, start_sp=None):
     """run the CPU until emulation ends
 
     This is the main loop of your emulation. The CPU emulation is run and
@@ -185,17 +195,29 @@ class Runtime(object):
     catch_kb_intr = self._run_cfg._catch_kb_intr
     cycles_per_run = self._run_cfg._cycles_per_run
 
+    # recursive run() call? if yes then store cpu state
+    rec_depth = len(self._end_pcs)
+    if rec_depth > 0:
+      cpu_state = cpu.get_cpu_context()
+    else:
+      cpu_state = None
+
+    # set start pc/sp if requested
+    if start_pc is not None:
+      cpu.w_pc(start_pc)
+    if start_sp is not None:
+      cpu.w_sp(start_sp)
+
+    # keep end pc
+    self._end_pcs.append(reset_end_pc)
+
     # timer function
     timer = time.time
-
-    # prepare end pc
-    if reset_end_pc is not None:
-      self._run_cfg.push_end_pc(reset_end_pc)
 
     cpu_time = 0
 
     # main loop
-    self._log.debug("enter run loop")
+    self._log.debug("enter run loop #%d", rec_depth)
     total_start = timer()
 
     results = []
@@ -223,22 +245,25 @@ class Runtime(object):
         handler = event.handler
         if handler is not None:
           result = handler(event)
-          # handler wants to
+          # handler wants to exit run loop
           if result is not None:
             results.append((result, event))
             stay = False
-            self._log.debug("leave run loop: result=%s (event=%r)",
-                            CPU_EVENT_NAMES[result], event)
+            self._log.debug("run loop exit #%d: result=%s (event=%r)",
+                            rec_depth, CPU_EVENT_NAMES[result], event)
         else:
           self._log.warning("no handler: result=%s (event=%r)",
                             CPU_EVENT_NAMES[event.ev_type], event)
 
     total_end = timer()
-    self._log.debug("leave run loop")
+    self._log.debug("leave run loop #%d", rec_depth)
 
     # pop end pc
-    if reset_end_pc is not None:
-      self._run_cfg.pop_end_pc()
+    self._end_pcs.pop()
+
+    # restore cpu
+    if cpu_state is not None:
+      cpu.set_cpu_context(cpu_state)
 
     # final timing
     total_time = total_end - total_start

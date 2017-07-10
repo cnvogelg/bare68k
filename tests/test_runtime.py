@@ -142,3 +142,25 @@ def test_rt_watchpoint(rt):
   tools.setup_watchpoints(1)
   tools.set_watchpoint(0, PROG_BASE, MEM_FC_SUPER_MASK, "bla")
   ri = rt.run()
+
+MOVEM_TO_SP = 0x48e7fffe
+MOVEM_FROM_SP = 0x4cdf7fff
+
+def test_rt_recursive_run(rt):
+  """run a sub call inside a trap"""
+  PROG_BASE = rt.get_reset_pc()
+  def trap_cb(event):
+    # recursive run
+    ri = rt.run(start_pc=PROG_BASE+4)
+    assert ri.get_last_result() == CPU_EVENT_DONE
+  op = traps.trap_setup(TRAP_DEFAULT, trap_cb)
+  # main code
+  mem.w16(PROG_BASE, op)
+  mem.w16(PROG_BASE + 2, RESET_OPCODE)
+  # sub code
+  mem.w32(PROG_BASE+4, MOVEM_TO_SP)
+  mem.w32(PROG_BASE+8, MOVEM_FROM_SP)
+  mem.w16(PROG_BASE+12, RESET_OPCODE)
+  # run
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_DONE
