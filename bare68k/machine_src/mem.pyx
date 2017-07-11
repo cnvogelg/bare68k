@@ -86,6 +86,12 @@ def add_empty(uint16_t start_page, uint16_t num_pages, int flags, uint32_t value
     raise ValueError("Invalid empty: start=%d, num=%d" % (start_page, num_pages))
   return <uint32_t>(start_page << 16)
 
+def add_mirror(uint16_t start_page, uint16_t num_pages, int flags, uint16_t base_page):
+  cdef int res = mem.mem_add_mirror(start_page, num_pages, flags, base_page)
+  if res == -1:
+    raise ValueError("Invalid mirror: start=%d, num=%d, base=%d" % (start_page, num_pages, base_page))
+  return <uint32_t>(start_page << 16)
+
 # memory trace cpu
 
 cdef object mem_cpu_trace_func = None

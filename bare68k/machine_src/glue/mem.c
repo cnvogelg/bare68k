@@ -27,6 +27,27 @@ static const uint8_t *disasm_buffer;
 static uint32_t disasm_size;
 static uint32_t disasm_offset;
 
+/* ----- Event Helper ----- */
+static inline void memory_access(int access, uint32_t addr, uint32_t val)
+{
+  cpu_add_event(CPU_EVENT_MEM_ACCESS, addr, val, access, NULL);
+}
+
+static inline void memory_bounds(int access, uint32_t addr, uint32_t val)
+{
+  cpu_add_event(CPU_EVENT_MEM_BOUNDS, addr, val, access, NULL);
+}
+
+static inline void trace_event(int access, uint32_t addr, uint32_t val, void *data)
+{
+  cpu_add_event(CPU_EVENT_MEM_TRACE, addr, val, access, data);
+}
+
+static inline void watchpoint_event(int access, uint32_t addr, uint32_t val, void *data)
+{
+  cpu_add_event(CPU_EVENT_WATCHPOINT, addr, val, access, data);
+}
+
 /* ----- Empty Range ----- */
 static uint32_t r8_empty(struct page_entry *page, uint32_t addr)
 {
@@ -49,6 +70,91 @@ static uint32_t r32_empty(struct page_entry *page, uint32_t addr)
 static void wx_empty(page_entry_t *page, uint32_t addr, uint32_t val)
 {
   // ignore a write
+}
+
+/* ----- Mirror Range ----- */
+static uint32_t r8_mirror(struct page_entry *page, uint32_t addr)
+{
+  uint32_t mirror_page = page->byte_left;
+  struct page_entry *mirror = &pages[mirror_page];
+  read_func_t r_func = mirror->r_func[0];
+  if(r_func != NULL) {
+    return r_func(mirror, addr);
+  } else {
+    int access = MEM_ACCESS_R8 | cpu_current_fc;
+    int value = invalid_value & 0xff;
+    memory_access(access, addr, value);
+    return value;
+  }
+}
+
+static uint32_t r16_mirror(struct page_entry *page, uint32_t addr)
+{
+  uint32_t mirror_page = page->byte_left;
+  struct page_entry *mirror = &pages[mirror_page];
+  read_func_t r_func = mirror->r_func[1];
+  if(r_func != NULL) {
+    return r_func(mirror, addr);
+  } else {
+    int access = MEM_ACCESS_R16 | cpu_current_fc;
+    int value = invalid_value & 0xffff;
+    memory_access(access, addr, value);
+    return value;
+  }
+}
+
+static uint32_t r32_mirror(struct page_entry *page, uint32_t addr)
+{
+  uint32_t mirror_page = page->byte_left;
+  struct page_entry *mirror = &pages[mirror_page];
+  read_func_t r_func = mirror->r_func[2];
+  if(r_func != NULL) {
+    return r_func(mirror, addr);
+  } else {
+    int access = MEM_ACCESS_R32 | cpu_current_fc;
+    int value = invalid_value;
+    memory_access(access, addr, value);
+    return value;
+  }
+}
+
+static void w8_mirror(page_entry_t *page, uint32_t addr, uint32_t val)
+{
+  uint32_t mirror_page = page->byte_left;
+  struct page_entry *mirror = &pages[mirror_page];
+  write_func_t w_func = mirror->w_func[0];
+  if(w_func != NULL) {
+    w_func(mirror, addr, val);
+  } else {
+    int access = MEM_ACCESS_W8 | cpu_current_fc;
+    memory_access(access, addr, val);
+  }
+}
+
+static void w16_mirror(page_entry_t *page, uint32_t addr, uint32_t val)
+{
+  uint32_t mirror_page = page->byte_left;
+  struct page_entry *mirror = &pages[mirror_page];
+  write_func_t w_func = mirror->w_func[1];
+  if(w_func != NULL) {
+    w_func(mirror, addr, val);
+  } else {
+    int access = MEM_ACCESS_W16 | cpu_current_fc;
+    memory_access(access, addr, val);
+  }
+}
+
+static void w32_mirror(page_entry_t *page, uint32_t addr, uint32_t val)
+{
+  uint32_t mirror_page = page->byte_left;
+  struct page_entry *mirror = &pages[mirror_page];
+  write_func_t w_func = mirror->w_func[2];
+  if(w_func != NULL) {
+    w_func(mirror, addr, val);
+  } else {
+    int access = MEM_ACCESS_W32 | cpu_current_fc;
+    memory_access(access, addr, val);
+  }
 }
 
 /* ----- Special Access ----- */
@@ -200,26 +306,6 @@ static void w32_mem(page_entry_t *page, uint32_t addr, uint32_t val)
 }
 
 /* ---------- Musashi Binding ---------- */
-
-static inline void memory_access(int access, uint32_t addr, uint32_t val)
-{
-  cpu_add_event(CPU_EVENT_MEM_ACCESS, addr, val, access, NULL);
-}
-
-static inline void memory_bounds(int access, uint32_t addr, uint32_t val)
-{
-  cpu_add_event(CPU_EVENT_MEM_BOUNDS, addr, val, access, NULL);
-}
-
-static inline void trace_event(int access, uint32_t addr, uint32_t val, void *data)
-{
-  cpu_add_event(CPU_EVENT_MEM_TRACE, addr, val, access, data);
-}
-
-static inline void watchpoint_event(int access, uint32_t addr, uint32_t val, void *data)
-{
-  cpu_add_event(CPU_EVENT_WATCHPOINT, addr, val, access, data);
-}
 
 /* m68k access helper macros */
 
@@ -676,6 +762,57 @@ int mem_add_empty(uint start_page, uint num_pages, int flags, uint32_t value)
 
     page->data = NULL;
     page->byte_left = value;
+    page->memory_entry = NULL;
+    page->special_entry = NULL;
+    page++;
+  }
+  return 1;
+}
+
+int mem_add_mirror(uint start_page, uint num_pages, int flags, uint base_page)
+{
+  /* check parameters */
+  if((start_page + num_pages) > total_pages) {
+    return 0;
+  }
+  if(num_pages == 0) {
+    return 0;
+  }
+  if((base_page + num_pages) > total_pages) {
+    return 0;
+  }
+  if(start_page == base_page) {
+    return 0;
+  }
+
+  /* setup pages */
+  page_entry_t *page = &pages[start_page];
+  int i;
+  for(i=0;i<num_pages;i++) {
+    /* setup read pointers */
+    if((flags & MEM_FLAGS_READ) == MEM_FLAGS_READ) {
+      page->r_func[0] = r8_mirror;
+      page->r_func[1] = r16_mirror;
+      page->r_func[2] = r32_mirror;
+    } else {
+      page->r_func[0] = NULL;
+      page->r_func[1] = NULL;
+      page->r_func[2] = NULL;
+    }
+
+    /* setup write pointers */
+    if((flags & MEM_FLAGS_WRITE) == MEM_FLAGS_WRITE) {
+      page->w_func[0] = w8_mirror;
+      page->w_func[1] = w16_mirror;
+      page->w_func[2] = w32_mirror;
+    } else {
+      page->w_func[0] = NULL;
+      page->w_func[1] = NULL;
+      page->w_func[2] = NULL;
+    }
+
+    page->data = NULL;
+    page->byte_left = base_page + i;
     page->memory_entry = NULL;
     page->special_entry = NULL;
     page++;

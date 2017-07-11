@@ -407,6 +407,58 @@ def test_empty_rw(mach):
   ri = get_info()
   assert ri.num_events == 0
 
+def test_mirror_ro(mach):
+  add_mirror(0, 1, MEM_FLAGS_READ, 1)
+  add_empty(1, 1, MEM_FLAGS_RW, 0xffffffff)
+  assert r8(0) == 0xff
+  assert r16(0) == 0xffff
+  assert r32(0) == 0xffffffff
+  # w8 fails
+  cpu_w8(0, 21)
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_MEM_ACCESS
+  assert ev.addr == 0
+  assert ev.value == 21
+  assert ev.flags == MEM_ACCESS_W8 | MEM_FC_SUPER_PROG
+  clear_info()
+  # w16 fails
+  cpu_w16(0, 0x1234)
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_MEM_ACCESS
+  assert ev.addr == 0
+  assert ev.value == 0x1234
+  assert ev.flags == MEM_ACCESS_W16 | MEM_FC_SUPER_PROG
+  clear_info()
+  # w32 fails
+  cpu_w32(0, 0x12345678)
+  ri = get_info()
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_MEM_ACCESS
+  assert ev.addr == 0
+  assert ev.value == 0x12345678
+  assert ev.flags == MEM_ACCESS_W32 | MEM_FC_SUPER_PROG
+
+def test_empty_rw(mach):
+  add_mirror(0, 1, MEM_FLAGS_RW, 1)
+  add_empty(1, 1, MEM_FLAGS_RW, 0xffffffff)
+  assert r8(0) == 0xff
+  assert r16(0) == 0xffff
+  assert r32(0) == 0xffffffff
+  # no events. simply ignored
+  cpu_w8(0, 21)
+  ri = get_info()
+  assert ri.num_events == 0
+  cpu_w16(0, 0x1234)
+  ri = get_info()
+  assert ri.num_events == 0
+  cpu_w32(0, 0x12345678)
+  ri = get_info()
+  assert ri.num_events == 0
 
 def test_api_trace_func(mach):
   class Tester:

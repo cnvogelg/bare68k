@@ -39,6 +39,7 @@ cdef extern from "glue/mem.h":
                            special_write_func_t write_func, void *write_data)
 
   int mem_add_empty(unsigned int start_page, unsigned int num_pages, int flags, uint32_t value)
+  int mem_add_mirror(unsigned int start_page, unsigned int num_pages, int flags, unsigned int base_page)
 
   void mem_set_cpu_trace_func(cpu_trace_func_t func)
   void mem_set_api_trace_func(api_trace_func_t func)

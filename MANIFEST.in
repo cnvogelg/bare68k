@@ -2,5 +2,4 @@ include MANIFEST.in
 include README.md
 recursive-include bare68k *.pyx *.pxd *.c *.h
 recursive-include bare68k/machine_src/musashi readme.txt history.txt
-recursive-include gen *.c *.h
 recursive-include samples *.bin *.s *.py
