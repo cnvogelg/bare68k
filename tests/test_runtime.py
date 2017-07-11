@@ -88,6 +88,24 @@ def test_rt_mem_bounds(rt):
   assert ri.get_last_result() == CPU_EVENT_DONE
   assert ri.get_stats().get_event_count(CPU_EVENT_MEM_BOUNDS) == 1
 
+def test_rt_mem_access_code(rt):
+  # access between RAM and ROM
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, 0x4ef9) # jmp <32b_addr>
+  mem.w32(PROG_BASE+2, 0x10000)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_MEM_ACCESS
+
+def test_rt_mem_bounds_code(rt):
+  # access beyond max pages
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, 0x4ef9) # jmp <32b_addr>
+  mem.w32(PROG_BASE+2, 0x100000)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_MEM_ACCESS
+
 # --- traps ---
 
 def test_rt_trap_cpu(rt):
