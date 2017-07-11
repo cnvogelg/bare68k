@@ -93,3 +93,6 @@ def test_memtypes():
   memcfg.add_reserve_range(5,1)
   # empty
   memcfg.add_empty_range(6,1)
+  # mirror
+  memcfg.add_mirror_range(7,1,0)
+

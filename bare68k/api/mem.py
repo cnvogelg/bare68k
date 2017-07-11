@@ -37,6 +37,7 @@ set_invalid_value = mach.set_invalid_value
 add_memory = mach.add_memory
 add_special = mach.add_special
 add_empty = mach.add_empty
+add_mirror = mach.add_mirror
 
 # trace
 set_mem_cpu_trace_func = mach.set_mem_cpu_trace_func

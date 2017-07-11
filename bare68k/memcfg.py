@@ -7,6 +7,7 @@ MEM_ROM = 'o'
 MEM_SPECIAL = 'S'
 MEM_RESERVE = 'X'
 MEM_EMPTY = 'E'
+MEM_MIRROR = 'M'
 
 PAGE_BYTES = 64 * 1024
 PAGE_MASK  = 0xffff
@@ -170,6 +171,9 @@ class MemoryConfig(object):
   def add_empty_range(self, begin_page, num_pages, value=0xffffffff):
     return self._store_page_range(begin_page, num_pages, MEM_EMPTY, opts=value)
 
+  def add_mirror_range(self, begin_page, num_pages, base_page):
+    return self._store_page_range(begin_page, num_pages, MEM_MIRROR, opts=base_page)
+
   def add_reserve_range(self, begin_page, num_pages):
     return self._store_page_range(begin_page, num_pages, MEM_RESERVE)
 
@@ -194,6 +198,12 @@ class MemoryConfig(object):
     begin_page = self._get_page_addr(begin_addr)
     num_pages = self._get_num_pages(size, units)
     return self.add_empty_range(begin_page, num_pages, value)
+
+  def add_empty_range_addr(self, begin_addr, size, base_addr, units=1024):
+    begin_page = self._get_page_addr(begin_addr)
+    num_pages = self._get_num_pages(size, units)
+    base_page = self._get_page_addr(base_addr)
+    return self.add_empty_range(begin_page, num_pages, base_page)
 
   def add_reserve_range_addr(self, begin_addr, size, units=1024):
     begin_page = self._get_page_addr(begin_addr)

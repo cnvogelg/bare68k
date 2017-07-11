@@ -136,6 +136,10 @@ class Runtime(object):
         value = mr.opts
         mem.add_empty(start, size, MEM_FLAGS_RW, value)
         self._log.info("memory: --- @%04x +%04x: %08x", start, size, value)
+      elif mt == MEM_MIRROR:
+        base_page = mr.opts
+        mem.add_mirror(start, size, MEM_FLAGS_RW, base_page)
+        self._log.info("memory: mir @%04x +%04x: <- %04x", start, size, base_page)
       elif mt == MEM_NOALLOC:
         self._log.info("memory: ??? @%04x +%04x", start, size)
       elif mt == MEM_RESERVE:

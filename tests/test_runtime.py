@@ -20,6 +20,23 @@ def test_init_quick_shutdown():
   rt = runtime.init_quick()
   rt.shutdown()
 
+def test_runtime_memcfg():
+  cpu_cfg = CPUConfig()
+  mem_cfg = MemoryConfig()
+  mem_cfg.add_ram_range(0, 1)
+  mem_cfg.add_rom_range(1, 1, "hallo", pad=True)
+  def r_func():
+    pass
+  def w_func():
+    pass
+  mem_cfg.add_special_range(2, 1, r_func, w_func)
+  mem_cfg.add_empty_range(3, 1, 0x11223344)
+  mem_cfg.add_mirror_range(4, 1, 0)
+  mem_cfg.add_reserve_range(5, 1)
+  run_cfg = RunConfig()
+  rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
+  rt.shutdown()
+
 def test_runtime_init(rt):
   pass
 
