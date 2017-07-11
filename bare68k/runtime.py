@@ -15,19 +15,48 @@ from bare68k.memcfg import *
 from bare68k.runcfg import RunConfig
 
 
+class EventStats(object):
+  """Store statistics on called events"""
+  def __init__(self):
+    self.total_events = 0
+    self.event_counts = [0] * CPU_NUM_EVENTS
+
+  def count(self, ev_num):
+    if ev_num >= 0 and ev_num < CPU_NUM_EVENTS:
+      self.event_counts[ev_num] += 1
+      self.total_events += 1
+    else:
+      raise ValueError("invalid event number")
+
+  def get_total_events(self):
+    return self.total_events
+
+  def get_event_count(self, ev_num):
+    if ev_num >= 0 and ev_num < CPU_NUM_EVENTS:
+      return self.event_counts[ev_num]
+    else:
+      raise ValueError("invalid event number")
+
+  def __repr__(self):
+    vals = map(str, self.event_counts)
+    return "EventStats(#%d:%s)" % (self.total_events, ",".join(vals))
+
+
 class RunInfo(object):
   """RunInfo returns information about the CPU run last performed"""
-  def __init__(self, total_time, cpu_time, total_cycles, results):
+  def __init__(self, total_time, cpu_time, total_cycles, results, stats):
     self.total_time = total_time
     self.cpu_time = cpu_time
     self.total_cycles = total_cycles
     self.results = results
+    self.stats = stats
     self.py_time = total_time - cpu_time
 
   def __repr__(self):
-    return "RunInfo({},{},{},{})".format(
+    return "RunInfo({},{},{},{},{})".format(
       self.total_time, self.cpu_time,
-      self.total_cycles, repr(self.results))
+      self.total_cycles, repr(self.results),
+      repr(self.stats))
 
   def is_done(self):
     return self.get_last_result() == CPU_EVENT_DONE
@@ -37,6 +66,9 @@ class RunInfo(object):
       return self.results[-1][0]
     else:
       return None
+
+  def get_stats(self):
+    return self.stats
 
   def calc_cpu_mhz(self):
     """from cpu time and cycle count calc cpu clock speed of musashi"""
@@ -223,6 +255,10 @@ class Runtime(object):
     # timer function
     timer = time.time
 
+    # stats
+    stats = EventStats()
+    start_cycles = cpu.get_total_cycles()
+
     cpu_time = 0
 
     # main loop
@@ -252,6 +288,7 @@ class Runtime(object):
       results = []
       for event in run_info.events:
         handler = event.handler
+        stats.count(event.ev_type)
         if handler is not None:
           result = handler(event)
           # handler wants to exit run loop
@@ -276,7 +313,13 @@ class Runtime(object):
 
     # final timing
     total_time = total_end - total_start
-    return RunInfo(total_time, cpu_time, cpu.get_total_cycles(), results)
+    end_cycles = cpu.get_total_cycles()
+    total_cycles = end_cycles - start_cycles
+
+    # create run info result
+    ri = RunInfo(total_time, cpu_time, total_cycles, results, stats)
+    self._log.debug("run info: %s", ri)
+    return ri
 
   def _setup_handlers(self):
     """internal setter for all machine event handlers"""

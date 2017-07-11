@@ -8,7 +8,7 @@ from bare68k.consts import *
 RESET_OPCODE = 0x4e70
 NOP_OPCODE = 0x4e71
 
-def test_init_shutdown():
+def test_runtime_init_shutdown():
   cpu_cfg = CPUConfig()
   mem_cfg = MemoryConfig()
   mem_cfg.add_ram_range(0, 1)
@@ -16,7 +16,7 @@ def test_init_shutdown():
   rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
   rt.shutdown()
 
-def test_init_quick_shutdown():
+def test_runtime_init_quick_shutdown():
   rt = runtime.init_quick()
   rt.shutdown()
 
@@ -40,12 +40,12 @@ def test_runtime_memcfg():
 def test_runtime_init(rt):
   pass
 
-def test_mem_cpu(rt):
+def test_rt_mem_cpu(rt):
   PROG_BASE = rt.get_reset_pc()
   mem.w16(PROG_BASE, RESET_OPCODE)
   cpu.w_reg(M68K_REG_D0, 0)
 
-def test_reset_quit_on_first(rt):
+def test_rt_reset_quit_on_first(rt):
   is_68k = rt.get_cpu_cfg().get_cpu_type() == M68K_CPU_TYPE_68000
   reset_cycles = 132 if is_68k else 518
   PROG_BASE = rt.get_reset_pc()
@@ -55,7 +55,7 @@ def test_reset_quit_on_first(rt):
   assert cpu.r_pc() == PROG_BASE + 2
   assert ri.get_last_result() == CPU_EVENT_DONE
 
-def test_reset_quit_on_pc(rt):
+def test_rt_reset_quit_on_pc(rt):
   is_68k = rt.get_cpu_cfg().get_cpu_type() == M68K_CPU_TYPE_68000
   reset_cycles = 132 if is_68k else 518
   PROG_BASE = rt.get_reset_pc()
@@ -66,17 +66,27 @@ def test_reset_quit_on_pc(rt):
   assert cpu.r_pc() == PROG_BASE + 2
   assert ri.get_last_result() == CPU_EVENT_RESET
 
-def test_mem_access(rt):
-  # access between RAM and ROM
-  cpu.w_pc(0x10000)
-  ri = rt.run()
-  assert ri.get_last_result() == CPU_EVENT_MEM_ACCESS
+# --- memory events ---
 
-def test_mem_bounds(rt):
-  # access beyond max pages
-  cpu.w_pc(0x100000)
+def test_rt_mem_access(rt):
+  # access between RAM and ROM
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0x10000)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
   ri = rt.run()
-  assert ri.get_last_result() == CPU_EVENT_MEM_BOUNDS
+  assert ri.get_last_result() == CPU_EVENT_DONE
+  assert ri.get_stats().get_event_count(CPU_EVENT_MEM_ACCESS) == 1
+
+def test_rt_mem_bounds(rt):
+  # access beyond max pages
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0x100000)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_DONE
+  assert ri.get_stats().get_event_count(CPU_EVENT_MEM_BOUNDS) == 1
 
 # --- traps ---
 

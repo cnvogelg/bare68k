@@ -60,15 +60,11 @@ class RunConfig(object):
     """default handler for invalid memory accesses"""
     mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
     self._log.error("MEM ACCESS: %s", mem_str)
-    # quit run loop:
-    return CPU_EVENT_MEM_ACCESS
 
   def handler_mem_bounds(self, event):
     """default handler for invalid memory accesses beyond max pages"""
     mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
     self._log.error("MEM BOUNDS: %s", mem_str)
-    # quit run loop:
-    return CPU_EVENT_MEM_BOUNDS
 
   def handler_mem_trace(self, event):
     pass
