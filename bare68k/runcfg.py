@@ -1,3 +1,4 @@
+from future.utils import raise_
 import logging
 
 from bare68k.consts import *
@@ -28,7 +29,7 @@ class RunConfig(object):
         return CPU_EVENT_USER_ABORT
     # re-raise other error
     self._log.error("handle CALLBACK raised: %s", exc_info[0])
-    raise exc_info[0], exc_info[1], exc_info[2]
+    raise_(exc_info[0], exc_info[1], exc_info[2])
 
   def handler_reset(self, event):
     """default handler for reset opcode"""

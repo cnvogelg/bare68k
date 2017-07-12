@@ -1,2 +1,2 @@
-import dump
-import trace
+from . import dump
+from . import trace

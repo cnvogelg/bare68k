@@ -7,7 +7,7 @@ import bare68k.api.cpu as cpu
 import bare68k.api.mem as mem
 from bare68k.consts import *
 
-import dump
+from . import dump
 
 # globals
 _log_instr = logging.getLogger(__name__ + ".instr")

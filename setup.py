@@ -44,7 +44,7 @@ gen_tool_src = "bare68k/machine_src/musashi/m68kmake.c"
 gen_tool_obj = "build/bare68k/machine_src/musashi/m68kmake.o"
 gen_input = "bare68k/machine_src/musashi/m68k_in.c"
 gen_dir = "bare68k/machine_src/gen"
-gen_src = map(lambda x : os.path.join(gen_dir,x), gen_src)
+gen_src = list(map(lambda x : os.path.join(gen_dir,x), gen_src))
 build_dir = "build"
 
 
@@ -183,6 +183,7 @@ setup(
     license = "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
     packages = ['bare68k'],
     zip_safe = False,
+    install_requires = ['future'],
     setup_requires = ['pytest-runner'],
     tests_require=['pytest'],
 #    use_scm_version=True,
