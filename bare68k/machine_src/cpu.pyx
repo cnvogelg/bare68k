@@ -131,7 +131,7 @@ cdef class Registers:
   def get_lines(self):
     cdef list lines = list()
     cdef const char **raw_lines = cpu.cpu_get_regs_str(&self.registers)
-    cdef bytes line
+    cdef str line
     while raw_lines[0] != NULL:
       line = raw_lines[0]
       raw_lines += 1
@@ -259,7 +259,7 @@ cdef int instr_hook_func_wrapper(uint32_t pc, void **data):
     return cpu.CPU_CB_ERROR
 
 cdef int instr_hook_func_str_wrapper(uint32_t pc, void **data):
-  cdef bytes s
+  cdef str s
   global instr_hook_func
   try:
     s = get_instr_str(pc)
@@ -354,7 +354,7 @@ def w_sr(uint32_t addr, uint32_t val):
 
 def get_sr_str(uint32_t sr):
   cdef const char *s = cpu.cpu_get_sr_str(sr)
-  return <bytes>s[:16]
+  return <str>s[:16]
 
 def get_regs():
   cdef Registers r = Registers()
@@ -363,4 +363,4 @@ def get_regs():
 
 cpdef get_instr_str(uint32_t pc):
   cdef const char *s = cpu.cpu_get_instr_str(pc)
-  return <bytes>s
+  return <str>s

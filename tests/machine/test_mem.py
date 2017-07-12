@@ -40,7 +40,7 @@ def test_invalid_rw(mach):
 
 def test_rw_vs_cpu(mem_rw):
   print("test_rw: %08x" % mem_rw)
-  for a in xrange(16):
+  for a in range(16):
     addr = mem_rw + a
     # write with API and check with CPU
     w8(addr, 42)
@@ -68,7 +68,7 @@ def test_rw_vs_cpu(mem_rw):
 
 def test_ro_vs_cpu(mem_ro):
   print("test_ro: %08x" % mem_ro)
-  for a in xrange(16):
+  for a in range(16):
     addr = mem_ro + a
     # write with API and check with CPU
     w8(addr, 42)
@@ -161,12 +161,12 @@ def test_rw_block(mem_rw):
   assert blk == blk2
 
 def test_c_str(mem_rw):
-  s = "hello, world!"
+  s = b"hello, world!"
   w_cstr(mem_rw, s)
   assert r_cstr(mem_rw) == s
 
 def test_b_str(mem_rw):
-  s = "hello, world!"
+  s = b"hello, world!"
   w_bstr(mem_rw, s)
   assert r_bstr(mem_rw) == s
 
@@ -483,7 +483,7 @@ def test_api_trace_func(mach):
   r32(0x100)
   assert t.value == (MEM_ACCESS_R32, 0x100, 12345, 0)
   # block
-  val = "hallo"
+  val = b"hallo"
   w_block(0x200, val)
   assert t.value == (MEM_ACCESS_W_BLOCK, 0x200, 5, 0)
   val2 = r_block(0x200, 5)
@@ -494,7 +494,7 @@ def test_api_trace_func(mach):
   copy_block(0x400, 0x500, 64)
   assert t.value == (MEM_ACCESS_BCOPY, 0x500, 64, 0x400)
   # c_str
-  s = "hello, world!"
+  s = b"hello, world!"
   n = len(s)
   w_cstr(0x100, s)
   assert t.value == (MEM_ACCESS_W_CSTR, 0x100, n, 0)
@@ -536,7 +536,7 @@ def test_api_trace_func_str(mach):
   r32(0x100)
   assert t.value == "r32    @00000100: 00003039"
   # block
-  val = "hallo"
+  val = b"hallo"
   w_block(0x200, val)
   assert t.value == "wblock @00000200: 00000005"
   val2 = r_block(0x200, 5)
@@ -547,7 +547,7 @@ def test_api_trace_func_str(mach):
   copy_block(0x400, 0x500, 64)
   assert t.value == "bcopy  @00000500: 00000040, 00000400"
   # c_str
-  s = "hello, world!"
+  s = b"hello, world!"
   n = len(s)
   w_cstr(0x100, s)
   assert t.value == "wcstr  @00000100: 0000000d"
@@ -590,14 +590,14 @@ def test_api_trace_func_default(mach):
   r16(0x10)
   r32(0x100)
   # block
-  val = "hallo"
+  val = b"hallo"
   w_block(0x200, val)
   val2 = r_block(0x200, 5)
   assert val == val2
   set_block(0x400, 32, 0xff)
   copy_block(0x400, 0x500, 64)
   # c_str
-  s = "hello, world!"
+  s = b"hello, world!"
   n = len(s)
   w_cstr(0x100, s)
   s2 = r_cstr(0x100)

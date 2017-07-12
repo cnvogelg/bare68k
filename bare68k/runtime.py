@@ -158,7 +158,7 @@ class Runtime(object):
         mem.add_memory(start, size, flags)
         data = mr.opts
         if data is not None:
-          mem.w_block(mr.start_addr, mr.opts)
+          mem.w_block(mr.start_addr, data)
         self._log.info("memory: ROM @%04x +%04x flags=%x", start, size, flags)
       elif mt == MEM_SPECIAL:
         r_func, w_func = mr.opts

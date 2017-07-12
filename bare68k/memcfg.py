@@ -150,10 +150,10 @@ class MemoryConfig(object):
       else:
         fill = PAGE_BYTES - rem
         if pad is True:
-          pad = chr(0)
-        else:
-          pad = chr(pad)
-        return data + pad * fill
+          pad = 0
+        fill_data = bytes(bytearray([pad] * fill))
+        rom = data + fill_data
+        return rom
 
   # page based
 

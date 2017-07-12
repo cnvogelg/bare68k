@@ -77,10 +77,10 @@ def test_memtypes():
   # RAM
   memcfg.add_ram_range(0,1)
   # ROM (page aligned)
-  data = chr(0) * PAGE_BYTES
+  data = bytes([0] * PAGE_BYTES)
   memcfg.add_rom_range(1,1,data)
   # ROM (not aligned)
-  data2 = chr(0) * 1234
+  data2 = bytes([0] * 1234)
   with pytest.raises(ConfigError):
     memcfg.add_rom_range(2,1,data2)
   memcfg.add_rom_range(2,1,data2,pad=True)

@@ -113,7 +113,7 @@ cdef int mem_cpu_trace_adapter(int flag, uint32_t addr, uint32_t val, void **dat
     return 0
 
 cdef int mem_cpu_trace_adapter_str(int flag, uint32_t addr, uint32_t val, void **data):
-  cdef bytes s
+  cdef str s
   global mem_cpu_trace_func
   try:
     v = (flag, addr, val)
@@ -157,7 +157,7 @@ cdef void mem_api_trace_adapter(int flag, uint32_t addr, uint32_t val, uint32_t 
     mem_api_exc_info = sys.exc_info()
 
 cdef void mem_api_trace_adapter_str(int flag, uint32_t addr, uint32_t val, uint32_t extra):
-  cdef bytes s
+  cdef str s
   global mem_api_trace_func
   global mem_api_exc_info
   try:
@@ -208,7 +208,7 @@ def r_block(uint32_t addr, uint32_t size):
     raise ValueError("Invalid address $%08x" % addr)
   else:
     _handle_api_exc()
-    return bytes(data[:size])
+    return <bytes>data[:size]
 
 def w_block(uint32_t addr, bytes data):
   cdef uint32_t size = len(data)
@@ -228,7 +228,7 @@ def r_cstr(uint32_t addr):
     raise ValueError("Invalid cstr at $%08x" % addr)
   else:
     _handle_api_exc()
-    return bytes(cstr[:length])
+    return <bytes>cstr[:length]
 
 def w_cstr(uint32_t addr, bytes pstr):
   cdef uint32_t length = len(pstr)
@@ -246,7 +246,7 @@ def r_bstr(uint32_t addr):
     raise ValueError("Invalid bstr at $%08x" % addr)
   else:
     _handle_api_exc()
-    return bytes(cstr[:length])
+    return <bytes>cstr[:length]
 
 def w_bstr(uint32_t addr, bytes pstr):
   cdef uint32_t length = len(pstr)
@@ -405,21 +405,21 @@ def cpu_r32(uint32_t addr):
 
 def get_cpu_fc_str(int access):
   cdef const char *s = mem.mem_get_cpu_fc_str(access)
-  return <bytes>s[:2]
+  return <str>s[:2]
 
 def get_cpu_access_str(int access):
   cdef const char *s = mem.mem_get_cpu_access_str(access)
-  return <bytes>s[:6]
+  return <str>s[:6]
 
 cpdef get_cpu_mem_str(int access, uint32_t address, uint32_t value):
   cdef const char *s = mem.mem_get_cpu_mem_str(access, address, value)
-  return <bytes>s[:26]
+  return <str>s[:26]
 
 def get_api_access_str(int access):
   cdef const char *s = mem.mem_get_api_access_str(access)
-  return <bytes>s[:6]
+  return <str>s[:6]
 
 cpdef get_api_mem_str(int access, uint32_t address, uint32_t value, uint32_t extra):
   cdef int size
   cdef const char *s = mem.mem_get_api_mem_str(access, address, value, extra, &size)
-  return <bytes>s[:size]
+  return <str>s[:size]

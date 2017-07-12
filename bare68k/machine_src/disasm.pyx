@@ -7,7 +7,7 @@ def disassemble(uint32_t pc):
   words = []
   for i in range(num_bytes/2):
     words.append(mem.m68k_read_disassembler_16(pc+i*2))
-  return (pc, words, line)
+  return (pc, words, <str>line)
 
 def disassemble_range(uint32_t start, uint32_t end):
   cdef uint32_t pc = start

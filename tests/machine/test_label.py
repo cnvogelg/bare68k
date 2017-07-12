@@ -24,7 +24,7 @@ def test_label_add_remove_simple(mach):
   assert 0 == get_num_labels()
 
 def _create_random(num, size, seed=42):
-  seq = range(num)
+  seq = list(range(num))
   random.seed(seed)
   random.shuffle(seq)
   labels = [None] * num
@@ -44,7 +44,7 @@ def _create_random(num, size, seed=42):
 
 def _delete_random(labels, seed=21):
   num = len(labels)
-  seq = range(num)
+  seq = list(range(num))
   random.seed(seed)
   random.shuffle(seq)
   assert get_num_labels() == num

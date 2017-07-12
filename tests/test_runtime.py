@@ -24,7 +24,7 @@ def test_runtime_memcfg():
   cpu_cfg = CPUConfig()
   mem_cfg = MemoryConfig()
   mem_cfg.add_ram_range(0, 1)
-  mem_cfg.add_rom_range(1, 1, "hallo", pad=True)
+  mem_cfg.add_rom_range(1, 1, b"hallo", pad=True)
   def r_func():
     pass
   def w_func():
