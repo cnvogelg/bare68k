@@ -1,4 +1,4 @@
-from api import label
+import bare68k.api.label as label
 
 class LabelMgr(object):
 
