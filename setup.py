@@ -150,7 +150,7 @@ depends = [
   'bare68k/machine_src/glue/mem.h',
   'bare68k/machine_src/glue/traps.h',
   'bare68k/machine_src/glue/tools.h',
-  'bare68k/machine_src/glue/tool'
+  'bare68k/machine_src/glue/label.h'
 ]
 inc_dirs = [
   'bare68k/machine_src',
