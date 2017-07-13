@@ -4,7 +4,7 @@ build/
 gen/
 .cache/
 machine.c
-machine.so
+*.so
 *.egg
 *.egg-info
 .eggs

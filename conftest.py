@@ -15,7 +15,7 @@ def mach(request):
   add_memory(0, 1, MEM_FLAGS_RW | MEM_FLAGS_TRAPS)
   pulse_reset()
   yield
-  shutdown(use_labels)
+  shutdown()
 
 PROG_BASE = 0x1000
 STACK = 0x800

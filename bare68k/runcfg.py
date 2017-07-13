@@ -8,9 +8,12 @@ import bare68k.api.mem as mem
 class RunConfig(object):
   """define the runtime configuration"""
 
-  def __init__(self, catch_kb_intr=True, cycles_per_run=0, log_channel=None):
+  def __init__(self, catch_kb_intr=True, cycles_per_run=0,
+               with_labels=True,
+               log_channel=None):
     self._catch_kb_intr = catch_kb_intr
     self._cycles_per_run = cycles_per_run
+    self._with_labels = with_labels
     if log_channel is None:
       self._log = logging.getLogger(__name__)
     else:

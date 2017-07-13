@@ -19,6 +19,7 @@ import sys
 
 cdef object event_handlers = [None] * cpu.CPU_NUM_EVENTS
 cdef int is_init = 0
+cdef bool got_labels
 
 # ---- handler access -----
 
@@ -52,6 +53,8 @@ def init(int cpu_type, int num_pages, bool with_labels=False):
   traps.traps_init()
   tools.tools_init()
 
+  global got_labels
+  got_labels = with_labels
   if with_labels:
     label.label_init(mem.mem_get_num_pages(), mem.mem_get_page_shift())
     label.label_set_cleanup_func(cleanup_label)
@@ -61,7 +64,7 @@ def init(int cpu_type, int num_pages, bool with_labels=False):
 
   clear_event_handlers()
 
-def shutdown(bool with_labels=False):
+def shutdown():
   global is_init
   if is_init == 0:
     raise RuntimeError("call init first")
@@ -73,7 +76,8 @@ def shutdown(bool with_labels=False):
   set_int_ack_func(None)
   set_irq(0)
 
-  if with_labels:
+  global got_labels
+  if got_labels:
     label.label_free()
 
   cpu.cpu_free()

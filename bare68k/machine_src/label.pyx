@@ -90,13 +90,14 @@ def add_label(uint32_t addr, uint32_t size, data):
   return Label.create(e)
 
 def remove_label(Label l):
+  if l is None:
+    raise ValueError("no label given!")
   cdef label.label_entry_t *entry = l.entry
   if entry != NULL:
     if label.label_remove(entry) == 0:
       raise ValueError("can't remove label!")
 
 def remove_labels_inside(uint32_t addr, uint32_t size):
-  cdef int num
   return label.label_remove_inside(addr, size)
 
 def find_label(uint32_t addr):

@@ -13,6 +13,7 @@ from bare68k.errors import *
 from bare68k.cpucfg import *
 from bare68k.memcfg import *
 from bare68k.runcfg import RunConfig
+from bare68k.labelmgr import *
 
 
 class EventStats(object):
@@ -117,9 +118,10 @@ class Runtime(object):
     max_pages = cpu_cfg.get_max_pages()
     mem_cfg.check(max_pages=max_pages)
     # init machine
+    with_labels = run_cfg._with_labels
     cpu = cpu_cfg.get_cpu_type()
     num_pages = mem_cfg.get_num_pages()
-    mach.init(cpu, num_pages)
+    mach.init(cpu, num_pages, with_labels)
     # realize mem config
     self._setup_mem(mem_cfg)
     # setup cpu event handlers
@@ -129,6 +131,15 @@ class Runtime(object):
     self._reset_sp = None
     self._end_pcs = []
     self._cpu_states = []
+    # setup label mgr
+    if with_labels:
+      self._label_mgr = LabelMgr()
+    else:
+      self._label_mgr = DummyLabelMgr()
+
+  def get_label_mgr(self):
+    """get the label manager"""
+    return self._label_mgr
 
   def get_cpu_cfg(self):
     """access the current CPU configuration"""
