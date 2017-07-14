@@ -38,12 +38,14 @@ def test_runtime_memcfg():
   rt.shutdown()
 
 def test_runtime_init(rt):
-  pass
+  print(rt.get_run_cfg())
 
 def test_rt_mem_cpu(rt):
   PROG_BASE = rt.get_reset_pc()
   mem.w16(PROG_BASE, RESET_OPCODE)
   cpu.w_reg(M68K_REG_D0, 0)
+
+# --- test reset ---
 
 def test_rt_reset_quit_on_first(rt):
   is_68k = rt.get_cpu_cfg().get_cpu_type() == M68K_CPU_TYPE_68000
@@ -65,6 +67,26 @@ def test_rt_reset_quit_on_pc(rt):
   assert ri.total_cycles == reset_cycles
   assert cpu.r_pc() == PROG_BASE + 2
   assert ri.get_last_result() == CPU_EVENT_RESET
+
+# --- test cb error ---
+
+def test_rt_cb_error_abort(rt):
+  def hook(pc):
+    raise KeyboardInterrupt()
+  cpu.set_instr_hook_func(hook)
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_USER_ABORT
+
+def test_rt_cb_error_exc(rt):
+  def hook(pc):
+    raise MemoryError()
+  cpu.set_instr_hook_func(hook)
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, RESET_OPCODE)
+  with pytest.raises(MemoryError):
+    ri = rt.run()
 
 # --- memory events ---
 
@@ -105,6 +127,41 @@ def test_rt_mem_bounds_code(rt):
   mem.w16(PROG_BASE+6, RESET_OPCODE)
   ri = rt.run()
   assert ri.get_last_result() == CPU_EVENT_MEM_ACCESS
+
+# --- memory trace
+
+def test_rt_mem_trace_return(rt):
+  def handler(s, v):
+    return "s=%s,v=%s" % (s, v)
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  mem.set_mem_cpu_trace_func(handler, as_str=True)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_MEM_TRACE
+
+def test_rt_mem_trace_kb_intr(rt):
+  def handler(s, v):
+    raise KeyboardInterrupt
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  mem.set_mem_cpu_trace_func(handler, as_str=True)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_USER_ABORT
+
+def test_rt_mem_trace_exc(rt):
+  def handler(s, v):
+    raise MemoryError
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  mem.set_mem_cpu_trace_func(handler, as_str=True)
+  with pytest.raises(MemoryError):
+    ri = rt.run()
 
 # --- traps ---
 

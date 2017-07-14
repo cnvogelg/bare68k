@@ -7,6 +7,7 @@ import logging
 import bare68k.api.machine as mach
 import bare68k.api.cpu as cpu
 import bare68k.api.mem as mem
+import bare68k.api.tools as tools
 
 from bare68k.consts import *
 from bare68k.errors import *
@@ -14,6 +15,7 @@ from bare68k.cpucfg import *
 from bare68k.memcfg import *
 from bare68k.runcfg import RunConfig
 from bare68k.labelmgr import *
+from bare68k.handler import EventHandler
 
 
 class EventStats(object):
@@ -62,6 +64,12 @@ class RunInfo(object):
   def is_done(self):
     return self.get_last_result() == CPU_EVENT_DONE
 
+  def get_results(self):
+    return self.results
+
+  def get_result(self, pos):
+    return self.results[pos][0]
+
   def get_last_result(self):
     if len(self.results) > 0:
       return self.results[-1][0]
@@ -97,7 +105,8 @@ def init_quick(cpu_type=M68K_CPU_TYPE_68000, ram_pages=1):
 
 class Runtime(object):
 
-  def __init__(self, cpu_cfg, mem_cfg, run_cfg, log_channel=None):
+  def __init__(self, cpu_cfg, mem_cfg, run_cfg,
+               event_handler=None, log_channel=None):
     """setup runtime.
 
     before you can run your system emulation you have to init() the system
@@ -108,29 +117,40 @@ class Runtime(object):
       self._log = logging.getLogger(__name__)
     else:
       self._log = log_channel
+
     # remember configs
     self._cpu_cfg = cpu_cfg
     self._mem_cfg = mem_cfg
     self._run_cfg = run_cfg
-    # set runcfg backref to runtime
-    run_cfg._runtime = self
+
+    # setup event handler backref to runtime
+    if event_handler is None:
+      self._event_handler = EventHandler()
+    else:
+      self._event_handler = event_handler
+    self._event_handler._runtime = self
+
     # check mem config
     max_pages = cpu_cfg.get_max_pages()
     mem_cfg.check(max_pages=max_pages)
+
     # init machine
     with_labels = run_cfg._with_labels
     cpu = cpu_cfg.get_cpu_type()
     num_pages = mem_cfg.get_num_pages()
     mach.init(cpu, num_pages, with_labels)
+
     # realize mem config
     self._setup_mem(mem_cfg)
     # setup cpu event handlers
     self._setup_handlers()
+
     # clear state
     self._reset_pc = None
     self._reset_sp = None
     self._end_pcs = []
     self._cpu_states = []
+
     # setup label mgr
     if with_labels:
       self._label_mgr = LabelMgr()
@@ -148,6 +168,18 @@ class Runtime(object):
   def get_mem_cfg(self):
     """access the current memory configuration"""
     return self._mem_cfg
+
+  def get_run_cfg(self):
+    """access the current run configuration"""
+    return self._run_cfg
+
+  def get_cpu(self):
+    """return cpu API 'object'"""
+    return cpu
+
+  def get_mem(self):
+    """return mem API 'object'"""
+    return mem
 
   def _setup_mem(self, mem_cfg):
     """internal helper to realize the memory configuration"""
@@ -246,6 +278,7 @@ class Runtime(object):
     # get some config values
     catch_kb_intr = self._run_cfg._catch_kb_intr
     cycles_per_run = self._run_cfg._cycles_per_run
+    pc_trace_size = self._run_cfg._pc_trace_size
 
     # recursive run() call? if yes then store cpu state
     rec_depth = len(self._end_pcs)
@@ -269,6 +302,9 @@ class Runtime(object):
     # stats
     stats = EventStats()
     start_cycles = cpu.get_total_cycles()
+
+    # pc trace?
+    tools.setup_pc_trace(pc_trace_size)
 
     cpu_time = 0
 
@@ -301,6 +337,7 @@ class Runtime(object):
         handler = event.handler
         stats.count(event.ev_type)
         if handler is not None:
+          self._log.debug("trigger handler: %s", CPU_EVENT_NAMES[event.ev_type])
           result = handler(event)
           # handler wants to exit run loop
           if result is not None:
@@ -308,6 +345,7 @@ class Runtime(object):
             stay = False
             self._log.debug("run loop exit #%d: result=%s (event=%r)",
                             rec_depth, CPU_EVENT_NAMES[result], event)
+            break
         else:
           self._log.warning("no handler: result=%s (event=%r)",
                             CPU_EVENT_NAMES[event.ev_type], event)
@@ -334,7 +372,7 @@ class Runtime(object):
 
   def _setup_handlers(self):
     """internal setter for all machine event handlers"""
-    cfg = self._run_cfg
+    cfg = self._event_handler
     eh = {
       CPU_EVENT_CALLBACK_ERROR: cfg.handler_cb_error,
       CPU_EVENT_RESET: cfg.handler_reset,
