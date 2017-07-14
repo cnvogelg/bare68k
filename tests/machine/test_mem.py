@@ -234,7 +234,7 @@ def test_cpu_trace_func_exc(mem_rw):
   ri = get_info()
   assert ri.num_events == 1
   ev = ri.events[0]
-  assert ev.ev_type == CPU_EVENT_MEM_TRACE
+  assert ev.ev_type == CPU_EVENT_CALLBACK_ERROR
   assert ev.data[1] == ve
   traceback.print_exception(*ev.data)
 
@@ -280,6 +280,22 @@ def test_special(mach):
   # test if write func is triggered (without events)
   w8(1, 11)
   assert s.w_val == 11
+  ri = get_info()
+  assert ri.num_events == 0
+
+def test_special_read_no_tuple(mach):
+  class special:
+    w_val = None
+    def r(self, mode, addr):
+      print("read", mode, addr)
+      return 21 # no tuple only value
+    def w(self, mode, addr, val):
+      print("write", mode, addr, val)
+      self.w_val = val
+  s = special()
+  add_special(0, 1, s.r, s.w)
+  # test if read func is triggered (without events)
+  assert r8(0) == 21
   ri = get_info()
   assert ri.num_events == 0
 

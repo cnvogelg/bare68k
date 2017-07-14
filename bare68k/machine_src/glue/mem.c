@@ -313,8 +313,11 @@ static void w32_mem(page_entry_t *page, uint32_t addr, uint32_t val)
   if(cpu_trace_func != NULL) { \
     void *data = NULL; \
     int res = cpu_trace_func(access, address, the_value, &data); \
-    if(res==0) { \
+    if(res==CPU_CB_EVENT) { \
       trace_event(access, address, the_value, data); \
+    } \
+    else if(res==CPU_CB_ERROR) { \
+      cpu_add_event(CPU_EVENT_CALLBACK_ERROR, address, 0, 0, data); \
     } \
   }
 

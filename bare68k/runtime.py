@@ -67,12 +67,21 @@ class RunInfo(object):
   def get_results(self):
     return self.results
 
+  def get_event(self, pos):
+    return self.results[pos][1]
+
   def get_result(self, pos):
     return self.results[pos][0]
 
   def get_last_result(self):
     if len(self.results) > 0:
       return self.results[-1][0]
+    else:
+      return None
+
+  def get_last_event(self):
+    if len(self.results) > 0:
+      return self.results[-1][1]
     else:
       return None
 
@@ -345,7 +354,9 @@ class Runtime(object):
             stay = False
             self._log.debug("run loop exit #%d: result=%s (event=%r)",
                             rec_depth, CPU_EVENT_NAMES[result], event)
-            break
+            # user abort terminates event loop
+            if result == CPU_EVENT_USER_ABORT:
+              break
         else:
           self._log.warning("no handler: result=%s (event=%r)",
                             CPU_EVENT_NAMES[event.ev_type], event)

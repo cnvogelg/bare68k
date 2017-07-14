@@ -41,14 +41,18 @@ cdef int mem_special_adapter_r(int access, uint32_t addr, uint32_t *val, void *p
     if pfunc != NULL:
       f = <object>pfunc
       pair = f(access, addr)
-      val[0] = pair[0]
-      result = pair[1]
-      if result is None:
-        return cpu.CPU_CB_NO_EVENT
+      if type(pair) is tuple:
+        val[0] = pair[0]
+        result = pair[1]
+        if result is None:
+          return cpu.CPU_CB_NO_EVENT
+        else:
+          Py_INCREF(result)
+          out_data[0] = <void *>result
+          return cpu.CPU_CB_EVENT
       else:
-        Py_INCREF(result)
-        out_data[0] = <void *>result
-        return cpu.CPU_CB_EVENT
+        val[0] = pair
+        return cpu.CPU_CB_NO_EVENT
     else:
       return cpu.CPU_CB_NO_EVENT
   except:
@@ -101,16 +105,16 @@ cdef int mem_cpu_trace_adapter(int flag, uint32_t addr, uint32_t val, void **dat
   try:
     result = mem_cpu_trace_func(flag, addr, val)
     if result is None:
-      return 1
+      return cpu.CPU_CB_NO_EVENT
     else:
       Py_INCREF(result)
       data[0] = <void *>result
-      return 0
+      return cpu.CPU_CB_EVENT
   except:
     exc_info = sys.exc_info()
     Py_INCREF(exc_info)
     data[0] = <void *>exc_info
-    return 0
+    return cpu.CPU_CB_ERROR
 
 cdef int mem_cpu_trace_adapter_str(int flag, uint32_t addr, uint32_t val, void **data):
   cdef str s
@@ -120,16 +124,16 @@ cdef int mem_cpu_trace_adapter_str(int flag, uint32_t addr, uint32_t val, void *
     s = get_cpu_mem_str(flag, addr, val)
     result = mem_cpu_trace_func(s, v)
     if result is None:
-      return 1
+      return cpu.CPU_CB_NO_EVENT
     else:
       Py_INCREF(result)
       data[0] = <void *>result
-      return 0
+      return cpu.CPU_CB_EVENT
   except:
     exc_info = sys.exc_info()
     Py_INCREF(exc_info)
     data[0] = <void *>exc_info
-    return 0
+    return cpu.CPU_CB_ERROR
 
 def set_mem_cpu_trace_func(object cb=None, bool default=False, bool as_str=False):
   global mem_cpu_trace_func

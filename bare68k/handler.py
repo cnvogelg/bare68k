@@ -71,29 +71,21 @@ class EventHandler(object):
       return CPU_EVENT_MEM_ACCESS
 
   def handler_mem_trace(self, event):
-    """a cpu mem trace handler returned a value != None
-       this could be a real value or an exception that was thrown
-    """
-    d = event.data
-    # is an exception tuple? -> raise!
-    if type(d) is tuple and len(d) == 3 and isinstance(d[1], BaseException):
-      # kb intr can be handled
-      if d[0] is KeyboardInterrupt:
-        if self._runtime._run_cfg._catch_kb_intr:
-          self._log.debug("MEM_TRACE: keyboard interrupt")
-          return CPU_EVENT_USER_ABORT
-      # re-raise other errors
-      self._log.error("MEM_TRACE: raises %s", d[0].__name__)
-      raise_(*d)
-    # regular data
-    self._log.info("MEM_TRACE: %s", d)
+    """a cpu mem trace handler returned a value != None"""
+    mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
+    self._log.info("MEM_TRACE: %s -> %s", mem_str, event.data)
     return CPU_EVENT_MEM_TRACE
 
   def handler_mem_special(self, event):
-    pass
+    """a memory special handler returned a value != None"""
+    mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
+    self._log.info("MEM_SPECIAL: %s -> %s", mem_str, event.data)
+    return CPU_EVENT_MEM_SPECIAL
 
   def handler_instr_hook(self, event):
-    pass
+    """an instruction hook handler returned a value != None"""
+    self._log.info("INSTR_HOOK: @%08X -> %s", event.addr, event.data)
+    return CPU_EVENT_INSTR_HOOK
 
   def handler_int_ack(self, event):
     pass

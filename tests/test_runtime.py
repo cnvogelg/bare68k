@@ -163,6 +163,91 @@ def test_rt_mem_trace_exc(rt):
   with pytest.raises(MemoryError):
     ri = rt.run()
 
+# --- mem special
+
+def test_rt_mem_special_none():
+  runtime.log_setup()
+  cpu_cfg = CPUConfig(M68K_CPU_TYPE_68000)
+  mem_cfg = MemoryConfig()
+  mem_cfg.add_ram_range(0, 1)
+  def read(mode, addr):
+    print("READ:%x @%08x" % (mode, addr))
+    return 42
+  def write(mode, addr, val):
+    print("WRITE:%x @%08x: %08x" % (mode, addr, val))
+  mem_cfg.add_special_range(1, 1, read, write)
+  run_cfg = RunConfig()
+  rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
+  PROG_BASE = 0x1000
+  STACK = 0x800
+  rt.reset(PROG_BASE, STACK)
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0x10000)
+  mem.w16(PROG_BASE+6, 0x2039) # move.l <32b_addr>,d0
+  mem.w32(PROG_BASE+8, 0x10000)
+  mem.w16(PROG_BASE+12, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_DONE
+  rt.shutdown()
+
+def test_rt_mem_special_val():
+  runtime.log_setup()
+  cpu_cfg = CPUConfig(M68K_CPU_TYPE_68000)
+  mem_cfg = MemoryConfig()
+  mem_cfg.add_ram_range(0, 1)
+  def read(mode, addr):
+    print("READ:%x @%08x" % (mode, addr))
+    return (42, "read")
+  def write(mode, addr, val):
+    print("WRITE:%x @%08x: %08x" % (mode, addr, val))
+    return "write"
+  mem_cfg.add_special_range(1, 1, read, write)
+  run_cfg = RunConfig()
+  rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
+  PROG_BASE = 0x1000
+  STACK = 0x800
+
+  # write run
+  rt.reset(PROG_BASE, STACK)
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0x10000)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_MEM_SPECIAL
+  assert ri.get_last_event().data == "write"
+
+  # read run
+  rt.reset(PROG_BASE, STACK)
+  mem.w16(PROG_BASE, 0x2039) # move.l <32b_addr>,d0
+  mem.w32(PROG_BASE+2, 0x10000)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_MEM_SPECIAL
+  assert ri.get_last_event().data == "read"
+
+  rt.shutdown()
+
+# --- instr_hook ---
+
+def test_rt_instr_hook_none(rt):
+  def hook(pc):
+    pass
+  cpu.set_instr_hook_func(hook)
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_last_result() == CPU_EVENT_DONE
+
+def test_rt_instr_hook_val(rt):
+  def hook(pc):
+    return "i am hooked"
+  cpu.set_instr_hook_func(hook)
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, RESET_OPCODE)
+  ri = rt.run()
+  assert ri.get_result(0) == CPU_EVENT_INSTR_HOOK
+  assert ri.get_event(0).data == "i am hooked"
+
 # --- traps ---
 
 def test_rt_trap_cpu(rt):
