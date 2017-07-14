@@ -84,11 +84,13 @@ class EventHandler(object):
 
   def handler_instr_hook(self, event):
     """an instruction hook handler returned a value != None"""
-    self._log.info("INSTR_HOOK: @%08X -> %s", event.addr, event.data)
+    self._log.info("INSTR_HOOK: pc=@%08x -> %s", event.addr, event.data)
     return CPU_EVENT_INSTR_HOOK
 
   def handler_int_ack(self, event):
-    pass
+    """int ack handler did return a value != None"""
+    self._log.info("INT_ACK: pc=@%08x int=%d -> %s", event.addr, event.flags, event.data)
+    return CPU_EVENT_INT_ACK
 
   def handler_breakpoint(self, event):
     addr = event.addr

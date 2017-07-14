@@ -211,16 +211,20 @@ cdef object int_ack_func = None
 cdef int int_ack_adapter(int level, uint32_t pc, uint32_t *ack_ret, void **data):
   global int_ack_func
   try:
-    # cb returns tuple (int_num, data)
+    # cb returns tuple (int_num, data) or int_num
     pair = int_ack_func(level, pc)
-    ack_ret[0] = pair[0]
-    res = pair[1]
-    if res is None:
-      return cpu.CPU_CB_NO_EVENT
+    if type(pair) is tuple:
+      ack_ret[0] = pair[0]
+      res = pair[1]
+      if res is None:
+        return cpu.CPU_CB_NO_EVENT
+      else:
+        Py_INCREF(res)
+        data[0] = <void *>res
+        return cpu.CPU_CB_EVENT
     else:
-      Py_INCREF(res)
-      data[0] = <void *>res
-      return cpu.CPU_CB_EVENT
+      res = pair
+      return cpu.CPU_CB_NO_EVENT
   except:
     exc_info = sys.exc_info()
     Py_INCREF(exc_info)

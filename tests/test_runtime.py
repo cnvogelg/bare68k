@@ -248,6 +248,23 @@ def test_rt_instr_hook_val(rt):
   assert ri.get_result(0) == CPU_EVENT_INSTR_HOOK
   assert ri.get_event(0).data == "i am hooked"
 
+# --- int ack ---
+
+def test_rt_int_ack_val(rt):
+  def int_ack(level, pc):
+    print("int_ack:", level)
+    return (M68K_INT_ACK_AUTOVECTOR, "huhu")
+  # set autovec of level 7
+  mem.w32(0x7c, 0x10000)
+  PROG_BASE = rt.get_reset_pc()
+  mem.w16(PROG_BASE, RESET_OPCODE)
+  cpu.set_int_ack_func(int_ack)
+  cpu.set_irq(7)
+  ri = rt.run()
+  assert ri.get_result(0) == CPU_EVENT_INT_ACK
+  assert ri.get_event(0).flags == 7
+  assert ri.get_event(0).data == "huhu"
+
 # --- traps ---
 
 def test_rt_trap_cpu(rt):

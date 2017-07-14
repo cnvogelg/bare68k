@@ -309,6 +309,33 @@ def test_irq_autovec_func(mach):
   assert ev.value == M68K_INT_ACK_AUTOVECTOR
   assert ev.data == "huhu"
 
+def test_irq_autovec_func_no_tuple(mach):
+  def func(pc):
+    print("pc=$%08x" % pc)
+  set_instr_hook_func(func)
+  def mem(mode, addr, val):
+    print("mem: %d @%08x =%08x" % (mode, addr, val))
+  set_mem_cpu_trace_func(mem)
+  def int_ack(level, pc):
+    print("int_ack:", level)
+    return M68K_INT_ACK_AUTOVECTOR
+  # set autovec of level 7
+  w32(0x7c, 0x10000)
+  w_sp(0x10000)
+  w16(0x100, NOP_OPCODE)
+  w_pc(0x100)
+  set_int_ack_func(int_ack)
+  set_irq(7)
+  ne = execute(2)
+  assert ne == 1
+  ri = get_info()
+  print("IRQ", ri)
+  # check for memfault
+  assert ri.num_events == 1
+  ev = ri.events[0]
+  assert ev.ev_type == CPU_EVENT_MEM_ACCESS
+  assert ev.addr == 0x10000
+
 def test_irq_vec_func(mach):
   def func(pc):
     print("pc=$%08x" % pc)
