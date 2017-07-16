@@ -8,30 +8,12 @@ PROG_BASE = 0x1000
 STACK = 0x800
 
 @pytest.fixture
-def lm(request):
-  runtime.log_setup()
-  cpu_cfg = CPUConfig(M68K_CPU_TYPE_68000)
-  mem_cfg = MemoryConfig()
-  mem_cfg.add_ram_range(0, 1)
-  mem_cfg.add_rom_range(2, 1)
-  run_cfg = RunConfig(with_labels=True)
-  rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
-  rt.reset(PROG_BASE, STACK)
-  yield rt.get_label_mgr()
-  rt.shutdown()
+def lm(rt):
+  return rt.get_label_mgr()
 
 @pytest.fixture
-def lmd(request):
-  runtime.log_setup()
-  cpu_cfg = CPUConfig(M68K_CPU_TYPE_68000)
-  mem_cfg = MemoryConfig()
-  mem_cfg.add_ram_range(0, 1)
-  mem_cfg.add_rom_range(2, 1)
-  run_cfg = RunConfig(with_labels=False)
-  rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
-  rt.reset(PROG_BASE, STACK)
-  yield rt.get_label_mgr()
-  rt.shutdown()
+def lmnl(rtnl):
+  return rtnl.get_label_mgr()
 
 
 def test_lm_setup(lm):
@@ -83,14 +65,14 @@ def test_lm_remove_inside(lm):
   assert num == 2
   assert lm.get_num_labels() == 0
 
-def test_lm_dummy(lmd):
-  assert lmd.get_num_labels() == 0
-  assert lmd.get_num_page_labels(0) == 0
-  assert lmd.get_all_labels() is None
-  assert lmd.get_page_labels(0) is None
-  assert lmd.add_label(0, 100, "hello") is None
-  assert lmd.remove_label(None) is None
-  assert lmd.remove_labels_inside(0, 100) == 0
-  assert lmd.find_label(50) is None
-  assert lmd.find_intersecting_labels(0,100) is None
+def test_lm_dummy(lmnl):
+  assert lmnl.get_num_labels() == 0
+  assert lmnl.get_num_page_labels(0) == 0
+  assert lmnl.get_all_labels() is None
+  assert lmnl.get_page_labels(0) is None
+  assert lmnl.add_label(0, 100, "hello") is None
+  assert lmnl.remove_label(None) is None
+  assert lmnl.remove_labels_inside(0, 100) == 0
+  assert lmnl.find_label(50) is None
+  assert lmnl.find_intersecting_labels(0,100) is None
 

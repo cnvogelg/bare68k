@@ -20,6 +20,7 @@ def mach(request):
 PROG_BASE = 0x1000
 STACK = 0x800
 
+# runtime with labels
 @pytest.fixture(params=[M68K_CPU_TYPE_68000, M68K_CPU_TYPE_68020],
                 ids=["68000", "68020"])
 def rt(request):
@@ -29,6 +30,21 @@ def rt(request):
   mem_cfg.add_ram_range(0, 1)
   mem_cfg.add_rom_range(2, 1)
   run_cfg = RunConfig()
+  rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
+  rt.reset(PROG_BASE, STACK)
+  yield rt
+  rt.shutdown()
+
+# runtime without labels
+@pytest.fixture(params=[M68K_CPU_TYPE_68000, M68K_CPU_TYPE_68020],
+                ids=["68000", "68020"])
+def rtnl(request):
+  runtime.log_setup()
+  cpu_cfg = CPUConfig(request.param)
+  mem_cfg = MemoryConfig()
+  mem_cfg.add_ram_range(0, 1)
+  mem_cfg.add_rom_range(2, 1)
+  run_cfg = RunConfig(with_labels=False)
   rt = Runtime(cpu_cfg, mem_cfg, run_cfg)
   rt.reset(PROG_BASE, STACK)
   yield rt
