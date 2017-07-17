@@ -13,7 +13,7 @@ def test_da_init_buffer(rt):
 CODE_ORG = 0x1000
 
 def read_code_file():
-  data_file = os.path.abspath(os.path.join(__file__,"..","..","samples","ppunpack","unpack.bin"))
+  data_file = os.path.abspath(os.path.join(__file__,"..","..","..","samples","ppunpack","unpack.bin"))
   fh = open(data_file, "rb")
   data = fh.read()
   fh.close()

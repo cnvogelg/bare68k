@@ -280,6 +280,10 @@ const char ** cpu_get_regs_str(const registers_t *regs)
     dx2 += 13;
     ax2 += 13;
   }
+  *(--dx1) = 0;
+  *(--ax1) = 0;
+  *(--dx2) = 0;
+  *(--ax2) = 0;
 
   sprintf(sp_line, "USP=%08x ISP=%08x MSP=%08x VBR=%08x",
           regs->usp, regs->isp, regs->msp, regs->vbr);
