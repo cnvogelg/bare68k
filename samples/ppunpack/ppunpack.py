@@ -72,8 +72,7 @@ def ppunpack(data, unpacker_code, do_trace=False):
       data_out = mem.r_block(data_out_addr, result)
 
   # dump final CPU state
-  print("final state:")
-  debug.dump.print_cpu_state()
+  debug.cpusnapshot.print_cpu_snapshot("final state:")
 
   # clean up bare68k environment
   rt.shutdown()

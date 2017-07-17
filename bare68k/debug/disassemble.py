@@ -1,7 +1,7 @@
 import bare68k.api.disasm as disasm
 import bare68k.api.cpu as cpu
 
-class LineInfo(object):
+class InstrLine(object):
   """the disassebmler creates a line info object with all extracted parameters
      for a single instruction line"""
   def __init__(self, pc, words, opcode, args, label=None, annotation=None, cycles=None):
@@ -14,11 +14,11 @@ class LineInfo(object):
     self.cycles = cycles
 
   def __repr__(self):
-    return "LineInfo(pc={:08x},words={},opcode={!r},args={!r},label={},annotation={},cycles={})".format(
+    return "InstrLine(pc={:08x},words={},opcode={!r},args={!r},label={},annotation={},cycles={})".format(
       self.pc, self.words, self.opcode, self.args, self.label, self.annotation, self.cycles)
 
 
-class LineInfoFormatter(object):
+class InstrLineFormatter(object):
   """convert a line info into a string for output"""
   def __init__(self, label_width=20, with_labels=True, with_cycles=True, with_words=True):
     self.label_width = label_width
@@ -27,7 +27,7 @@ class LineInfoFormatter(object):
     self.with_labels = with_labels
 
   def __repr__(self):
-    return "LineInfoFormatter(label_width={}, with_labels={}, with_cycles={}, with_words={})".format(
+    return "InstrLineFormatter(label_width={}, with_labels={}, with_cycles={}, with_words={})".format(
       self.label_width, self.with_labels, self.with_cycles, self.with_words)
 
   def format(self, li):
@@ -128,7 +128,7 @@ class Disassembler(object):
     else:
       label = None
     # add annotation?
-    li = LineInfo(pc, words, opcode, args, label, cycles=cycles)
+    li = InstrLine(pc, words, opcode, args, label, cycles=cycles)
     if self._annotator is not None:
       li.annotation = self._annotator(li)
     # create line info

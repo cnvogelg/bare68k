@@ -35,7 +35,7 @@ def test_da_file(rt):
   da = Disassembler(data, CODE_ORG)
   pc = CODE_ORG
   end = CODE_ORG + size
-  lf = LineInfoFormatter()
+  lf = InstrLineFormatter()
   while pc < end:
     li, pc = da.disassemble(pc)
     print(lf.format(li))
