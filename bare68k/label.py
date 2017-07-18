@@ -1,5 +1,20 @@
 import bare68k.api.label as label
 
+
+class LabelFormatter(object):
+  def format(self, label, pc=None):
+    data = label.data()
+    # if data is callable
+    if callable(data):
+      txt = data(pc)
+    else:
+      txt = data
+    # offset?
+    off = pc - label.addr()
+    if off > 0:
+      txt += "+{:x}".format(off)
+    return txt
+
 class LabelMgr(object):
 
   def get_num_labels(self):

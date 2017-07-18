@@ -28,6 +28,9 @@ class CPUSnapshotCreator(object):
     else:
       self._pc_trace_size = pc_trace_size
 
+  def get_disassembler(self):
+    return self._disasm
+
   def create(self, reason=None):
     """create a snapshot of the current CPU state"""
     regs = cpu.get_regs()
@@ -69,6 +72,9 @@ class CPUSnapshotFormatter(object):
       self.il_formatter = InstrLineFormatter()
     else:
       self.il_formatter = instr_line_formatter
+
+  def get_instr_line_formatter(self):
+    return self.il_formatter
 
   def format(self, cpu_snap):
     """convert the snapshot to an array of string lines and return it"""

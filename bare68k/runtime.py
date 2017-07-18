@@ -14,7 +14,7 @@ from bare68k.errors import *
 from bare68k.cpucfg import *
 from bare68k.memcfg import *
 from bare68k.runcfg import RunConfig
-from bare68k.labelmgr import *
+from bare68k.label import *
 from bare68k.handler import EventHandler
 
 
@@ -137,7 +137,6 @@ class Runtime(object):
       self._event_handler = EventHandler()
     else:
       self._event_handler = event_handler
-    self._event_handler._runtime = self
 
     # check mem config
     max_pages = cpu_cfg.get_max_pages()
@@ -166,6 +165,12 @@ class Runtime(object):
     else:
       self._label_mgr = DummyLabelMgr()
 
+    # finally attach runtime to handler
+    self._event_handler.attach_runtime(self)
+
+  def get_with_labels(self):
+    return self._run_cfg._with_labels
+
   def get_label_mgr(self):
     """get the label manager"""
     return self._label_mgr
@@ -189,6 +194,9 @@ class Runtime(object):
   def get_mem(self):
     """return mem API 'object'"""
     return mem
+
+  def get_event_handler(self):
+    return self._event_handler
 
   def _setup_mem(self, mem_cfg):
     """internal helper to realize the memory configuration"""
@@ -288,6 +296,7 @@ class Runtime(object):
     catch_kb_intr = self._run_cfg._catch_kb_intr
     cycles_per_run = self._run_cfg._cycles_per_run
     pc_trace_size = self._run_cfg._pc_trace_size
+    instr_trace = self._run_cfg._instr_trace
 
     # recursive run() call? if yes then store cpu state
     rec_depth = len(self._end_pcs)
@@ -314,6 +323,10 @@ class Runtime(object):
 
     # pc trace?
     tools.setup_pc_trace(pc_trace_size)
+
+    # instr trace?
+    if instr_trace:
+      cpu.set_instr_hook_func(self._event_handler.handler_instr_trace)
 
     cpu_time = 0
 
@@ -370,6 +383,10 @@ class Runtime(object):
     # restore cpu
     if cpu_state is not None:
       cpu.set_cpu_context(cpu_state)
+
+    # instr trace
+    if instr_trace:
+      cpu.set_instr_hook_func(None)
 
     # final timing
     total_time = total_end - total_start

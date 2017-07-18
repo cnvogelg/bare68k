@@ -1,5 +1,6 @@
 import bare68k.api.disasm as disasm
 import bare68k.api.cpu as cpu
+from bare68k.label import LabelFormatter
 
 class InstrLine(object):
   """the disassebmler creates a line info object with all extracted parameters
@@ -20,11 +21,17 @@ class InstrLine(object):
 
 class InstrLineFormatter(object):
   """convert a line info into a string for output"""
-  def __init__(self, label_width=20, with_labels=True, with_cycles=True, with_words=True):
+  def __init__(self, label_width=20, with_labels=True, with_cycles=True, with_words=True,
+      label_formatter=None):
     self.label_width = label_width
     self.with_cycles = with_cycles
     self.with_words = with_words
     self.with_labels = with_labels
+    # setup label formatter
+    if label_formatter is None:
+      self.label_formatter = LabelFormatter()
+    else:
+      self.label_formatter = label_formatter
 
   def __repr__(self):
     return "InstrLineFormatter(label_width={}, with_labels={}, with_cycles={}, with_words={})".format(
@@ -43,9 +50,11 @@ class InstrLineFormatter(object):
     if self.with_labels:
       label = li.label
       if label is None:
-        label = ""
+        txt = ""
+      else:
+        txt = self.label_formatter.format(label, li.pc)
       f = "{{:{}}}".format(self.label_width)
-      l = f.format(label)
+      l = f.format(txt)
       res.append(l)
     # words
     if self.with_words:

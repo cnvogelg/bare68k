@@ -3,17 +3,51 @@ import logging
 
 from bare68k.consts import *
 import bare68k.api.mem as mem
+from bare68k.debug.cpusnapshot import *
 
 class EventHandler(object):
   """define the event handling of the runtime"""
 
-  def __init__(self, log_channel=None):
-    if log_channel is None:
+  def __init__(self, logger=None, snap_create=None, snap_formatter=None,
+    instr_logger=None):
+    # setup log channel
+    if logger is None:
       self._log = logging.getLogger(__name__)
     else:
-      self._log = log_channel
+      self._log = logger
+    # setup snapshot creator
+    if snap_create is None:
+      self._snap_create = CPUSnapshotCreator()
+    else:
+      self._snap_create = snap_create
+    # setup snapshot formatter
+    if snap_formatter is None:
+      self._snap_formatter = CPUSnapshotFormatter()
+    else:
+      self._snap_formatter = snap_formatter
+    # setup instr log channel
+    if instr_logger is None:
+      self._instr_log = logging.getLogger("bare68k.instr")
+    else:
+      self._instr_log = instr_logger
+    # derive disassembler and formatter
+    self._disasm = self._snap_create.get_disassembler()
+    self._il_formatter = self._snap_formatter.get_instr_line_formatter()
     # the runtime backref will be set when attached to runtime
     self._runtime = None
+
+  def attach_runtime(self, runtime):
+    self._runtime = runtime
+    # if label manager is used attach it to disassembler, too
+    if runtime.get_with_labels():
+      label_mgr = runtime.get_label_mgr()
+      self._disasm.set_label_mgr(label_mgr)
+
+  def set_instr_logger(self, logger):
+    self._instr_log = logger
+
+  def set_logger(self, logger):
+    self._log = logger
 
   def handler_cb_error(self, event):
     """a callback running your code raised an exception"""
@@ -114,3 +148,11 @@ class EventHandler(object):
 
   def handler_timer(self, event):
     self._log.info("TIMER")
+
+  def handler_instr_trace(self, pc):
+    # disassemble pc
+    il,_ = self._disasm.disassemble(pc)
+    # format
+    line = self._il_formatter.format(il)
+    # and log
+    self._instr_log.info(line)

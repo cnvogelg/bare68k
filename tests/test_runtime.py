@@ -1,5 +1,6 @@
 import pytest
 import traceback
+import logging
 
 from bare68k import *
 from bare68k.api import *
@@ -7,6 +8,32 @@ from bare68k.consts import *
 
 RESET_OPCODE = 0x4e70
 NOP_OPCODE = 0x4e71
+
+# logger like class that stores msgs
+class CaptureLog:
+  def __init__(self):
+    self.msgs = {}
+
+  def clear(self):
+    self.msgs = {}
+
+  def get_msgs(self, lvl):
+    if lvl in self.msgs:
+      return self.msgs[lvl]
+    else:
+      return None
+
+  def log(self, lvl, msg):
+    if lvl not in self.msgs:
+      l = [msg]
+      self.msgs[lvl] = l
+    else:
+      l = self.msgs[lvl]
+      l.append(msg)
+
+  def info(self, msg):
+    self.log(logging.INFO, msg)
+
 
 def test_runtime_init_shutdown():
   cpu_cfg = CPUConfig()
@@ -368,3 +395,43 @@ def test_rt_recursive_run(rt):
   # run
   ri = rt.run()
   assert ri.get_last_result() == CPU_EVENT_DONE
+
+def test_rt_instr_trace(rt):
+  PROG_BASE = rt.get_reset_pc()
+  # label range
+  lm = rt.get_label_mgr()
+  lm.add_label(PROG_BASE,32,"hoho")
+  # place code
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  # capture log
+  cl = CaptureLog()
+  rt.get_event_handler().set_instr_logger(cl)
+  # enable instr trace
+  rt.get_run_cfg().set_instr_trace(True)
+  rt.run()
+  # check log
+  msgs = cl.get_msgs(logging.INFO)
+  assert len(msgs) == 2
+  assert msgs[0] == '@00001000  hoho                  23c0 0000 0000  move.l    D0,$0.l             '
+  assert msgs[1] == '@00001006  hoho+6                4e70            reset                         '
+
+def test_rt_instr_trace_off(rt):
+  PROG_BASE = rt.get_reset_pc()
+  # label range
+  lm = rt.get_label_mgr()
+  lm.add_label(PROG_BASE,32,"hoho")
+  # place code
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  # capture log
+  cl = CaptureLog()
+  rt.get_event_handler().set_instr_logger(cl)
+  # disable instr trace
+  rt.get_run_cfg().set_instr_trace(False)
+  rt.run()
+  # check log
+  msgs = cl.get_msgs(logging.INFO)
+  assert msgs == None
