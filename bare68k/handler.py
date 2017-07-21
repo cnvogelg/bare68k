@@ -9,7 +9,7 @@ class EventHandler(object):
   """define the event handling of the runtime"""
 
   def __init__(self, logger=None, snap_create=None, snap_formatter=None,
-    instr_logger=None):
+    instr_logger=None, mem_logger=None):
     # setup log channel
     if logger is None:
       self._log = logging.getLogger(__name__)
@@ -30,6 +30,11 @@ class EventHandler(object):
       self._instr_log = logging.getLogger("bare68k.instr")
     else:
       self._instr_log = instr_logger
+    # setup mem log channel
+    if mem_logger is None:
+      self._mem_log = logging.getLogger("bare68k.mem")
+    else:
+      self._mem_log = mem_logger
     # derive disassembler and formatter
     self._disasm = self._snap_create.get_disassembler()
     self._il_formatter = self._snap_formatter.get_instr_line_formatter()
@@ -45,6 +50,9 @@ class EventHandler(object):
 
   def set_instr_logger(self, logger):
     self._instr_log = logger
+
+  def set_mem_logger(self, logger):
+    self._mem_log = logger
 
   def set_logger(self, logger):
     self._log = logger
@@ -149,6 +157,8 @@ class EventHandler(object):
   def handle_timer(self, event):
     self._log.info("TIMER")
 
+  # debug handler
+
   def handle_instr_trace(self, pc):
     # disassemble pc
     il,_ = self._disasm.disassemble(pc)
@@ -156,3 +166,12 @@ class EventHandler(object):
     line = self._il_formatter.format(il)
     # and log
     self._instr_log.info(line)
+
+  def handle_cpu_mem_trace(self, msg, flag_addr_val):
+    flags = flag_addr_val[0]
+    # log only data access (not program)
+    if flags & MEM_FC_DATA_MASK == MEM_FC_DATA_MASK:
+      self._mem_log.info(msg)
+
+  def handle_api_mem_trace(self, msg, flag_addr_val):
+    self._mem_log.info(msg)

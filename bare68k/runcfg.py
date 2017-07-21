@@ -10,19 +10,22 @@ class RunConfig(object):
 
   def __init__(self, catch_kb_intr=True, cycles_per_run=0,
                with_labels=True, pc_trace_size=8,
-               instr_trace=False):
+               instr_trace=False, cpu_mem_trace=False, api_mem_trace=False):
     self._catch_kb_intr = catch_kb_intr
     self._cycles_per_run = cycles_per_run
     self._with_labels = with_labels
     self._pc_trace_size = pc_trace_size
     self._instr_trace = instr_trace
+    self._cpu_mem_trace = cpu_mem_trace
+    self._api_mem_trace = api_mem_trace
 
   def __repr__(self):
     return "RunConfg(catch_kb_intr={}, cycles_per_run={}, " \
-      "with_labels={}, pc_trace_size={}, instr_trace={})".format(
+      "with_labels={}, pc_trace_size={}, instr_trace={}, " \
+      "cpu_mem_trace={}, api_mem_trace={})".format(
           self._catch_kb_intr, self._cycles_per_run,
           self._with_labels, self._pc_trace_size,
-          self._instr_trace
+          self._instr_trace, self._cpu_mem_trace, self._api_mem_trace
         )
 
   def get_catch_kb_intr(self):
@@ -40,6 +43,12 @@ class RunConfig(object):
   def get_instr_trace(self):
     return self._instr_trace
 
+  def get_cpu_mem_trace(self):
+    return self._cpu_mem_trace
+
+  def get_api_mem_trace(self):
+    return self._api_mem_trace
+
   def set_catch_kb_instr(self, on):
     self._catch_kb_intr = on
 
@@ -51,3 +60,9 @@ class RunConfig(object):
 
   def set_instr_trace(self, on):
     self._instr_trace = on
+
+  def set_cpu_mem_trace(self, on):
+    self._cpu_mem_trace = on
+
+  def set_api_mem_trace(self, on):
+    self._api_mem_trace = on

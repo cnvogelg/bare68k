@@ -297,6 +297,8 @@ class Runtime(object):
     cycles_per_run = self._run_cfg._cycles_per_run
     pc_trace_size = self._run_cfg._pc_trace_size
     instr_trace = self._run_cfg._instr_trace
+    cpu_mem_trace = self._run_cfg._cpu_mem_trace
+    api_mem_trace = self._run_cfg._api_mem_trace
 
     # recursive run() call? if yes then store cpu state
     rec_depth = len(self._end_pcs)
@@ -325,8 +327,13 @@ class Runtime(object):
     tools.setup_pc_trace(pc_trace_size)
 
     # instr trace?
+    evh = self._event_handler
     if instr_trace:
-      cpu.set_instr_hook_func(self._event_handler.handle_instr_trace)
+      cpu.set_instr_hook_func(evh.handle_instr_trace)
+    if cpu_mem_trace:
+      mem.mach.set_mem_cpu_trace_func(evh.handle_cpu_mem_trace, as_str=True)
+    if api_mem_trace:
+      mem.mach.set_mem_api_trace_func(evh.handle_api_mem_trace, as_str=True)
 
     cpu_time = 0
 
@@ -387,6 +394,10 @@ class Runtime(object):
     # instr trace
     if instr_trace:
       cpu.set_instr_hook_func(None)
+    if cpu_mem_trace:
+      mem.set_mem_cpu_trace_func(None)
+    if api_mem_trace:
+      mem.set_mem_api_trace_func(None)
 
     # final timing
     total_time = total_end - total_start

@@ -435,3 +435,77 @@ def test_rt_instr_trace_off(rt):
   # check log
   msgs = cl.get_msgs(logging.INFO)
   assert msgs == None
+
+def test_rt_cpu_mem_trace(rt):
+  PROG_BASE = rt.get_reset_pc()
+  # place code
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  # capture log
+  cl = CaptureLog()
+  rt.get_event_handler().set_mem_logger(cl)
+  # enable cpu mem trace
+  rt.get_run_cfg().set_cpu_mem_trace(True)
+  rt.run()
+  # check log
+  msgs = cl.get_msgs(logging.INFO)
+  assert len(msgs) == 1
+  assert msgs[0] == 'W32:SD @00000000: 00000000'
+
+def test_rt_cpu_mem_trace_off(rt):
+  PROG_BASE = rt.get_reset_pc()
+  # place code
+  mem.w16(PROG_BASE, 0x23c0) # move.l d0,<32b_addr>
+  mem.w32(PROG_BASE+2, 0)
+  mem.w16(PROG_BASE+6, RESET_OPCODE)
+  # capture log
+  cl = CaptureLog()
+  rt.get_event_handler().set_mem_logger(cl)
+  # enable cpu mem trace
+  rt.get_run_cfg().set_cpu_mem_trace(False)
+  rt.run()
+  # check log
+  msgs = cl.get_msgs(logging.INFO)
+  assert msgs == None
+
+def test_rt_api_mem_trace(rt):
+  PROG_BASE = rt.get_reset_pc()
+  # capture log
+  cl = CaptureLog()
+  rt.get_event_handler().set_mem_logger(cl)
+  # enable api mem trace
+  rt.get_run_cfg().set_api_mem_trace(True)
+  # run with trap
+  def trap(ev):
+    # perform API access
+    mem.w32(0, 0x12345678)
+    print(ev)
+  op = traps.trap_setup(TRAP_DEFAULT, trap)
+  mem.w16(PROG_BASE, op)
+  mem.w16(PROG_BASE + 2, RESET_OPCODE)
+  rt.run()
+  # check log
+  msgs = cl.get_msgs(logging.INFO)
+  assert len(msgs) == 1
+  assert msgs[0] == 'w32    @00000000: 12345678'
+
+def test_rt_api_mem_trace(rt):
+  PROG_BASE = rt.get_reset_pc()
+  # capture log
+  cl = CaptureLog()
+  rt.get_event_handler().set_mem_logger(cl)
+  # disable api mem trace
+  rt.get_run_cfg().set_api_mem_trace(False)
+  # run with trap
+  def trap(ev):
+    # perform API access
+    mem.w32(0, 0x12345678)
+    print(ev)
+  op = traps.trap_setup(TRAP_DEFAULT, trap)
+  mem.w16(PROG_BASE, op)
+  mem.w16(PROG_BASE + 2, RESET_OPCODE)
+  rt.run()
+  # check log
+  msgs = cl.get_msgs(logging.INFO)
+  assert msgs == None
