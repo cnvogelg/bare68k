@@ -128,3 +128,10 @@ def test_disassemble_buffer_api(mach):
   assert words == [0, 0]
   assert line == "ori.b   #$0, D0"
   assert pc == 0
+
+def test_disassemble_is_valid(mach):
+  op1 = 0x4e75
+  assert disassemble_is_valid(op1) == True
+  if get_type() == M68K_CPU_TYPE_68000:
+    op2 = 0x8380 # unpk
+    assert disassemble_is_valid(op2) == False

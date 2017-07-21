@@ -26,6 +26,7 @@ w_sr = mach.w_sr
 get_sr_str = mach.get_sr_str
 get_regs = mach.get_regs
 get_instr_str = mach.get_instr_str
+get_type = mach.get_type
 
 # hooks
 set_instr_hook_func = mach.set_instr_hook_func

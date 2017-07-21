@@ -39,3 +39,4 @@ cdef extern from "musashi/m68k.h":
   void m68k_set_int_ack_callback(int  (*callback)(int int_level))
 
   unsigned int m68k_disassemble(char* str_buff, unsigned int pc, unsigned int cpu_type)
+  unsigned int m68k_is_valid_instruction(unsigned int instruction, unsigned int cpu_type)

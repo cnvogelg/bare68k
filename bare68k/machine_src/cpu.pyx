@@ -205,6 +205,9 @@ def get_total_cycles():
 def clear_info():
   cpu.cpu_clear_info()
 
+def get_type():
+  return cpu.cpu_get_type()
+
 # irq
 
 cdef object int_ack_func = None
