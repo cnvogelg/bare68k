@@ -49,7 +49,7 @@ class EventHandler(object):
   def set_logger(self, logger):
     self._log = logger
 
-  def handler_cb_error(self, event):
+  def handle_cb_error(self, event):
     """a callback running your code raised an exception"""
     # get exception info
     exc_info = event.data
@@ -62,7 +62,7 @@ class EventHandler(object):
     self._log.error("handle CALLBACK raised: %s", exc_info[0].__name__)
     raise_(*exc_info)
 
-  def handler_reset(self, event):
+  def handle_reset(self, event):
     """default handler for reset opcode"""
     global _reset_end_pc
     pc = event.addr
@@ -75,7 +75,7 @@ class EventHandler(object):
     else:
       return CPU_EVENT_RESET
 
-  def handler_aline_trap(self, event):
+  def handle_aline_trap(self, event):
     """an unbound aline trap was encountered"""
     # bound handler?
     bound_handler = event.data
@@ -88,7 +88,7 @@ class EventHandler(object):
       self._log.warn("unbound ALINE encountered: @%08x: %04x", pc, op)
       return CPU_EVENT_ALINE_TRAP
 
-  def handler_mem_access(self, event):
+  def handle_mem_access(self, event):
     """default handler for invalid memory accesses"""
     mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
     self._log.error("MEM ACCESS: %s", mem_str)
@@ -96,7 +96,7 @@ class EventHandler(object):
     if event.flags & MEM_FC_PROG_MASK == MEM_FC_PROG_MASK:
       return CPU_EVENT_MEM_ACCESS
 
-  def handler_mem_bounds(self, event):
+  def handle_mem_bounds(self, event):
     """default handler for invalid memory accesses beyond max pages"""
     mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
     self._log.error("MEM BOUNDS: %s", mem_str)
@@ -104,29 +104,29 @@ class EventHandler(object):
     if event.flags & MEM_FC_PROG_MASK == MEM_FC_PROG_MASK:
       return CPU_EVENT_MEM_ACCESS
 
-  def handler_mem_trace(self, event):
+  def handle_mem_trace(self, event):
     """a cpu mem trace handler returned a value != None"""
     mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
     self._log.info("MEM_TRACE: %s -> %s", mem_str, event.data)
     return CPU_EVENT_MEM_TRACE
 
-  def handler_mem_special(self, event):
+  def handle_mem_special(self, event):
     """a memory special handler returned a value != None"""
     mem_str = mem.get_cpu_mem_str(event.flags, event.addr, event.value)
     self._log.info("MEM_SPECIAL: %s -> %s", mem_str, event.data)
     return CPU_EVENT_MEM_SPECIAL
 
-  def handler_instr_hook(self, event):
+  def handle_instr_hook(self, event):
     """an instruction hook handler returned a value != None"""
     self._log.info("INSTR_HOOK: pc=@%08x -> %s", event.addr, event.data)
     return CPU_EVENT_INSTR_HOOK
 
-  def handler_int_ack(self, event):
+  def handle_int_ack(self, event):
     """int ack handler did return a value != None"""
     self._log.info("INT_ACK: pc=@%08x int=%d -> %s", event.addr, event.flags, event.data)
     return CPU_EVENT_INT_ACK
 
-  def handler_breakpoint(self, event):
+  def handle_breakpoint(self, event):
     addr = event.addr
     bp_id = event.value
     mem_flags = event.flags
@@ -136,7 +136,7 @@ class EventHandler(object):
                    addr, bp_id, mf_str, user_data)
     return CPU_EVENT_BREAKPOINT
 
-  def handler_watchpoint(self, event):
+  def handle_watchpoint(self, event):
     addr = event.addr
     bp_id = event.value
     mem_flags = event.flags
@@ -146,10 +146,10 @@ class EventHandler(object):
                    addr, bp_id, mf_str, user_data)
     return CPU_EVENT_WATCHPOINT
 
-  def handler_timer(self, event):
+  def handle_timer(self, event):
     self._log.info("TIMER")
 
-  def handler_instr_trace(self, pc):
+  def handle_instr_trace(self, pc):
     # disassemble pc
     il,_ = self._disasm.disassemble(pc)
     # format

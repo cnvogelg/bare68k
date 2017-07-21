@@ -326,7 +326,7 @@ class Runtime(object):
 
     # instr trace?
     if instr_trace:
-      cpu.set_instr_hook_func(self._event_handler.handler_instr_trace)
+      cpu.set_instr_hook_func(self._event_handler.handle_instr_trace)
 
     cpu_time = 0
 
@@ -402,18 +402,18 @@ class Runtime(object):
     """internal setter for all machine event handlers"""
     cfg = self._event_handler
     eh = {
-      CPU_EVENT_CALLBACK_ERROR: cfg.handler_cb_error,
-      CPU_EVENT_RESET: cfg.handler_reset,
-      CPU_EVENT_ALINE_TRAP: cfg.handler_aline_trap,
-      CPU_EVENT_MEM_ACCESS: cfg.handler_mem_access,
-      CPU_EVENT_MEM_BOUNDS: cfg.handler_mem_bounds,
-      CPU_EVENT_MEM_TRACE: cfg.handler_mem_trace,
-      CPU_EVENT_MEM_SPECIAL: cfg.handler_mem_special,
-      CPU_EVENT_INSTR_HOOK: cfg.handler_instr_hook,
-      CPU_EVENT_INT_ACK: cfg.handler_int_ack,
-      CPU_EVENT_BREAKPOINT: cfg.handler_breakpoint,
-      CPU_EVENT_WATCHPOINT: cfg.handler_watchpoint,
-      CPU_EVENT_TIMER: cfg.handler_timer
+      CPU_EVENT_CALLBACK_ERROR: cfg.handle_cb_error,
+      CPU_EVENT_RESET: cfg.handle_reset,
+      CPU_EVENT_ALINE_TRAP: cfg.handle_aline_trap,
+      CPU_EVENT_MEM_ACCESS: cfg.handle_mem_access,
+      CPU_EVENT_MEM_BOUNDS: cfg.handle_mem_bounds,
+      CPU_EVENT_MEM_TRACE: cfg.handle_mem_trace,
+      CPU_EVENT_MEM_SPECIAL: cfg.handle_mem_special,
+      CPU_EVENT_INSTR_HOOK: cfg.handle_instr_hook,
+      CPU_EVENT_INT_ACK: cfg.handle_int_ack,
+      CPU_EVENT_BREAKPOINT: cfg.handle_breakpoint,
+      CPU_EVENT_WATCHPOINT: cfg.handle_watchpoint,
+      CPU_EVENT_TIMER: cfg.handle_timer
     }
     for e in eh:
       cpu.set_event_handler(e, eh[e])
