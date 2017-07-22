@@ -2,18 +2,32 @@
 
 PYTHON = python
 
-.PHONY: all do_build_inplace do_test do_gen do_clean
+.PHONY: all dev build test gen clean doc doc_upload
 
-all: do_build_inplace
+help:
+	@echo "make dev       dev setup package"
+	@echo "make build     build native plugin in-place"
+	@echo "make test      run tests"
+	@echo "make clean     cleanup"
+	@echo "make doc       generate docs with mkdocs"
 
-do_build_inplace:
+dev:
+	$(PYTHON) setup.py develop --user
+
+build:
 	$(PYTHON) setup.py build_ext -i
 
-do_test:
+test:
 	$(PYTHON) setup.py test
 
-do_gen:
+gen:
 	$(PYTHON) setup.py gen
 
-do_clean:
+clean:
 	$(PYTHON) setup.py clean
+
+doc:
+	mkdocs build
+
+doc_upload: doc
+	python setup.py upload_docs --upload-dir=site

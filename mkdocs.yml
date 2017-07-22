@@ -1,0 +1,9 @@
+site_name: bare68k
+repo_url: https://github.com/cnvogelg/bare68k
+theme: readthedocs
+pages:
+  - Home: index.md
+  - Tutorial: tutorial.md
+  - Users Guide:
+    - Configuration: config.md
+    - Runtime: runtime.md

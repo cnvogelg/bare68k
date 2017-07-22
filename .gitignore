@@ -10,3 +10,5 @@ machine.c
 .eggs
 .tox
 dist/
+site/
+
