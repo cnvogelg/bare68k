@@ -44,7 +44,7 @@ under the GNU Public License V2
 
 ## Installation
 
-* use pip: `pip install bare68k`
+* use pip: `pip install bare68k
 * use github repository: `python setup.py install`
 * use dev setup: `python setup.py develop --user`
 
