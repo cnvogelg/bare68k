@@ -9,7 +9,7 @@ help:
 	@echo "make build     build native plugin in-place"
 	@echo "make test      run tests"
 	@echo "make clean     cleanup"
-	@echo "make doc       generate docs with mkdocs"
+	@echo "make doc       generate docs with sphinx"
 
 dev:
 	$(PYTHON) setup.py develop --user
@@ -27,7 +27,7 @@ clean:
 	$(PYTHON) setup.py clean
 
 doc:
-	mkdocs build
+	$(PYTHON) setup.py build_sphinx
 
 doc_upload: doc
 	python setup.py upload_docs --upload-dir=site

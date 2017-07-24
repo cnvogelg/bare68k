@@ -13,6 +13,20 @@ from distutils.core import Command
 from distutils.dir_util import remove_tree
 from distutils import log
 
+# get project version
+from bare68k import __version__
+version = __version__[:__version__.rfind('.')]
+release = __version__
+print("version=", version, " release=", release)
+
+# has sphinx?
+try:
+  from sphinx.setup_command import BuildDoc
+  has_sphinx = True
+except ImportError:
+  has_sphinx = False
+print("has_sphinx:", has_sphinx)
+
 # has cython?
 try:
   from Cython.Build import cythonize
@@ -108,13 +122,24 @@ class CleanGenCommand(Command):
       os.remove(gen_tool)
 
 
+# my custom commands
 cmdclass = {
   'gen' : GenCommand,
   'clean_gen' : CleanGenCommand,
   'build_ext' : my_build_ext,
   'clean' : my_clean
 }
+command_options = {}
 
+# setup build_sphinx command
+if has_sphinx:
+  cmdclass['build_sphinx'] = BuildDoc
+  command_options['build_sphinx'] = {
+    'version': ('setup.py', version),
+    'release': ('setup.py', release)
+  }
+
+# source files
 if use_cython:
   cython_src = 'bare68k/machine.pyx'
 else:
@@ -166,8 +191,8 @@ if use_cython:
 setup(
     name = "bare68k",
     description='A package to create m68k system emulators',
-    long_description=read("README.md"),
-    version = "0.1.0",
+    long_description=read("README.rst"),
+    version = __version__,
     maintainer = "Christian Vogelgsang",
     maintainer_email = "chris@vogelgsang.org",
     url = "http://github.com/cnvogelg/bare68k",
@@ -186,9 +211,8 @@ setup(
     install_requires = ['future'],
     setup_requires = ['pytest-runner'],
     tests_require=['pytest'],
-#    use_scm_version=True,
-#    setup_requires=['setuptools_scm'],
     ext_modules = extensions,
-    cmdclass = cmdclass
+    cmdclass = cmdclass,
+    command_options = command_options
 )
 

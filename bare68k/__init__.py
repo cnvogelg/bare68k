@@ -6,5 +6,7 @@ from . import runtime
 from . import api
 from . import debug
 
+__version__ = '0.1.0'
+
 __all__ = ['CPUConfig', 'MemoryConfig', 'RunConfig', 'Runtime',
            'runtime', 'api', 'debug']
