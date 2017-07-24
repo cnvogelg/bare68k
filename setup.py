@@ -3,6 +3,7 @@ from __future__ import print_function
 import sys
 import os
 import subprocess
+import re
 
 from setuptools import setup, find_packages
 from distutils.extension import Extension
@@ -14,7 +15,11 @@ from distutils.dir_util import remove_tree
 from distutils import log
 
 # get project version
-from bare68k import __version__
+def get_property(prop, project):
+    result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
+    return result.group(1)
+
+__version__ = get_property('__version__', 'bare68k')
 version = __version__[:__version__.rfind('.')]
 release = __version__
 print("version=", version, " release=", release)
@@ -209,7 +214,7 @@ setup(
     packages = ['bare68k'],
     zip_safe = False,
     install_requires = ['future'],
-    setup_requires = ['pytest-runner','future'],
+    setup_requires = ['pytest-runner'],
     tests_require=['pytest'],
     ext_modules = extensions,
     cmdclass = cmdclass,
