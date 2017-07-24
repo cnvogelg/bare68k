@@ -209,7 +209,7 @@ setup(
     packages = ['bare68k'],
     zip_safe = False,
     install_requires = ['future'],
-    setup_requires = ['pytest-runner'],
+    setup_requires = ['pytest-runner','future'],
     tests_require=['pytest'],
     ext_modules = extensions,
     cmdclass = cmdclass,
