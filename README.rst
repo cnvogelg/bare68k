@@ -1,7 +1,7 @@
 bare68k
 =======
 
-|travis|
+|travis| |rtfd|
 
 bare68k allows you to write **m68k system emulators** in Python 2 or 3.  It
 consists of a **CPU emulation** for 68000/68020/68EC020 provided by the
@@ -16,6 +16,7 @@ under the GNU Public License V2
 
 .. _Musashi: https://github.com/kstenerud/Musashi
 .. |travis| image:: https://travis-ci.org/cnvogelg/bare68k.svg?branch=master
+.. |rtfd| image:: https://readthedocs.org/projects/bare68k/badge/?version=latest
 
 Features
 --------
