@@ -26,16 +26,17 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 
 # html
-html_theme = 'alabaster'
-html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'relations.html',  # needs 'show_related': True theme option to display
-        'searchbox.html',
-        'donate.html',
-    ]
-}
+html_theme = 'sphinx_rtd_theme'
+#html_theme = 'alabaster'
+#html_sidebars = {
+#    '**': [
+#        'about.html',
+#        'navigation.html',
+#        'relations.html',  # needs 'show_related': True theme option to display
+#        'searchbox.html',
+#        'donate.html',
+#    ]
+#}
 
 # html help
 htmlhelp_basename = 'bare68kdoc'

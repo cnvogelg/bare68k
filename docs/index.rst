@@ -1,14 +1,6 @@
 bare68k
 =======
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-.. project badges
-
-|travis|
-
 bare68k allows you to write **m68k system emulators** in Python 2 or 3.  It
 consists of a **CPU emulation** for 68000/68020/68EC020 provided by the
 `Musashi`_ engine written in native C. A **memory map** with RAM, ROM,
@@ -21,7 +13,12 @@ written by Christian Vogelgsang <chris@vogelgsang.org>
 under the GNU Public License V2
 
 .. _Musashi: https://github.com/kstenerud/Musashi
-.. |travis| image:: https://travis-ci.org/cnvogelg/bare68k.svg?branch=master
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   tutorial
 
 Features
 --------
@@ -35,6 +32,7 @@ Features
 * intercept m68k code by placing ALINE-opcode based traps to call your code
 * event-based CPU emulation frontend does always return to Python first
 * provide Python handlers for all CPU emulation events
+
   * RESET opcode
   * ALINE trap opcode
   * invalid memory access (e.g. write in ROM region)
@@ -42,12 +40,15 @@ Features
   * control interrupt acknowledgement
   * watch and break points
   * custom timers based on CPU cycles
+
 * extensive diagnose functions
+
   * instruction trace
   * memory access for both CPU and Python API
   * register dump
   * memory labels to mark memory regions with arbitrary Python data
   * all bare68k components use Python logging
+
 * rich API to configure memory and CPU state
 * store/restore CPU context
 
