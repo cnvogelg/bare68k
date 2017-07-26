@@ -14,6 +14,10 @@ from distutils.core import Command
 from distutils.dir_util import remove_tree
 from distutils import log
 
+# pkgs
+pkgs = find_packages()
+print("pkgs="+",".join(pkgs))
+
 # get project version
 def get_property(prop, project):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
@@ -211,7 +215,7 @@ setup(
         "Topic :: System :: Emulators",
     ],
     license = "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
-    packages = ['bare68k'],
+    packages = pkgs,
     zip_safe = False,
     install_requires = ['future'],
     setup_requires = ['pytest-runner'],
