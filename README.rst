@@ -16,7 +16,9 @@ under the GNU Public License V2
 
 .. _Musashi: https://github.com/kstenerud/Musashi
 .. |travis| image:: https://travis-ci.org/cnvogelg/bare68k.svg?branch=master
+   :target: https://travis-ci.org/cnvogelg/bare68k
 .. |rtfd| image:: https://readthedocs.org/projects/bare68k/badge/?version=latest
+   :target: https://readthedocs.org/projects/bare68k
 
 Features
 --------
