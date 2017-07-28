@@ -80,6 +80,7 @@ build_dir = "build"
 # check compiler
 is_msvc = sys.platform == 'win32' and sys.version.lower().find('msc') != -1
 
+
 class my_build_ext(build_ext):
     """overwrite build_ext to generate code first"""
 
@@ -129,9 +130,9 @@ class GenCommand(Command):
             cc.compile(sources=[src], output_dir=build_dir)
             # link
             if is_msvc:
-                ld_args=['/MANIFEST']
+                ld_args = ['/MANIFEST']
             else:
-                ld_args=None
+                ld_args = None
             cc.link_executable(
                 objects=[obj], output_progname=gen_tool,
                 extra_postargs=ld_args)
