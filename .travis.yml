@@ -8,5 +8,6 @@ python:
 matrix:
   include:
     - os: osx
+      language: generic
 install: pip install tox-travis
 script: tox
