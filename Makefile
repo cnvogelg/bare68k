@@ -56,6 +56,10 @@ gen:
 clean:
 	$(PYTHON) setup.py clean
 
+clean_all: clean
+	rm -rf bare68k/machine*.so
+	rm -f bare68k/machine.c
+
 # ----- dist -----
 
 sdist:

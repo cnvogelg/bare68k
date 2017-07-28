@@ -29,27 +29,32 @@ static int num_free = 0;
 
 static int trap_aline(uint opcode, uint pc)
 {
+  int mem_flags;
+  uint off;
+  int flags;
+  void *data;
+
   /* global disable */
   if(!global_enable) {
     return M68K_ALINE_EXCEPT;
   }
 
   /* mem flags? */
-  int mem_flags = mem_get_memory_flags(pc);
+  mem_flags = mem_get_memory_flags(pc);
   if((mem_flags & MEM_FLAGS_TRAPS) == 0) {
     return M68K_ALINE_EXCEPT;
   }
 
-  uint off = opcode & TRAP_MASK;
+  off = opcode & TRAP_MASK;
 
   /* enabled? */
-  int flags = traps[off].flags;
+  flags = traps[off].flags;
   if((flags & TRAP_ENABLE) == 0) {
     return M68K_ALINE_EXCEPT;
   }
 
   /* process aline trap */
-  void *data = traps[off].data;
+  data = traps[off].data;
 
   /* auto clean one shot trap */
   if(flags & TRAP_ONE_SHOT) {
@@ -110,12 +115,14 @@ int traps_shutdown(void)
 
 uint16_t trap_setup(int flags, void *data)
 {
+  int id;
+
   /* no more traps available? */
   if(first_free == NULL) {
     return TRAP_INVALID;
   }
 
-  int id = (int)(first_free - traps);
+  id = (int)(first_free - traps);
 
   return trap_setup_abs(id, flags, data);
 }
@@ -154,12 +161,14 @@ uint16_t trap_setup_abs(uint16_t id, int flags, void *data)
 
 void *trap_free(uint16_t opcode)
 {
+  void *data;
+
   uint16_t id = opcode & TRAP_MASK;
   /* invalid trap */
   if(traps[id].flags == 0) {
     return NULL;
   }
-  void *data = traps[id].data;
+  data = traps[id].data;
   /* insert trap into free list */
   traps[id].next = first_free;
   if(first_free != NULL) {

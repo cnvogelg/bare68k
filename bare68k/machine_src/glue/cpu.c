@@ -260,15 +260,22 @@ static char sp_line[60];
 static char *reg_lines[] = { pc_line, dx1_line, dx2_line, ax1_line, ax2_line, sp_line, NULL };
 const char ** cpu_get_regs_str(const registers_t *regs)
 {
-  int n = sprintf(pc_line, " PC=%08x  SR=", regs->pc);
-  const char *sr = cpu_get_sr_str(regs->sr);
+  int n;
+  const char *sr;
+  char *ax1;
+  char *ax2;
+  char *dx1;
+  char *dx2;
+  int i;
+
+  n = sprintf(pc_line, " PC=%08x  SR=", regs->pc);
+  sr = cpu_get_sr_str(regs->sr);
   strcpy(pc_line + n, sr);
 
-  char *ax1 = ax1_line;
-  char *ax2 = ax2_line;
-  char *dx1 = dx1_line;
-  char *dx2 = dx2_line;
-  int i;
+  ax1 = ax1_line;
+  ax2 = ax2_line;
+  dx1 = dx1_line;
+  dx2 = dx2_line;
   for(i=0;i<4;i++) {
     int j = i + 4;
     sprintf(dx1, " D%d=%08x ", i, regs->dx[i]);
@@ -300,7 +307,9 @@ const char *cpu_get_instr_str(uint32_t pc)
 
 void cpu_add_event(int type, uint32_t addr, uint32_t value, uint32_t flags, void *data)
 {
-  int n = run_info.num_events;
+  int n;
+
+  n = run_info.num_events;
   if(n == MAX_EVENTS) {
     run_info.lost_events++;
   } else {
@@ -375,11 +384,11 @@ int cpu_execute(int num_cycles)
 
 int cpu_execute_to_event(int cycles_per_run)
 {
+  int done_cycles = 0;
+
   if(cycles_per_run == 0) {
     cycles_per_run = DEFAULT_CYCLES;
   }
-
-  int done_cycles = 0;
 
   if(!dont_clear) {
     cpu_clear_info();

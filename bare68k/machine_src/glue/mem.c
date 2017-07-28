@@ -28,25 +28,17 @@ static uint32_t disasm_size;
 static uint32_t disasm_offset;
 
 /* ----- Event Helper ----- */
-static inline void memory_access(int access, uint32_t addr, uint32_t val)
-{
-  cpu_add_event(CPU_EVENT_MEM_ACCESS, addr, val, access, NULL);
-}
+#define memory_access(access, addr, val) \
+  cpu_add_event(CPU_EVENT_MEM_ACCESS, addr, val, access, NULL)
 
-static inline void memory_bounds(int access, uint32_t addr, uint32_t val)
-{
-  cpu_add_event(CPU_EVENT_MEM_BOUNDS, addr, val, access, NULL);
-}
+#define memory_bounds(access, addr, val) \
+  cpu_add_event(CPU_EVENT_MEM_BOUNDS, addr, val, access, NULL)
 
-static inline void trace_event(int access, uint32_t addr, uint32_t val, void *data)
-{
-  cpu_add_event(CPU_EVENT_MEM_TRACE, addr, val, access, data);
-}
+#define trace_event(access, addr, val, data) \
+  cpu_add_event(CPU_EVENT_MEM_TRACE, addr, val, access, data)
 
-static inline void watchpoint_event(int access, uint32_t addr, uint32_t val, void *data)
-{
-  cpu_add_event(CPU_EVENT_WATCHPOINT, addr, val, access, data);
-}
+#define watchpoint_event(access, addr, val, data) \
+  cpu_add_event(CPU_EVENT_WATCHPOINT, addr, val, access, data)
 
 /* ----- Empty Range ----- */
 static uint32_t r8_empty(struct page_entry *page, uint32_t addr)
@@ -69,7 +61,7 @@ static uint32_t r32_empty(struct page_entry *page, uint32_t addr)
 
 static void wx_empty(page_entry_t *page, uint32_t addr, uint32_t val)
 {
-  // ignore a write
+  /* ignore a write */
 }
 
 /* ----- Mirror Range ----- */
@@ -528,6 +520,9 @@ int mem_init(uint num_pages)
 
 void mem_free(void)
 {
+  memory_entry_t *me;
+  special_entry_t *se;
+
   /* free pages */
   if(pages != NULL) {
     free(pages);
@@ -535,7 +530,7 @@ void mem_free(void)
   total_pages = 0;
 
   /* free memory entries and associated memory */
-  memory_entry_t *me = first_mem_entry;
+  me = first_mem_entry;
   while(me != NULL) {
     memory_entry_t *next = me->next;
     free(me->data);
@@ -545,7 +540,7 @@ void mem_free(void)
   first_mem_entry = NULL;
 
   /* free special entries */
-  special_entry_t *se = first_special_entry;
+  se = first_special_entry;
   while(se != NULL) {
     special_entry_t *next = se->next;
     if(special_cleanup_func != NULL) {
@@ -578,6 +573,15 @@ void mem_set_invalid_value(uint32_t val)
 
 memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
 {
+  size_t byte_size;
+  uint8_t *data;
+  size_t me_size;
+  memory_entry_t *me;
+  page_entry_t *page;
+  uint32_t offset;
+  uint32_t remain;
+  int i;
+
   /* check parameters */
   if((start_page + num_pages) > total_pages) {
     return NULL;
@@ -587,8 +591,8 @@ memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
   }
 
   /* alloc memory */
-  size_t byte_size = num_pages * MEM_PAGE_SIZE;
-  uint8_t *data = (uint8_t *)malloc(byte_size);
+  byte_size = num_pages * MEM_PAGE_SIZE;
+  data = (uint8_t *)malloc(byte_size);
   if(data == NULL) {
     return NULL;
   }
@@ -597,8 +601,8 @@ memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
   bzero(data, byte_size);
 
   /* first alloc mem entry */
-  size_t me_size = sizeof(memory_entry_t);
-  memory_entry_t *me = (memory_entry_t *)malloc(me_size);
+  me_size = sizeof(memory_entry_t);
+  me = (memory_entry_t *)malloc(me_size);
   if(me == NULL) {
     free(data);
     return NULL;
@@ -617,10 +621,9 @@ memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
   me->flags = flags;
 
   /* fill in page entries */
-  page_entry_t *page = &pages[start_page];
-  uint32_t offset = 0;
-  uint32_t remain = byte_size;
-  int i;
+  page = &pages[start_page];
+  offset = 0;
+  remain = byte_size;
   for(i=0;i<num_pages;i++) {
     /* setup read pointers */
     if((flags & MEM_FLAGS_READ) == MEM_FLAGS_READ) {
@@ -666,6 +669,11 @@ special_entry_t *mem_add_special(uint start_page, uint num_pages,
                     special_read_func_t read_func, void *read_data,
                     special_write_func_t write_func, void *write_data)
 {
+  size_t se_size;
+  special_entry_t *se;
+  page_entry_t *page;
+  int i;
+
   /* check parameters */
   if((start_page + num_pages) > total_pages) {
     return NULL;
@@ -675,8 +683,8 @@ special_entry_t *mem_add_special(uint start_page, uint num_pages,
   }
 
   /* first alloc special entry */
-  size_t se_size = sizeof(special_entry_t);
-  special_entry_t *se = (special_entry_t *)malloc(se_size);
+  se_size = sizeof(special_entry_t);
+  se = (special_entry_t *)malloc(se_size);
   if(se == NULL) {
     return NULL;
   }
@@ -693,8 +701,7 @@ special_entry_t *mem_add_special(uint start_page, uint num_pages,
   se->w_data = write_data;
 
   /* setup pages */
-  page_entry_t *page = &pages[start_page];
-  int i;
+  page = &pages[start_page];
   for(i=0;i<num_pages;i++) {
     /* setup read pointers */
     if(read_func != NULL) {
@@ -729,6 +736,9 @@ special_entry_t *mem_add_special(uint start_page, uint num_pages,
 
 int mem_add_empty(uint start_page, uint num_pages, int flags, uint32_t value)
 {
+  page_entry_t *page;
+  int i;
+
   /* check parameters */
   if((start_page + num_pages) > total_pages) {
     return 0;
@@ -738,8 +748,7 @@ int mem_add_empty(uint start_page, uint num_pages, int flags, uint32_t value)
   }
 
   /* setup pages */
-  page_entry_t *page = &pages[start_page];
-  int i;
+  page = &pages[start_page];
   for(i=0;i<num_pages;i++) {
     /* setup read pointers */
     if((flags & MEM_FLAGS_READ) == MEM_FLAGS_READ) {
@@ -774,6 +783,9 @@ int mem_add_empty(uint start_page, uint num_pages, int flags, uint32_t value)
 
 int mem_add_mirror(uint start_page, uint num_pages, int flags, uint base_page)
 {
+  page_entry_t *page;
+  int i;
+
   /* check parameters */
   if((start_page + num_pages) > total_pages) {
     return 0;
@@ -789,8 +801,7 @@ int mem_add_mirror(uint start_page, uint num_pages, int flags, uint base_page)
   }
 
   /* setup pages */
-  page_entry_t *page = &pages[start_page];
-  int i;
+  page = &pages[start_page];
   for(i=0;i<num_pages;i++) {
     /* setup read pointers */
     if((flags & MEM_FLAGS_READ) == MEM_FLAGS_READ) {
@@ -928,10 +939,12 @@ const uint8_t *mem_r_block(uint32_t address, uint32_t size)
 
 int mem_w_block(uint32_t address, uint32_t size, const uint8_t *src_data)
 {
+  uint8_t *tgt_data;
+
   if(src_data == NULL) {
     return 0;
   }
-  uint8_t *tgt_data = mem_get_range(address, size);
+  tgt_data = mem_get_range(address, size);
   if(tgt_data == NULL) {
     return 0;
   }
@@ -944,6 +957,9 @@ int mem_w_block(uint32_t address, uint32_t size, const uint8_t *src_data)
 
 const uint8_t *mem_r_cstr(uint32_t address, uint32_t *ret_length)
 {
+  uint32_t length;
+  uint8_t *ptr;
+
   /* get max range in memory */
   uint32_t size;
   uint8_t *data = mem_get_max_range(address, &size);
@@ -951,8 +967,8 @@ const uint8_t *mem_r_cstr(uint32_t address, uint32_t *ret_length)
     return NULL;
   }
   /* make sure string fits in memory */
-  uint32_t length = 0;
-  uint8_t *ptr = data;
+  length = 0;
+  ptr = data;
   while(length < size) {
     if(*ptr == 0) {
       *ret_length = length;
@@ -969,12 +985,14 @@ const uint8_t *mem_r_cstr(uint32_t address, uint32_t *ret_length)
 
 int mem_w_cstr(uint32_t address, const uint8_t *str, uint32_t length)
 {
+  uint32_t size;
+  uint8_t *data;
+
   if(str == NULL) {
     return 0;
   }
   /* get max memory range */
-  uint32_t size;
-  uint8_t *data = mem_get_max_range(address, &size);
+  data = mem_get_max_range(address, &size);
   if(data == NULL) {
     return 0;
   }
@@ -993,6 +1011,8 @@ int mem_w_cstr(uint32_t address, const uint8_t *str, uint32_t length)
 
 const uint8_t *mem_r_bstr(uint32_t address, uint32_t *ret_length)
 {
+  uint32_t length;
+
   uint32_t size;
   uint8_t *data = mem_get_max_range(address, &size);
   if(data == NULL) {
@@ -1001,7 +1021,7 @@ const uint8_t *mem_r_bstr(uint32_t address, uint32_t *ret_length)
   if(size == 0) {
     return NULL;
   }
-  uint32_t length = *data;
+  length = *data;
   if((length+1) <= size) {
     *ret_length = length;
     if(api_trace_func != NULL) {
@@ -1015,6 +1035,9 @@ const uint8_t *mem_r_bstr(uint32_t address, uint32_t *ret_length)
 
 int mem_w_bstr(uint32_t address, const uint8_t *str, uint32_t length)
 {
+  uint32_t size;
+  uint8_t *data;
+
   if(str == NULL) {
     return 0;
   }
@@ -1022,8 +1045,7 @@ int mem_w_bstr(uint32_t address, const uint8_t *str, uint32_t length)
     return 0;
   }
   /* get max range */
-  uint32_t size;
-  uint8_t *data = mem_get_max_range(address, &size);
+  data = mem_get_max_range(address, &size);
   if(data == NULL) {
     return 0;
   }
@@ -1238,6 +1260,8 @@ const char *mem_get_cpu_fc_str(int access)
 
 const char *mem_get_cpu_access_str(int access)
 {
+  int width;
+  int fc;
   char *s = mem_str;
 
   if((access & MEM_ACCESS_WRITE) == MEM_ACCESS_WRITE) {
@@ -1247,7 +1271,7 @@ const char *mem_get_cpu_access_str(int access)
     s[0] = 'R';
   }
 
-  int width = access & MEM_ACCESS_WIDTH;
+  width = access & MEM_ACCESS_WIDTH;
   if(width == 1) {
     s[1] = '0';
     s[2] = '8';
@@ -1267,7 +1291,7 @@ const char *mem_get_cpu_access_str(int access)
 
   s[3] = ':';
 
-  int fc = access & MEM_FC_MASK;
+  fc = access & MEM_FC_MASK;
   switch(fc) {
     case MEM_FC_INT_ACK:
       s[4] = 'I';
@@ -1342,13 +1366,15 @@ const char *mem_get_api_access_str(int access)
       }
     }
   } else {
+    int width;
+
      if((access & MEM_ACCESS_WRITE) == MEM_ACCESS_WRITE) {
         s[0] = 'w';
       } else {
         s[0] = 'r';
       }
 
-      int width = access & MEM_ACCESS_WIDTH;
+      width = access & MEM_ACCESS_WIDTH;
       if(width == 1) {
         s[1] = '0';
         s[2] = '8';

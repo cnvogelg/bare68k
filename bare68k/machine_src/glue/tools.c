@@ -111,6 +111,7 @@ int tools_setup_pc_trace(int num)
 
 uint32_t *tools_get_pc_trace(int *size)
 {
+  uint32_t *result;
   int i;
   int pos = (pc_trace.offset + pc_trace.max - pc_trace.num) % pc_trace.max;
   int n = pc_trace.num;
@@ -121,7 +122,7 @@ uint32_t *tools_get_pc_trace(int *size)
   }
 
   /* create result array */
-  uint32_t *result = (uint32_t *)malloc(sizeof(uint32_t) * n);
+  result = (uint32_t *)malloc(sizeof(uint32_t) * n);
   if(result == NULL) {
     *size = 0;
     return NULL;
@@ -176,12 +177,12 @@ static int array_setup(array_t *a, int num, size_t node_size)
   return num;
 }
 
-static inline node_t *node_get(array_t *a, int id)
+static node_t *node_get(array_t *a, int id)
 {
   if((id < 0) || (id >= a->max)) {
     return NULL;
   }
-  return (node_t *)(((void *)a->nodes) + a->node_size * id);
+  return (node_t *)(((char *)a->nodes) + a->node_size * id);
 }
 
 static node_t *node_alloc(array_t *a, int id, void *data)
