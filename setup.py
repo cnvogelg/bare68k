@@ -115,14 +115,21 @@ class GenCommand(Command):
             os.mkdir(build_dir)
         # build tool first?
         if not os.path.exists(gen_tool):
-            log.info("building '{}' tool".format(gen_tool))
             cc = ccompiler.new_compiler()
-            cc.compile(sources=[gen_tool_src], output_dir=build_dir)
+            log.info("building '{}' tool".format(gen_tool))
+            # win fixes
+            src = gen_tool_src.replace("/", os.path.sep)
+            print("tool source:", src)
             obj = gen_tool_obj.replace(".o", cc.obj_extension)
-            print("tool object:", obj, cc.obj_extension)
+            obj = obj.replace("/", os.path.sep)
+            print("tool object:", obj)
+            # compile
+            cc.compile(sources=[src], output_dir=build_dir)
+            # link
             cc.link_executable(
                 objects=[obj], output_progname=gen_tool)
-            os.remove(gen_tool_obj)
+            # remove
+            os.remove(obj)
         # generate source?
         if not os.path.exists(gen_src[0]):
             log.info("generating source files")
