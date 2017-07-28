@@ -219,7 +219,12 @@ inc_dirs = [
     'bare68k/machine_src/glue',
     gen_dir
 ]
-if os.name == 'nt':
+
+# check compiler
+is_msvc = sys.platform == 'win32' and sys.version.lower().index('msc') != -1
+
+# add missing vc headers
+if is_msvc:
     inc_dirs.append('bare68k/machine_src/glue/win')
 
 extensions = [Extension("bare68k.machine", sourcefiles,
