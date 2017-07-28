@@ -124,7 +124,7 @@ uint32_t *tools_get_pc_trace(int *size)
 {
   uint32_t *result;
   int i;
-  int pos = (pc_trace.offset + pc_trace.max - pc_trace.num) % pc_trace.max;
+  int pos;
   int n = pc_trace.num;
 
   if(n == 0) {
@@ -140,6 +140,7 @@ uint32_t *tools_get_pc_trace(int *size)
   }
 
   /* copy values */
+  pos = (pc_trace.offset + pc_trace.max - pc_trace.num) % pc_trace.max;
   for(i=0;i<n;i++) {
     result[i] = pc_trace.entries[pos];
     pos = (pos + 1) % pc_trace.max;
