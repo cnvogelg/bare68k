@@ -92,7 +92,10 @@ class RunInfo(object):
 
     def calc_cpu_mhz(self):
         """from cpu time and cycle count calc cpu clock speed of musashi"""
-        return self.total_cycles / (self.cpu_time * 1000000)
+        if self.cpu_time > 0:
+            return self.total_cycles / (self.cpu_time * 1000000)
+        else:
+            return 0
 
 
 def log_setup(level=logging.DEBUG):
