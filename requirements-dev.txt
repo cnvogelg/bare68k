@@ -8,3 +8,5 @@ cython
 sphinx
 sphinx_rtd_theme
 autopep8
+twine
+detox

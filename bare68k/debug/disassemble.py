@@ -63,8 +63,8 @@ class InstrLineFormatter(object):
             else:
                 txt = self.label_formatter.format(label, li.pc)
             f = "{{:{}}}".format(self.label_width)
-            l = f.format(txt)
-            res.append(l)
+            label_txt = f.format(txt)
+            res.append(label_txt)
         # words
         if self.with_words:
             words = map(lambda x: "{:04x}".format(x), li.words)

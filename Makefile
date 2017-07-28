@@ -1,17 +1,18 @@
 # Makefile helps calling typical python commands
 
-PYTHON = python
-PIP = pip
+PYTHON = python2.7
+PIP = pip2.7
 OPEN = open
 
 .PHONY: help init build test
 .PHONY: gen clean
 .PHONY: sdist release
 .PHONY: doc doc_info
-.PHONY: pep8 pep8_diff pep8_fix
+.PHONY: pep8 pep8_diff pep8_fix codestyle
 
 help:
 	@echo "make init      setup dev requirements"
+	@echo "make init_py   setup python versions via pyenv"
 	@echo "make build     build native plugin in-place"
 	@echo "make test      run tests"
 	@echo
@@ -28,10 +29,18 @@ help:
 	@echo "make pep8      check source"
 	@echo "make pep8_diff show pep8 errors"
 	@echo "make pep8_fix  fix pep8 errors"
+	@echo "make codestyle check coding style with pycodestyle"
 
 
 init:
 	$(PIP) install -U -r requirements-dev.txt
+
+init_py:
+	pyenv install -s 2.7.13
+	pyenv install -s 3.4.6
+	pyenv install -s 3.5.3
+	pyenv install -s 3.6.2
+	pyenv local 2.7.13 3.4.6 3.5.3 3.6.2
 
 build:
 	$(PYTHON) setup.py build_ext -i
@@ -59,7 +68,7 @@ release: sdist
 # ----- doc -----
 
 doc_info:
-	rst2html.py --strict README.rst build/README.thml
+	rst2html.py --strict README.rst build/README.html
 	rst2html.py --strict CHANGELOG.rst build/CHANGELOG.html
 
 doc: doc_info
@@ -71,10 +80,13 @@ doc_view: doc
 # ----- pep8 -----
 
 pep8:
-	autopep8 -r --diff . | grep +++
+	-autopep8 -r --diff . | grep +++
 
 pep8_diff:
 	autopep8 -r --diff .
 
 pep8_fix:
 	autopep8 -r -i .
+
+codestyle:
+	pycodestyle bare68k --ignore=E501

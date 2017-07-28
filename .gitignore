@@ -11,4 +11,5 @@ machine.c
 .tox
 dist/
 site/
+.python-version
 
