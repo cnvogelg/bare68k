@@ -92,6 +92,7 @@ def test_memtypes():
     memcfg.add_rom_range(2, 1, data2, pad=True)
     memcfg.add_rom_range(3, 1, data2, pad=0xff)
     # special
+
     def r(*args):
         pass
     memcfg.add_special_range(4, 1, r, None)

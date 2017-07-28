@@ -18,6 +18,7 @@ def mach(request):
     yield
     shutdown()
 
+
 PROG_BASE = 0x1000
 STACK = 0x800
 

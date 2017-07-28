@@ -164,8 +164,10 @@ def test_instr_hook(mach):
     w16(0x104, NOP_OPCODE)
     w16(0x106, NOP_OPCODE)
     assert r16(0x100) == NOP_OPCODE
+
     class hook:
         pcs = []
+
         def func(self, pc):
             print("pc=$%08x" % pc)
             self.pcs.append(pc)
@@ -194,8 +196,10 @@ def test_instr_hook_str(mach):
     w16(0x102, NOP_OPCODE)
     w16(0x104, NOP_OPCODE)
     w16(0x106, NOP_OPCODE)
+
     class hook:
         pcs = []
+
         def func(self, s, pc):
             self.pcs.append(s)
     # with hook
@@ -225,6 +229,7 @@ def test_instr_hook_exc(mach):
     w16(0x106, NOP_OPCODE)
     assert r16(0x100) == NOP_OPCODE
     e = ValueError("ouch")
+
     def hook(pc):
         raise e
     set_instr_hook_func(hook)
@@ -246,6 +251,7 @@ def test_instr_hook_value(mach):
     w16(0x104, NOP_OPCODE)
     w16(0x106, NOP_OPCODE)
     assert r16(0x100) == NOP_OPCODE
+
     def hook(pc):
         return 42
     set_instr_hook_func(hook)
@@ -274,6 +280,7 @@ def test_irq_autovec_nofunc(mach):
     def func(pc):
         print("pc=$%08x" % pc)
     set_instr_hook_func(func)
+
     def mem(mode, addr, val):
         print("mem: %d @%08x =%08x" % (mode, addr, val))
     set_mem_cpu_trace_func(mem)
@@ -299,9 +306,11 @@ def test_irq_autovec_func(mach):
     def func(pc):
         print("pc=$%08x" % pc)
     set_instr_hook_func(func)
+
     def mem(mode, addr, val):
         print("mem: %d @%08x =%08x" % (mode, addr, val))
     set_mem_cpu_trace_func(mem)
+
     def int_ack(level, pc):
         print("int_ack:", level)
         return (M68K_INT_ACK_AUTOVECTOR, "huhu")
@@ -328,9 +337,11 @@ def test_irq_autovec_func_no_tuple(mach):
     def func(pc):
         print("pc=$%08x" % pc)
     set_instr_hook_func(func)
+
     def mem(mode, addr, val):
         print("mem: %d @%08x =%08x" % (mode, addr, val))
     set_mem_cpu_trace_func(mem)
+
     def int_ack(level, pc):
         print("int_ack:", level)
         return M68K_INT_ACK_AUTOVECTOR
@@ -356,9 +367,11 @@ def test_irq_vec_func(mach):
     def func(pc):
         print("pc=$%08x" % pc)
     set_instr_hook_func(func)
+
     def mem(mode, addr, val):
         print("mem: %d @%08x =%08x" % (mode, addr, val))
     set_mem_cpu_trace_func(mem)
+
     def int_ack(level, pc):
         print("int_ack:", level)
         return (2, "hello")  # return vector 2 and generate event
@@ -385,10 +398,12 @@ def test_irq_vec_exc(mach):
     def func(pc):
         print("pc=$%08x" % pc)
     set_instr_hook_func(func)
+
     def mem(mode, addr, val):
         print("mem: %d @%08x =%08x" % (mode, addr, val))
     set_mem_cpu_trace_func(mem)
     e = ValueError("blurp")
+
     def int_ack(level, pc):
         raise e
     # set vector 2

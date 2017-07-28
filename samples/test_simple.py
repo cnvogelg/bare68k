@@ -27,8 +27,8 @@ def test_run():
     STACK = 0x800
     mem = rt.get_mem()
     mem.w16(PROG_BASE, 0x23c0)  # move.l d0,<32b_addr>
-    mem.w32(PROG_BASE+2, 0)
-    mem.w16(PROG_BASE+6, 0x4e70)  # reset
+    mem.w32(PROG_BASE + 2, 0)
+    mem.w16(PROG_BASE + 6, 0x4e70)  # reset
 
     # setup CPU
     cpu = rt.get_cpu()

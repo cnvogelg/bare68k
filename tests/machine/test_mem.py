@@ -185,8 +185,10 @@ def test_b_str(mem_rw):
 def test_cpu_trace_func(mem_rw):
     class Tester:
         value = None
+
         def set(self, *args):
             self.value = args
+
         def get(self):
             v = self.value
             print(get_cpu_mem_str(*v))
@@ -210,6 +212,7 @@ def test_cpu_trace_func(mem_rw):
 def test_cpu_trace_func_str(mem_rw):
     class Tester:
         value = None
+
         def set(self, s, v):
             self.value = s
     t = Tester()
@@ -241,6 +244,7 @@ def test_cpu_trace_func_default(mem_rw):
 def test_cpu_trace_func_exc(mem_rw):
     # if trace func raises an exception then generate trace event
     ve = ValueError("bohoo")
+
     def bork(*args):
         raise ve
     set_mem_cpu_trace_func(bork)
@@ -257,6 +261,7 @@ def test_cpu_trace_func_exc(mem_rw):
 def test_cpu_trace_func_val(mem_rw):
     # if trace func returns a value then generate trace event
     val = 42
+
     def bork(*args):
         return val
     set_mem_cpu_trace_func(bork)
@@ -283,9 +288,11 @@ def test_cpu_trace_func_none(mem_rw):
 def test_special(mach):
     class special:
         w_val = None
+
         def r(self, mode, addr):
             print("read", mode, addr)
             return (21, None)
+
         def w(self, mode, addr, val):
             print("write", mode, addr, val)
             self.w_val = val
@@ -305,9 +312,11 @@ def test_special(mach):
 def test_special_read_no_tuple(mach):
     class special:
         w_val = None
+
         def r(self, mode, addr):
             print("read", mode, addr)
             return 21  # no tuple only value
+
         def w(self, mode, addr, val):
             print("write", mode, addr, val)
             self.w_val = val
@@ -322,9 +331,11 @@ def test_special_read_no_tuple(mach):
 def test_special_with_event(mach):
     class special:
         w_val = None
+
         def r(self, mode, addr):
             print("read", mode, addr)
             return (21, "r!")
+
         def w(self, mode, addr, val):
             print("write", mode, addr, val)
             self.w_val = val
@@ -352,8 +363,10 @@ def test_special_with_event(mach):
 def test_special_exc(mach):
     e1 = ValueError("read fault")
     e2 = ValueError("write fault")
+
     def r(mode, addr):
         raise e1
+
     def w(mode, addr, val):
         raise e2
     add_special(0, 1, r, w)
@@ -507,6 +520,7 @@ def test_empty_rw(mach):
 def test_api_trace_func(mach):
     class Tester:
         value = None
+
         def cb(self, flag, addr, val, extra):
             self.value = (flag, addr, val, extra)
     t = Tester()
@@ -561,6 +575,7 @@ def test_api_trace_func(mach):
 def test_api_trace_func_str(mach):
     class Tester:
         value = None
+
         def cb(self, s, v):
             self.value = s
     t = Tester()
@@ -614,6 +629,7 @@ def test_api_trace_func_str(mach):
 
 def test_api_trace_func_exc(mach):
     exc = ValueError("my value err")
+
     def bork(*args):
         raise exc
     set_mem_api_trace_func(bork)

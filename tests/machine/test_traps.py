@@ -200,6 +200,7 @@ def test_auto_rts_trap(mach):
 
 def test_many_traps(mach):
     num_free = traps_get_num_free()
+
     def my_cb():
         print("HUHU")
     # allocate all traps

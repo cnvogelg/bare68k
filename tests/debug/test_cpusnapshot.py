@@ -16,7 +16,7 @@ def run_prog(rt):
     addr = PROG_BASE
     for i in range(16):
         mem.w16(addr, 0x4ef8)
-        mem.w16(addr+2, addr+6)
+        mem.w16(addr + 2, addr + 6)
         addr += 6
     mem.w16(addr, 0x4e70)  # reset
     rt.run()

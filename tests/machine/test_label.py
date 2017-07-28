@@ -143,7 +143,7 @@ def test_label_cross_add_remove(mach):
 def test_label_remove_inside(mach):
     labels = _create_random(1024, 128)
     assert 1024 == get_num_labels()
-    remove_labels_inside(128, 128*2)
+    remove_labels_inside(128, 128 * 2)
     assert 1022 == get_num_labels()
 
 

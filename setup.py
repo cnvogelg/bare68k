@@ -16,7 +16,7 @@ from distutils import log
 
 # pkgs
 pkgs = find_packages()
-print("pkgs="+",".join(pkgs))
+print("pkgs=" + ",".join(pkgs))
 
 # get project version
 
@@ -26,6 +26,7 @@ def get_property(prop, project):
         r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop),
         open(project + '/__init__.py').read())
     return result.group(1)
+
 
 __version__ = get_property('__version__', 'bare68k')
 version = __version__[:__version__.rfind('.')]
@@ -59,6 +60,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 def read(*parts):
     return open(os.path.join(here, *parts), 'r').read()
+
 
 gen_src = [
     'm68kopac.c',

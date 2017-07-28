@@ -112,6 +112,7 @@ def check_unpack(input_file, ref_output_file, unpacker_file="unpack.bin",
     out_data = ppunpack(data, unpacker_code, trace)
     assert out_data == ref_data
 
+
 # run when script is called
 if __name__ == '__main__':
     check_unpack("data.bin", "rnc_1.s", trace=False)

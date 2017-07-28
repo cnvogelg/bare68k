@@ -12,6 +12,7 @@ def test_da_init_buffer(rt):
     da = Disassembler(buf)
     da.shutdown()
 
+
 CODE_ORG = 0x1000
 
 
