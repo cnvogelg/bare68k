@@ -1,0 +1,10 @@
+tox
+mock
+pytest
+docutils
+wheel
+future
+cython
+sphinx
+sphinx_rtd_theme
+autopep8
