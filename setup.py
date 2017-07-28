@@ -118,8 +118,10 @@ class GenCommand(Command):
             log.info("building '{}' tool".format(gen_tool))
             cc = ccompiler.new_compiler()
             cc.compile(sources=[gen_tool_src], output_dir=build_dir)
+            obj = gen_tool_obj.replace(".o", cc.obj_extension)
+            print("tool object:", obj, cc.obj_extension)
             cc.link_executable(
-                objects=[gen_tool_obj], output_progname=gen_tool)
+                objects=[obj], output_progname=gen_tool)
             os.remove(gen_tool_obj)
         # generate source?
         if not os.path.exists(gen_src[0]):
