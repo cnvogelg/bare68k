@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.todo',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages']
+              'sphinx.ext.todo',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.githubpages']
 
 templates_path = ['_templates']
 
@@ -28,7 +28,7 @@ todo_include_todos = True
 # html
 html_theme = 'sphinx_rtd_theme'
 #html_theme = 'alabaster'
-#html_sidebars = {
+# html_sidebars = {
 #    '**': [
 #        'about.html',
 #        'navigation.html',
@@ -61,6 +61,3 @@ texinfo_documents = [
      author, 'bare68k', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

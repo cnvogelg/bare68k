@@ -11,8 +11,8 @@ M68K_CPU_TYPE_68000 = 1
 M68K_CPU_TYPE_68010 = 2
 M68K_CPU_TYPE_68EC020 = 3
 M68K_CPU_TYPE_68020 = 4
-M68K_CPU_TYPE_68030 = 5 # Supported by disassembler ONLY
-M68K_CPU_TYPE_68040	= 6 # Supported by disassembler ONLY
+M68K_CPU_TYPE_68030 = 5  # Supported by disassembler ONLY
+M68K_CPU_TYPE_68040 = 6  # Supported by disassembler ONLY
 
 # registers
 M68K_REG_D0 = 0
@@ -31,77 +31,77 @@ M68K_REG_A4 = 12
 M68K_REG_A5 = 13
 M68K_REG_A6 = 14
 M68K_REG_A7 = 15
-M68K_REG_PC = 16 # Program Counter
-M68K_REG_SR = 17 # Status Register
-M68K_REG_SP = 18 #The current Stack Pointer (located in A7)
-M68K_REG_USP = 19 # User Stack Pointer
-M68K_REG_ISP = 20 # Interrupt Stack Pointer
-M68K_REG_MSP = 21 # Master Stack Pointer
-M68K_REG_SFC = 22 # Source Function Code
-M68K_REG_DFC = 23 # Destination Function Code
-M68K_REG_VBR = 24 # Vector Base Register
-M68K_REG_CACR = 25 # Cache Control Register
-M68K_REG_CAAR = 26 # Cache Address Register
+M68K_REG_PC = 16  # Program Counter
+M68K_REG_SR = 17  # Status Register
+M68K_REG_SP = 18  # The current Stack Pointer (located in A7)
+M68K_REG_USP = 19  # User Stack Pointer
+M68K_REG_ISP = 20  # Interrupt Stack Pointer
+M68K_REG_MSP = 21  # Master Stack Pointer
+M68K_REG_SFC = 22  # Source Function Code
+M68K_REG_DFC = 23  # Destination Function Code
+M68K_REG_VBR = 24  # Vector Base Register
+M68K_REG_CACR = 25  # Cache Control Register
+M68K_REG_CAAR = 26  # Cache Address Register
 
-M68K_REG_PREF_ADDR = 27 # Virtual Reg: Last prefetch address
-M68K_REG_PREF_DATA = 28 # Virtual Reg: Last prefetch data
+M68K_REG_PREF_ADDR = 27  # Virtual Reg: Last prefetch address
+M68K_REG_PREF_DATA = 28  # Virtual Reg: Last prefetch data
 
-M68K_REG_PPC = 29 # Previous value in the program counter
-M68K_REG_IR = 30 # Instruction register
-M68K_REG_CPU_TYPE = 31 # Type of CPU being run
+M68K_REG_PPC = 29  # Previous value in the program counter
+M68K_REG_IR = 30  # Instruction register
+M68K_REG_CPU_TYPE = 31  # Type of CPU being run
 
 # aline callback
-M68K_ALINE_NONE   = 0
+M68K_ALINE_NONE = 0
 M68K_ALINE_EXCEPT = 1
-M68K_ALINE_RTS    = 2
+M68K_ALINE_RTS = 2
 
 # int ack special values
 M68K_INT_ACK_AUTOVECTOR = 0xffffffff
-M68K_INT_ACK_SPURIOUS   = 0xfffffffe
+M68K_INT_ACK_SPURIOUS = 0xfffffffe
 
 # memory
-MEM_FLAGS_READ  = 1
+MEM_FLAGS_READ = 1
 MEM_FLAGS_WRITE = 2
-MEM_FLAGS_RW    = 3
+MEM_FLAGS_RW = 3
 MEM_FLAGS_TRAPS = 4
 
 # memory trace
-MEM_ACCESS_R8    = 0x11
-MEM_ACCESS_R16   = 0x12
-MEM_ACCESS_R32   = 0x14
-MEM_ACCESS_W8    = 0x21
-MEM_ACCESS_W16   = 0x22
-MEM_ACCESS_W32   = 0x24
-MEM_ACCESS_MASK  = 0xff
+MEM_ACCESS_R8 = 0x11
+MEM_ACCESS_R16 = 0x12
+MEM_ACCESS_R32 = 0x14
+MEM_ACCESS_W8 = 0x21
+MEM_ACCESS_W16 = 0x22
+MEM_ACCESS_W32 = 0x24
+MEM_ACCESS_MASK = 0xff
 
 # memory function code
-MEM_FC_MASK        = 0xff00
-MEM_FC_USER_DATA   = 0x1100
-MEM_FC_USER_PROG   = 0x1200
-MEM_FC_SUPER_DATA  = 0x2100
-MEM_FC_SUPER_PROG  = 0x2200
-MEM_FC_INT_ACK     = 0x4000
+MEM_FC_MASK = 0xff00
+MEM_FC_USER_DATA = 0x1100
+MEM_FC_USER_PROG = 0x1200
+MEM_FC_SUPER_DATA = 0x2100
+MEM_FC_SUPER_PROG = 0x2200
+MEM_FC_INT_ACK = 0x4000
 # masks
-MEM_FC_DATA_MASK   = 0x0100
-MEM_FC_PROG_MASK   = 0x0200
-MEM_FC_USER_MASK   = 0x1000
-MEM_FC_SUPER_MASK  = 0x2000
-MEM_FC_INT_MASK    = 0x4000
+MEM_FC_DATA_MASK = 0x0100
+MEM_FC_PROG_MASK = 0x0200
+MEM_FC_USER_MASK = 0x1000
+MEM_FC_SUPER_MASK = 0x2000
+MEM_FC_INT_MASK = 0x4000
 
 # memory flags for api
 MEM_ACCESS_R_BLOCK = 0x1100
 MEM_ACCESS_W_BLOCK = 0x1200
-MEM_ACCESS_R_CSTR  = 0x2100
-MEM_ACCESS_W_CSTR  = 0x2200
-MEM_ACCESS_R_BSTR  = 0x3100
-MEM_ACCESS_W_BSTR  = 0x3200
-MEM_ACCESS_R_B32   = 0x4100
-MEM_ACCESS_W_B32   = 0x4200
-MEM_ACCESS_BSET    = 0x5400
-MEM_ACCESS_BCOPY   = 0x6400
+MEM_ACCESS_R_CSTR = 0x2100
+MEM_ACCESS_W_CSTR = 0x2200
+MEM_ACCESS_R_BSTR = 0x3100
+MEM_ACCESS_W_BSTR = 0x3200
+MEM_ACCESS_R_B32 = 0x4100
+MEM_ACCESS_W_B32 = 0x4200
+MEM_ACCESS_BSET = 0x5400
+MEM_ACCESS_BCOPY = 0x6400
 
 # traps
-TRAP_DEFAULT  = 0
+TRAP_DEFAULT = 0
 TRAP_ONE_SHOT = 1
 TRAP_AUTO_RTS = 2
 
@@ -127,18 +127,18 @@ CPU_EVENT_DONE = 13
 
 # names for all events
 CPU_EVENT_NAMES = (
-    "CALLBACK_ERROR", #0
-    "RESET", #1
-    "ALINE_TRAP", #2
-    "MEM_ACCESS", #3
-    "MEM_BOUNDS", #4
-    "MEM_TRACE", #5
-    "MEM_SPECIAL", #6
-    "INSTR_HOOK", #7
-    "INT_ACK", #8
-    "BREAKPOINT", #9
-    "WATCHPOINT", #10
-    "TIMER", #11
-    "USER_ABORT", #13
-    "DONE", #14
+    "CALLBACK_ERROR",  # 0
+    "RESET",  # 1
+    "ALINE_TRAP",  # 2
+    "MEM_ACCESS",  # 3
+    "MEM_BOUNDS",  # 4
+    "MEM_TRACE",  # 5
+    "MEM_SPECIAL",  # 6
+    "INSTR_HOOK",  # 7
+    "INT_ACK",  # 8
+    "BREAKPOINT",  # 9
+    "WATCHPOINT",  # 10
+    "TIMER",  # 11
+    "USER_ABORT",  # 13
+    "DONE",  # 14
 )

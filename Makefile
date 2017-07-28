@@ -31,3 +31,12 @@ doc:
 
 doc_upload: doc
 	python setup.py upload_docs --upload-dir=site
+
+pep:
+	autopep8 -r --diff . | grep +++
+
+pep_diff:
+	autopep8 -r --diff .
+
+pep_fix:
+	autopep8 -r -i .
