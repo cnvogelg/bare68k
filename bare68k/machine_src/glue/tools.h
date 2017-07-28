@@ -7,7 +7,7 @@
 #ifndef _TOOLS_H
 #define _TOOLS_H
 
-#include <stdint.h>
+#include "int.h"
 
 #define NO_POINT      -1
 

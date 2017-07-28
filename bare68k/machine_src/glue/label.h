@@ -9,7 +9,7 @@
 #ifndef _LABEL_H
 #define _LABEL_H
 
-#include <stdint.h>
+#include "int.h"
 
 #ifndef UINT_TYPE
 #define UINT_TYPE
