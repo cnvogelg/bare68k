@@ -65,6 +65,17 @@ void tools_init(void)
   tools_breakpoints_enabled = 0;
   tools_watchpoints_enabled = 0;
   tools_timers_enabled = 0;
+
+  memset(&pc_trace, 0, sizeof(pc_trace_t));
+
+  breakpoints_free_func = NULL;
+  memset(&breakpoints, 0, sizeof(array_t));
+
+  watchpoints_free_func = NULL;
+  memset(&watchpoints, 0, sizeof(array_t));
+
+  timers_free_func = NULL;
+  memset(&timers, 0, sizeof(array_t));
 }
 
 void tools_free(void)
