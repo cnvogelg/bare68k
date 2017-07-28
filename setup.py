@@ -6,7 +6,7 @@ import subprocess
 import re
 
 from setuptools import setup, find_packages
-from distutils.extension import Extension
+from setuptools import Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.clean import clean
 import distutils.ccompiler as ccompiler
@@ -77,6 +77,8 @@ gen_dir = "bare68k/machine_src/gen"
 gen_src = list(map(lambda x: os.path.join(gen_dir, x), gen_src))
 build_dir = "build"
 
+# check compiler
+is_msvc = sys.platform == 'win32' and sys.version.lower().find('msc') != -1
 
 class my_build_ext(build_ext):
     """overwrite build_ext to generate code first"""
@@ -126,8 +128,13 @@ class GenCommand(Command):
             # compile
             cc.compile(sources=[src], output_dir=build_dir)
             # link
+            if is_msvc:
+                ld_args=['/MANIFEST']
+            else:
+                ld_args=None
             cc.link_executable(
-                objects=[obj], output_progname=gen_tool)
+                objects=[obj], output_progname=gen_tool,
+                extra_postargs=ld_args)
             # remove
             os.remove(obj)
         # generate source?
@@ -219,9 +226,6 @@ inc_dirs = [
     'bare68k/machine_src/glue',
     gen_dir
 ]
-
-# check compiler
-is_msvc = sys.platform == 'win32' and sys.version.lower().find('msc') != -1
 
 # add missing vc headers
 if is_msvc:
