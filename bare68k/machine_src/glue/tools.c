@@ -5,7 +5,7 @@
  */
 
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 
 #include "tools.h"
 #include "cpu.h"
