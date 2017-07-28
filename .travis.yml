@@ -19,5 +19,15 @@ matrix:
         - TOXENV=py36
         - BREW_INSTALL=python3
 
-install: pip install tox-travis
+install:
+  - |
+    if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      if [[ -n "$BREW_INSTALL" ]]; then
+        brew update
+        brew install "$BREW_INSTALL"
+      fi
+      sudo pip install tox
+    fi
+  - pip install tox-travis
+
 script: tox
