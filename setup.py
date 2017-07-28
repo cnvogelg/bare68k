@@ -221,7 +221,7 @@ inc_dirs = [
 ]
 
 # check compiler
-is_msvc = sys.platform == 'win32' and sys.version.lower().index('msc') != -1
+is_msvc = sys.platform == 'win32' and sys.version.lower().find('msc') != -1
 
 # add missing vc headers
 if is_msvc:
