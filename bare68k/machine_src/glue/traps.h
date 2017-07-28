@@ -8,7 +8,7 @@
 #define _TRAPS_H
 
 #include "m68k.h"
-#include "int.h"
+#include <stdint.h>
 
 #define TRAP_DEFAULT    0
 #define TRAP_ONE_SHOT   1

@@ -211,8 +211,7 @@ depends = [
     'bare68k/machine_src/glue/tools.h',
     'bare68k/machine_src/glue/label.h',
 
-    'bare68k/machine_src/glue/int.h',
-    'bare68k/machine_src/glue/ms_stdint.h'
+    'bare68k/machine_src/glue/win/stdint.h'
 ]
 inc_dirs = [
     'bare68k/machine_src',
@@ -220,6 +219,8 @@ inc_dirs = [
     'bare68k/machine_src/glue',
     gen_dir
 ]
+if os.name == 'nt':
+    inc_dirs.append('bare68k/machine_src/glue/win')
 
 extensions = [Extension("bare68k.machine", sourcefiles,
                         depends=depends, include_dirs=inc_dirs)]

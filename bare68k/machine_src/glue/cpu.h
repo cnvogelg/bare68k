@@ -8,7 +8,7 @@
 #define _CPU_H
 
 #include "m68k.h"
-#include "int.h"
+#include <stdint.h>
 
 #define CPU_EVENT_CALLBACK_ERROR 0
 #define CPU_EVENT_RESET 1

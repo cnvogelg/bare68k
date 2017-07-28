@@ -9,7 +9,7 @@
 
 #include "m68k.h"
 #include "cpu.h"
-#include "int.h"
+#include <stdint.h>
 
 /* ------ Types ----- */
 #ifndef UINT_TYPE
