@@ -160,7 +160,7 @@ int label_init(uint np, uint ps)
   if(page_lists == NULL) {
     return 0;
   }
-  bzero(page_lists, num_bytes);
+  memset(page_lists, 0, num_bytes);
   return 1;
 }
 

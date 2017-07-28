@@ -166,7 +166,7 @@ static int array_setup(array_t *a, int num, size_t node_size)
     if(a->nodes == NULL) {
       return -1;
     }
-    bzero(a->nodes, bytes);
+    memset(a->nodes, 0, bytes);
   } else {
     a->nodes = NULL;
   }

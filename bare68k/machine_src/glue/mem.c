@@ -512,7 +512,7 @@ int mem_init(uint num_pages)
     return 0;
   }
   total_pages = num_pages;
-  bzero(pages, bytes);
+  memset(pages, 0, bytes);
 
   mem_set_invalid_value(0xffffffff);
   return 1;
@@ -598,7 +598,7 @@ memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
   }
 
   /* clear memory */
-  bzero(data, byte_size);
+  memset(data, 0, byte_size);
 
   /* first alloc mem entry */
   me_size = sizeof(memory_entry_t);
@@ -607,7 +607,7 @@ memory_entry_t *mem_add_memory(uint start_page, uint num_pages, int flags)
     free(data);
     return NULL;
   }
-  bzero(me, me_size);
+  memset(me, 0, me_size);
 
   /* link to mem list */
   me->next = first_mem_entry;
@@ -688,7 +688,7 @@ special_entry_t *mem_add_special(uint start_page, uint num_pages,
   if(se == NULL) {
     return NULL;
   }
-  bzero(se, se_size);
+  memset(se, 0, se_size);
 
   /* link to mem list */
   se->next = first_special_entry;
