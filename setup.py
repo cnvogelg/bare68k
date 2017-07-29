@@ -231,9 +231,13 @@ inc_dirs = [
 # add missing vc headers
 if is_msvc:
     inc_dirs.append('bare68k/machine_src/glue/win')
+    defines = [('_CRT_SECURE_NO_WARNINGS', None)]
+else:
+    defines = None
 
 extensions = [Extension("bare68k.machine", sourcefiles,
-                        depends=depends, include_dirs=inc_dirs)]
+                        depends=depends, include_dirs=inc_dirs,
+                        define_macros=defines)]
 if use_cython:
     extensions = cythonize(extensions, include_path=['bare68k/machine_src'])
 
