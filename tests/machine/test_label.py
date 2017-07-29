@@ -85,8 +85,8 @@ def test_label_stress_add_remove_large(mach):
 
 
 def test_label_add_only(mach):
-    assert None == get_all_labels()
-    assert None == get_page_labels(0)
+    assert None is get_all_labels()
+    assert None is get_page_labels(0)
     assert 0 == get_num_labels()
     assert 0 == get_num_page_labels(0)
     l = add_label(0x0000, 0x2000, "label")
@@ -97,8 +97,8 @@ def test_label_add_only(mach):
 
 
 def test_label_add_remove(mach):
-    assert None == get_all_labels()
-    assert None == get_page_labels(0)
+    assert None is get_all_labels()
+    assert None is get_page_labels(0)
     assert 0 == get_num_labels()
     assert 0 == get_num_page_labels(0)
     l = add_label(0xf000, 0x2000, "label")
@@ -109,14 +109,14 @@ def test_label_add_remove(mach):
     remove_label(l)
     assert 0 == get_num_labels()
     assert 0 == get_num_page_labels(0)
-    assert None == get_all_labels()
-    assert None == get_page_labels(0)
+    assert None is get_all_labels()
+    assert None is get_page_labels(0)
 
 
 def test_label_cross_add_only(mach):
-    assert None == get_all_labels()
-    assert None == get_page_labels(0)
-    assert None == get_page_labels(1)
+    assert None is get_all_labels()
+    assert None is get_page_labels(0)
+    assert None is get_page_labels(1)
     l = add_label(0xf000, 0x2000, "cross")
     assert 1 == get_num_labels()
     assert [l] == get_all_labels()
@@ -125,9 +125,9 @@ def test_label_cross_add_only(mach):
 
 
 def test_label_cross_add_remove(mach):
-    assert None == get_all_labels()
-    assert None == get_page_labels(0)
-    assert None == get_page_labels(1)
+    assert None is get_all_labels()
+    assert None is get_page_labels(0)
+    assert None is get_page_labels(1)
     l = add_label(0xf000, 0x2000, "cross")
     assert 1 == get_num_labels()
     assert [l] == get_all_labels()
@@ -135,9 +135,9 @@ def test_label_cross_add_remove(mach):
     assert [l] == get_page_labels(1)
     remove_label(l)
     assert 0 == get_num_labels()
-    assert None == get_all_labels()
-    assert None == get_page_labels(0)
-    assert None == get_page_labels(1)
+    assert None is get_all_labels()
+    assert None is get_page_labels(0)
+    assert None is get_page_labels(1)
 
 
 def test_label_remove_inside(mach):

@@ -18,7 +18,7 @@ under the GNU Public License V2
 .. |travis| image:: https://travis-ci.org/cnvogelg/bare68k.svg?branch=master
    :target: https://travis-ci.org/cnvogelg/bare68k
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/cnvogelg/bare68k?branch=master&svg=true
-   :target: https://ci.appveyor.com/api/project/cnvogelg/bare68k/branch/master
+   :target: https://ci.appveyor.com/project/cnvogelg/bare68k/branch/master
 .. |rtfd| image:: https://readthedocs.org/projects/bare68k/badge/?version=latest
    :target: https://readthedocs.org/projects/bare68k
 

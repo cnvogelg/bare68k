@@ -29,7 +29,7 @@ def test_pc_no_trace(mach):
     ev = ri.events[0]
     assert ev.ev_type == CPU_EVENT_RESET
     trace = get_pc_trace()
-    assert trace == None
+    assert trace is None
 
 
 def test_pc_trace(mach):
@@ -108,7 +108,7 @@ def test_bp_setup(mach):
     assert get_next_free_breakpoint() == 0
     set_breakpoint(0, 0x100, 0, None)
     assert get_next_free_breakpoint() == 1
-    assert get_breakpoint_data(0) == None
+    assert get_breakpoint_data(0) is None
     assert get_num_breakpoints() == 1
     # add non empty bp
     set_breakpoint(1, 0x200, 0, "hallo")
@@ -135,11 +135,11 @@ def test_bp_setup(mach):
 def test_bp_enable(mach):
     setup_breakpoints(1)
     set_breakpoint(0, 0x100, 0, None)
-    assert is_breakpoint_enabled(0) == True
+    assert is_breakpoint_enabled(0) is True
     disable_breakpoint(0)
-    assert is_breakpoint_enabled(0) == False
+    assert is_breakpoint_enabled(0) is False
     enable_breakpoint(0)
-    assert is_breakpoint_enabled(0) == True
+    assert is_breakpoint_enabled(0) is True
 
 
 def test_bp_check(mach):
@@ -148,7 +148,7 @@ def test_bp_check(mach):
     set_breakpoint(1, 0x102, 2, None)
     set_breakpoint(2, 0x100, 3, None)
     set_breakpoint(3, 0x102, 4, None)
-    assert check_breakpoint(0x104, 7) == None
+    assert check_breakpoint(0x104, 7) is None
     assert check_breakpoint(0x100, 7) == 0
     assert check_breakpoint(0x100, 2) == 2
 
@@ -203,7 +203,7 @@ def test_wp_setup(mach):
     assert get_next_free_watchpoint() == 0
     set_watchpoint(0, 0x100, 0, None)
     assert get_next_free_watchpoint() == 1
-    assert get_watchpoint_data(0) == None
+    assert get_watchpoint_data(0) is None
     assert get_num_watchpoints() == 1
     # add non empty bp
     set_watchpoint(1, 0x200, 0, "hallo")
@@ -230,11 +230,11 @@ def test_wp_setup(mach):
 def test_wp_enable(mach):
     setup_watchpoints(1)
     set_watchpoint(0, 0x100, 0, None)
-    assert is_watchpoint_enabled(0) == True
+    assert is_watchpoint_enabled(0) is True
     disable_watchpoint(0)
-    assert is_watchpoint_enabled(0) == False
+    assert is_watchpoint_enabled(0) is False
     enable_watchpoint(0)
-    assert is_watchpoint_enabled(0) == True
+    assert is_watchpoint_enabled(0) is True
 
 
 def test_wp_check(mach):
@@ -243,7 +243,7 @@ def test_wp_check(mach):
     set_watchpoint(1, 0x102, 2, None)
     set_watchpoint(2, 0x100, 3, None)
     set_watchpoint(3, 0x102, 4, None)
-    assert check_watchpoint(0x104, 7) == None
+    assert check_watchpoint(0x104, 7) is None
     assert check_watchpoint(0x100, 7) == 0
     assert check_watchpoint(0x100, 2) == 2
 
@@ -298,7 +298,7 @@ def test_timers_setup(mach):
     assert get_next_free_timer() == 0
     set_timer(0, 100, None)
     assert get_next_free_timer() == 1
-    assert get_timer_data(0) == None
+    assert get_timer_data(0) is None
     assert get_num_timers() == 1
     # add non empty bp
     set_timer(1, 200, "hallo")
@@ -325,11 +325,11 @@ def test_timers_setup(mach):
 def test_timers_enable(mach):
     setup_timers(1)
     set_timer(0, 100, None)
-    assert is_timer_enabled(0) == True
+    assert is_timer_enabled(0) is True
     disable_timer(0)
-    assert is_timer_enabled(0) == False
+    assert is_timer_enabled(0) is False
     enable_timer(0)
-    assert is_timer_enabled(0) == True
+    assert is_timer_enabled(0) is True
 
 
 def test_timers_tick(mach):

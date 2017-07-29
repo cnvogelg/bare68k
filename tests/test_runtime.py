@@ -482,7 +482,7 @@ def test_rt_instr_trace_off(rt):
     rt.run()
     # check log
     msgs = cl.get_msgs(logging.INFO)
-    assert msgs == None
+    assert msgs is None
 
 
 def test_rt_cpu_mem_trace(rt):
@@ -517,7 +517,7 @@ def test_rt_cpu_mem_trace_off(rt):
     rt.run()
     # check log
     msgs = cl.get_msgs(logging.INFO)
-    assert msgs == None
+    assert msgs is None
 
 
 def test_rt_api_mem_trace(rt):
@@ -562,4 +562,4 @@ def test_rt_api_mem_trace(rt):
     rt.run()
     # check log
     msgs = cl.get_msgs(logging.INFO)
-    assert msgs == None
+    assert msgs is None

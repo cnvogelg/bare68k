@@ -525,7 +525,7 @@ def test_api_trace_func(mach):
             self.value = (flag, addr, val, extra)
     t = Tester()
     set_mem_api_trace_func(t.cb)
-    assert t.value == None
+    assert t.value is None
     # writes
     w8(0, 13)
     assert t.value == (MEM_ACCESS_W8, 0, 13, 0)
@@ -580,7 +580,7 @@ def test_api_trace_func_str(mach):
             self.value = s
     t = Tester()
     set_mem_api_trace_func(t.cb, as_str=True)
-    assert t.value == None
+    assert t.value is None
     # writes
     w8(0, 13)
     assert t.value == "w08    @00000000: 0000000d"
