@@ -127,7 +127,11 @@ class GenCommand(Command):
             obj = obj.replace("/", os.path.sep)
             print("tool object:", obj)
             # compile
-            cc.compile(sources=[src], output_dir=build_dir)
+            if is_msvc:
+                defines = [('_CRT_SECURE_NO_WARNINGS', None)]
+            else:
+                defines = None
+            cc.compile(sources=[src], output_dir=build_dir, macros=defines)
             # link
             if is_msvc:
                 ld_args = ['/MANIFEST']
