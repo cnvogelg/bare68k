@@ -1,7 +1,7 @@
 bare68k
 =======
 
-|travis| |appveyor| |rtfd|
+|travis| |appveyor| |rtfd| |coverall|
 
 bare68k allows you to write **m68k system emulators** in Python 2 or 3.  It
 consists of a **CPU emulation** for 68000/68020/68EC020 provided by the
@@ -21,6 +21,8 @@ under the GNU Public License V2
    :target: https://ci.appveyor.com/project/cnvogelg/bare68k/branch/master
 .. |rtfd| image:: https://readthedocs.org/projects/bare68k/badge/?version=latest
    :target: https://readthedocs.org/projects/bare68k
+.. |coverall| image:: https://coveralls.io/repos/github/cnvogelg/bare68k/badge.svg?branch=master
+   :target: https://coveralls.io/github/cnvogelg/bare68k?branch=master
 
 Features
 --------
