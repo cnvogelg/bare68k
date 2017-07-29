@@ -273,7 +273,7 @@ setup(
     zip_safe=False,
     install_requires=['future'],
     setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
+    tests_require=['pytest', 'pytest-cov'],
     ext_modules=extensions,
     cmdclass=cmdclass,
     command_options=command_options

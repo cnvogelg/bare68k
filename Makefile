@@ -5,7 +5,7 @@ PIP = pip2.7
 OPEN = open
 
 .PHONY: help init build test
-.PHONY: gen clean
+.PHONY: gen clean clean_all
 .PHONY: sdist release
 .PHONY: doc doc_info
 .PHONY: pep8 pep8_diff pep8_fix codestyle
@@ -17,7 +17,7 @@ help:
 	@echo "make test      run tests"
 	@echo
 	@echo "make clean     cleanup"
-	@echo "make clean     cleanup"
+	@echo "make clean_all cleanup all including cython"
 	@echo
 	@echo "make sdist     make source dist"
 	@echo "make release   build dist and upload"

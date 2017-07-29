@@ -1,6 +1,7 @@
 tox
 mock
 pytest
+pytest-cov
 docutils
 wheel
 future
