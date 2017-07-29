@@ -12,4 +12,5 @@ machine.c
 dist/
 site/
 .python-version
+.coverage
 
