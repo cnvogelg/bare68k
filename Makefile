@@ -74,7 +74,7 @@ bdist:
 release: clean_all sdist bdist
 
 upload:
-	twine dist/*
+	twine upload dist/*
 
 # ----- doc -----
 
