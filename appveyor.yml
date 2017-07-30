@@ -27,4 +27,4 @@ after_test:
 
 artifacts:
   - path: dist\*
-  - name: dist
+    name: dist
