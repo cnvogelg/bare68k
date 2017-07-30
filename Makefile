@@ -6,7 +6,7 @@ OPEN = open
 
 .PHONY: help init build test
 .PHONY: gen clean clean_all
-.PHONY: sdist release
+.PHONY: sdist bdist release upload
 .PHONY: doc doc_info
 .PHONY: pep8 pep8_diff pep8_fix codestyle
 
@@ -20,7 +20,9 @@ help:
 	@echo "make clean_all cleanup all including cython"
 	@echo
 	@echo "make sdist     make source dist"
+	@echo "make bdist     make binary dist (wheel)"
 	@echo "make release   build dist and upload"
+	@echo "make upload    upload release to pypi"
 	@echo
 	@echo "make doc       generate docs with sphinx"
 	@echo "make doc_info  generate *.rst doc files"
@@ -56,17 +58,22 @@ gen:
 clean:
 	$(PYTHON) setup.py clean
 
-clean_all: clean
+clean_all:
 	rm -rf bare68k/machine*.so
 	rm -f bare68k/machine.c
+	rm -rf build dist
 
 # ----- dist -----
 
 sdist:
-	rm -rf dist
 	python setup.py sdist
 
-release: sdist
+bdist:
+	python setup.py bdist_wheel
+
+release: clean_all sdist bdist
+
+upload:
 	twine dist/*
 
 # ----- doc -----
