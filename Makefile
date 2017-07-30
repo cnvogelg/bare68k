@@ -6,7 +6,7 @@ OPEN = open
 
 .PHONY: help init build test
 .PHONY: gen clean clean_all
-.PHONY: sdist bdist release upload
+.PHONY: sdist bdist release upload download
 .PHONY: doc doc_info
 .PHONY: pep8 pep8_diff pep8_fix codestyle
 
@@ -23,6 +23,7 @@ help:
 	@echo "make bdist     make binary dist (wheel)"
 	@echo "make release   build dist and upload"
 	@echo "make upload    upload release to pypi"
+	@echo "make download  download appveyor artifacts"
 	@echo
 	@echo "make doc       generate docs with sphinx"
 	@echo "make doc_info  generate *.rst doc files"
@@ -75,6 +76,9 @@ release: clean_all sdist bdist
 
 upload:
 	twine upload dist/*
+
+download:
+	python setup.py appveyor_dl
 
 # ----- doc -----
 

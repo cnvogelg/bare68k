@@ -168,12 +168,33 @@ class CleanGenCommand(Command):
             os.remove(gen_tool)
 
 
+class AppveyorDownloadCommand(Command):
+    """download win artifacts from appveyor"""
+    description = "download win artifacts from appveyor"
+    user_options = [
+        ('branch=', None, "specify the branch to download")
+    ]
+
+    def initialize_options(self):
+        self.branch = None
+
+    def finalize_options(self):
+        if self.branch is None:
+            self.branch = 'v{}'.format(release)
+
+    def run(self):
+        import appveyor_dl
+        print("downloading branch", self.branch)
+        appveyor_dl.appveyor_download('cnvogelg', 'bare68k', self.branch)
+
+
 # my custom commands
 cmdclass = {
     'gen': GenCommand,
     'clean_gen': CleanGenCommand,
     'build_ext': my_build_ext,
-    'clean': my_clean
+    'clean': my_clean,
+    'appveyor_dl' : AppveyorDownloadCommand
 }
 command_options = {}
 
