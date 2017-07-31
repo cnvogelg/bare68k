@@ -194,7 +194,7 @@ cmdclass = {
     'clean_gen': CleanGenCommand,
     'build_ext': my_build_ext,
     'clean': my_clean,
-    'appveyor_dl' : AppveyorDownloadCommand
+    'appveyor_dl': AppveyorDownloadCommand
 }
 command_options = {}
 
