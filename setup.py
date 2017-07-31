@@ -55,10 +55,19 @@ if '--no-cython' in sys.argv:
     sys.argv.remove('--no-cython')
 print("use_cython:", use_cython)
 
-here = os.path.abspath(os.path.dirname(__file__))
+# mock whole setup? for docs!
+mock = False
+if '--mock' in sys.argv:
+    mock = True
+    sys.argv.remove('--mock')
+# mock for read the docs
+if os.environ.get('READTHEDOCS') == 'True':
+    mock = True
+print("mock:", mock)
 
 
 def read(*parts):
+    here = os.path.abspath(os.path.dirname(__file__))
     return open(os.path.join(here, *parts), 'r').read()
 
 
@@ -260,11 +269,15 @@ if is_msvc:
 else:
     defines = None
 
-extensions = [Extension("bare68k.machine", sourcefiles,
-                        depends=depends, include_dirs=inc_dirs,
-                        define_macros=defines)]
-if use_cython:
-    extensions = cythonize(extensions, include_path=['bare68k/machine_src'])
+if not mock:
+    extensions = [Extension("bare68k.machine", sourcefiles,
+                            depends=depends, include_dirs=inc_dirs,
+                            define_macros=defines)]
+    if use_cython:
+        extensions = cythonize(extensions, include_path=[
+                               'bare68k/machine_src'])
+else:
+    extensions = None
 
 setup(
     name="bare68k",
