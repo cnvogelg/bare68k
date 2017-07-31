@@ -88,7 +88,7 @@ def shutdown():
   clear_event_handlers()
 
 def is_initialized():
-  return is_init
+  return <bint>is_init
 
 # modules
 include "cpu.pyx"

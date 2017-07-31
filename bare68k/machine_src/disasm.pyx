@@ -30,4 +30,4 @@ def disassemble_memory():
   mem.mem_disasm_memory()
 
 def disassemble_is_valid(uint16_t opcode):
-  return musashi.m68k_is_valid_instruction(opcode, cpu.cpu_get_type())
+  return <bint>musashi.m68k_is_valid_instruction(opcode, cpu.cpu_get_type())

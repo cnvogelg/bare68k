@@ -132,7 +132,7 @@ def test_disassemble_buffer_api(mach):
 
 def test_disassemble_is_valid(mach):
     op1 = 0x4e75
-    assert disassemble_is_valid(op1)
+    assert disassemble_is_valid(op1) is True
     if get_type() == M68K_CPU_TYPE_68000:
         op2 = 0x8380  # unpk
-        assert not disassemble_is_valid(op2)
+        assert disassemble_is_valid(op2) is False
