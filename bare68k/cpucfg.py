@@ -3,7 +3,8 @@ from bare68k.errors import *
 
 
 class CPUConfig(object):
-    """Configuraiton class helper for CPU specific parameters of bare68k"""
+    """Configure the emulated CPU.
+    """
 
     cpu_types = (
         M68K_CPU_TYPE_68000,

@@ -4,6 +4,9 @@ from .cpucfg import CPUConfig
 from .memcfg import MemoryConfig
 from .runcfg import RunConfig
 from .runtime import Runtime
+from .handler import EventHandler
+from .errors import Bare68kException, ConfigError, InternalError
+from .label import LabelMgr, DummyLabelMgr
 from . import runtime
 from . import api
 from . import debug
@@ -15,6 +18,3 @@ __license__ = "GPL"
 __maintainer__ = "Christian Vogelgsang"
 __email__ = "chris@vogelgsang.org"
 __status__ = "Development"
-
-__all__ = ['CPUConfig', 'MemoryConfig', 'RunConfig', 'Runtime',
-           'runtime', 'api', 'debug']

@@ -1,4 +1,4 @@
-import bare68k.machine as mach
+from ._getmach import mach
 
 # cpu pc trace
 

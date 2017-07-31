@@ -19,6 +19,7 @@ under the GNU Public License V2
    :caption: Contents:
 
    tutorial
+   api
    changelog
 
 Features

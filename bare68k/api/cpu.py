@@ -1,6 +1,6 @@
 """wrap machine's CPU access functions"""
 
-import bare68k.machine as mach
+from ._getmach import mach
 
 # context handling
 get_cpu_context = mach.get_cpu_context

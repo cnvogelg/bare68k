@@ -1,6 +1,6 @@
 """wrap machine's memory access functions"""
 
-import bare68k.machine as mach
+from ._getmach import mach
 
 # memory block access for RAM/ROM
 set_block = mach.set_block

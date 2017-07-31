@@ -1,6 +1,6 @@
 """wrap machine's trap functions"""
 
-import bare68k.machine as mach
+from ._getmach import mach
 
 trap_setup = mach.trap_setup
 trap_setup_abs = mach.trap_setup_abs

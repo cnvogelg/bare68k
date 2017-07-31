@@ -1,4 +1,4 @@
-import bare68k.machine as mach
+from ._getmach import mach
 
 init = mach.init
 shutdown = mach.shutdown

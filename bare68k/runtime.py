@@ -118,14 +118,29 @@ def init_quick(cpu_type=M68K_CPU_TYPE_68000, ram_pages=1):
 
 
 class Runtime(object):
+    """The runtime controls the CPU emulation run and dispatches events.
+
+    The central entry point for every system emulation done with bare68k is
+    the Runtime. First you configure it by passing in a CPU, memory layout and
+    runtime configuration.
+
+    Add an optional event handler to control the processing of incoming
+    events. Configure an optional Logger to receive all incoming traces.
+
+    Args:
+         cpu_cfg (:obj:`bare68k.CPUConfig`): the CPU configuration
+         mem_cfg (:obj:`bare68k.MemoryConfig`): the memory layout for the emulation
+         run_cfg (:obj:`bare68k.RunConfig`): runtime options
+         event_handler (:obj:`bare68k.EventHandler`, optional): event handler that
+             receives all returned events from the CPU emulation. By
+             default the :class:`bare68k.EventHandler` is used.
+         log_channel (:obj:`logging.Logger`, optional): a logger that
+             logs all runtime events. By default a logger with ``__name__``
+             of the module is created.
+    """
 
     def __init__(self, cpu_cfg, mem_cfg, run_cfg,
                  event_handler=None, log_channel=None):
-        """setup runtime.
-
-        before you can run your system emulation you have to init() the system
-        by providing a configuration for the CPU and the memory layout
-        """
         # setup logging
         if log_channel is None:
             self._log = logging.getLogger(__name__)
@@ -174,10 +189,27 @@ class Runtime(object):
         self._event_handler.attach_runtime(self)
 
     def get_with_labels(self):
+        """Check is memory labels are enabled for the runtime.
+
+        The runtime can be either configured to enable or disable memory
+        labels via the :class:`RunConfig`. This function returns True if
+        labels are enabled otherwise False.
+
+        Returns:
+            bool: True if labels are enabled, otherwise False
+        """
         return self._run_cfg._with_labels
 
     def get_label_mgr(self):
-        """get the label manager"""
+        """Get the label manager associated with the runtime.
+
+        If labels are enabled a real :class:`LabelMgr` is returned. If
+        labels are disabled then a fake :class:`DummyLabelMgr` is available.
+        It provides the same interface but does nothing.
+
+        Returns:
+            :obj:`LabelMgr` or :obj:`DummyLabelMgr`: active label manager
+        """
         return self._label_mgr
 
     def get_cpu_cfg(self):

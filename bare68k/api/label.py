@@ -1,4 +1,4 @@
-import bare68k.machine as mach
+from ._getmach import mach
 
 # query labels
 get_num_labels = mach.get_num_labels

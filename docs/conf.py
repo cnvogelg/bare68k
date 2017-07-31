@@ -4,7 +4,9 @@
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
-              'sphinx.ext.githubpages']
+              'sphinx.ext.githubpages',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.intersphinx']
 
 templates_path = ['_templates']
 
@@ -24,6 +26,8 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 todo_include_todos = True
+
+intersphinx_mapping = {'python': ('https://docs.python.org/3.6', None)}
 
 # html
 html_theme = 'sphinx_rtd_theme'
