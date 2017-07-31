@@ -1,3 +1,5 @@
+"""bare68k: A package to write m68k system emulators"""
+
 from .cpucfg import CPUConfig
 from .memcfg import MemoryConfig
 from .runcfg import RunConfig
@@ -6,7 +8,13 @@ from . import runtime
 from . import api
 from . import debug
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
+__copyright__ = "Copyright 2017, Christian Vogelgsang"
+__credits__ = ["Christian Vogelgsang", "Karl Stenerud"]
+__license__ = "GPL"
+__maintainer__ = "Christian Vogelgsang"
+__email__ = "chris@vogelgsang.org"
+__status__ = "Development"
 
 __all__ = ['CPUConfig', 'MemoryConfig', 'RunConfig', 'Runtime',
            'runtime', 'api', 'debug']
