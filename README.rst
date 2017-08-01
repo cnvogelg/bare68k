@@ -3,6 +3,8 @@ bare68k
 
 |travis| |appveyor| |rtfd| |coverall|
 
+|pypi-v| |wheel| |pyver| |status|
+
 bare68k allows you to write **m68k system emulators** in Python 2 or 3.  It
 consists of a **CPU emulation** for 68000/68020/68EC020 provided by the
 `Musashi`_ engine written in native C. A **memory map** with RAM, ROM,
@@ -23,6 +25,11 @@ under the GNU Public License V2
    :target: https://readthedocs.org/projects/bare68k
 .. |coverall| image:: https://coveralls.io/repos/github/cnvogelg/bare68k/badge.svg?branch=master
    :target: https://coveralls.io/github/cnvogelg/bare68k?branch=master
+.. |pypi-v| image:: https://img.shields.io/pypi/v/bare68k.svg
+   :target: https://pypi.python.org/pypi/bare68k
+.. |wheel| image:: https://img.shields.io/pypi/wheel/bare68k.svg
+.. |pyver| image:: https://img.shields.io/pypi/pyversions/bare68k.svg
+.. |status| image:: https://img.shields.io/pypi/status/bare68k.svg
 
 Features
 --------
