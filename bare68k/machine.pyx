@@ -1,4 +1,4 @@
-# cython: c_string_type=str, c_string_encoding=ascii
+# cython: c_string_type=str, c_string_encoding=ascii, embedsignature=True
 
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint64_t, uint32_t, uint16_t, uint8_t, int8_t, int16_t, int32_t
