@@ -1,10 +1,26 @@
-"""wrap machine's CPU access functions"""
+"""The :mod:`bare68k.api.cpu` module wraps machine's CPU access functions."""
 
 from ._getmach import mach
 
-# context handling
 get_cpu_context = mach.get_cpu_context
+"""Read the CPU context including all registers.
+
+Read the CPU context if you want to save the entire state. You can later
+restore the full CPU state with :func:`set_cpu_context`.
+
+Returns:
+    :obj:`CPUContext` native context object contains stored state
+"""
+
 set_cpu_context = mach.set_cpu_context
+"""Set the CPU context including all registers.
+
+After getting the CPU state with :func:`get_cpu_context` you can restore the
+state with this function.
+
+Args:
+    ctx (:obj:`CPUContext`): native context object with state to restore
+"""
 
 # register access
 r_reg = mach.r_reg

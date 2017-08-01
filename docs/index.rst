@@ -20,6 +20,8 @@ under the GNU Public License V2
 
    tutorial
    api
+   apilow
+   consts
    changelog
 
 Features
