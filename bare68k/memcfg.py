@@ -16,18 +16,21 @@ PAGE_SHIFT = 16
 
 class MemoryRange(object):
 
-    def __init__(self, start_page, num_pages, mem_type, opts=None, traps=True):
+    def __init__(self, start_page, num_pages, mem_type,
+                 opts=None, traps=True, name=None):
         self.start_page = start_page
         self.num_pages = num_pages
         self.mem_type = mem_type
         self.opts = opts
         self.traps = traps
+        self.name = name
         self.next_page = self.start_page + self.num_pages
         self.start_addr = start_page << PAGE_SHIFT
 
     def __repr__(self):
-        return "MemoryRange(%d, %d, %s, %r, %r)" % (self.start_page, self.num_pages,
-                                                    self.mem_type, self.opts, self.traps)
+        return "MemoryRange(%d, %d, %s, opts=%r, traps=%r, name=%s)" % \
+            (self.start_page, self.num_pages,
+             self.mem_type, self.opts, self.traps, self.name)
 
     def __eq__(self, o):
         return self.start_page == o.start_page and self.num_pages == o.num_pages \
@@ -97,10 +100,11 @@ class MemoryConfig(object):
         """convert an absolute address to a page number"""
         return self._get_num_pages(addr, 1)
 
-    def _store_page_range(self, begin_page, num_pages, mem_type, opts=None, sparse=False, traps=True):
+    def _store_page_range(self, begin_page, num_pages, mem_type,
+                          opts=None, sparse=False, traps=True, name=None):
         """make sure the given page range fits in the page list"""
         # create a new range
-        r = MemoryRange(begin_page, num_pages, mem_type, opts, traps)
+        r = MemoryRange(begin_page, num_pages, mem_type, opts, traps, name)
         # add to range_list
         rl = self.range_list
         if len(rl) == 0:
@@ -162,58 +166,82 @@ class MemoryConfig(object):
 
     # page based
 
-    def add_ram_range(self, begin_page, num_pages, sparse=False, traps=True):
-        return self._store_page_range(begin_page, num_pages, MEM_RAM, sparse=sparse, traps=traps)
+    def add_ram_range(self, begin_page, num_pages,
+                      sparse=False, traps=True, name=None):
+        return self._store_page_range(begin_page, num_pages, MEM_RAM,
+                                      sparse=sparse, traps=traps, name=name)
 
-    def add_rom_range(self, begin_page, num_pages, data=None, pad=False, traps=True):
+    def add_rom_range(self, begin_page, num_pages,
+                      data=None, pad=False, traps=True, name=None):
         rom = self._prepare_rom(data, pad)
-        return self._store_page_range(begin_page, num_pages, MEM_ROM, opts=rom, traps=traps)
+        return self._store_page_range(begin_page, num_pages, MEM_ROM,
+                                      opts=rom, traps=traps, name=name)
 
-    def add_special_range(self, begin_page, num_pages, r_func, w_func):
+    def add_special_range(self, begin_page, num_pages, r_func, w_func,
+                          name=None):
         opts = (r_func, w_func)
-        return self._store_page_range(begin_page, num_pages, MEM_SPECIAL, opts=opts)
+        return self._store_page_range(begin_page, num_pages, MEM_SPECIAL,
+                                      opts=opts, name=name)
 
-    def add_empty_range(self, begin_page, num_pages, value=0xffffffff):
-        return self._store_page_range(begin_page, num_pages, MEM_EMPTY, opts=value)
+    def add_empty_range(self, begin_page, num_pages, value=0xffffffff,
+                        name=None):
+        return self._store_page_range(begin_page, num_pages, MEM_EMPTY,
+                                      opts=value, name=name)
 
-    def add_mirror_range(self, begin_page, num_pages, base_page):
-        return self._store_page_range(begin_page, num_pages, MEM_MIRROR, opts=base_page)
+    def add_mirror_range(self, begin_page, num_pages, base_page,
+                         name=None):
+        return self._store_page_range(begin_page, num_pages, MEM_MIRROR,
+                                      opts=base_page, name=name)
 
-    def add_reserve_range(self, begin_page, num_pages):
-        return self._store_page_range(begin_page, num_pages, MEM_RESERVE)
+    def add_reserve_range(self, begin_page, num_pages,
+                          name=None):
+        return self._store_page_range(begin_page, num_pages, MEM_RESERVE,
+                                      name=name)
 
     # address based
 
-    def add_ram_range_addr(self, begin_addr, size, units=1024, sparse=False, traps=True):
+    def add_ram_range_addr(self, begin_addr, size,
+                           units=1024, sparse=False, traps=True, name=None):
         begin_page = self._get_page_addr(begin_addr)
         num_pages = self._get_num_pages(size, units)
-        return self.add_ram_range(begin_page, num_pages, sparse, traps=traps)
+        return self.add_ram_range(begin_page, num_pages, sparse,
+                                  traps=traps, name=name)
 
-    def add_rom_range_addr(self, begin_addr, size, data=None, units=1024, pad=False, traps=True):
+    def add_rom_range_addr(self, begin_addr, size,
+                           data=None, units=1024, pad=False, traps=True, name=None):
         begin_page = self._get_page_addr(begin_addr)
         num_pages = self._get_num_pages(size, units)
-        return self.add_rom_range(begin_page, num_pages, data, pad, traps=traps)
+        return self.add_rom_range(begin_page, num_pages, data, pad,
+                                  traps=traps, name=name)
 
-    def add_special_range_addr(self, begin_addr, size, r_func, w_func, units=1024):
+    def add_special_range_addr(self, begin_addr, size, r_func, w_func,
+                               units=1024, name=None):
         begin_page = self._get_page_addr(begin_addr)
         num_pages = self._get_num_pages(size, units)
-        return self.add_special_range(begin_page, num_pages, r_func, w_func)
+        return self.add_special_range(begin_page, num_pages, r_func, w_func,
+                                      name=name)
 
-    def add_empty_range_addr(self, begin_addr, size, value=0xffffffff, units=1024):
+    def add_empty_range_addr(self, begin_addr, size,
+                             value=0xffffffff, units=1024, name=None):
         begin_page = self._get_page_addr(begin_addr)
         num_pages = self._get_num_pages(size, units)
-        return self.add_empty_range(begin_page, num_pages, value)
+        return self.add_empty_range(begin_page, num_pages, value,
+                                    name=name)
 
-    def add_mirror_range_addr(self, begin_addr, size, base_addr, units=1024):
+    def add_mirror_range_addr(self, begin_addr, size, base_addr,
+                              units=1024, name=None):
         begin_page = self._get_page_addr(begin_addr)
         num_pages = self._get_num_pages(size, units)
         base_page = self._get_page_addr(base_addr)
-        return self.add_mirror_range(begin_page, num_pages, base_page)
+        return self.add_mirror_range(begin_page, num_pages, base_page,
+                                     name=name)
 
-    def add_reserve_range_addr(self, begin_addr, size, units=1024):
+    def add_reserve_range_addr(self, begin_addr, size,
+                               units=1024, name=None):
         begin_page = self._get_page_addr(begin_addr)
         num_pages = self._get_num_pages(size, units)
-        return self.add_reserve_range(begin_page, num_pages)
+        return self.add_reserve_range(begin_page, num_pages,
+                                      name=name)
 
     # get result
 

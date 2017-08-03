@@ -90,10 +90,12 @@ def test_ram_sparse():
 def test_memtypes():
     memcfg = MemoryConfig()
     # RAM
-    memcfg.add_ram_range(0, 1)
+    mra = memcfg.add_ram_range(0, 1, name="RAM")
+    assert mra[0] == MemoryRange(0, 1, MEM_RAM, name="RAM")
     # ROM (page aligned)
     data = bytes([0] * PAGE_BYTES)
-    memcfg.add_rom_range(1, 1, data)
+    mro = memcfg.add_rom_range(1, 1, data, name="ROM")
+    assert mro[0] == MemoryRange(1, 1, MEM_ROM, opts=data, name="ROM")
     # ROM (not aligned)
     data2 = bytes([0] * 1234)
     with pytest.raises(ConfigError):
@@ -104,10 +106,14 @@ def test_memtypes():
 
     def r(*args):
         pass
-    memcfg.add_special_range(4, 1, r, None)
-    # reserver
-    memcfg.add_reserve_range(5, 1)
+    mrs = memcfg.add_special_range(4, 1, r, None, name="bla")
+    assert mrs[0] == MemoryRange(4, 1, MEM_SPECIAL, opts=(r, None), name="bla")
+    # reservere
+    mrr = memcfg.add_reserve_range(5, 1, name="blu")
+    assert mrr[0] == MemoryRange(5, 1, MEM_RESERVE, name="blu")
     # empty
-    memcfg.add_empty_range(6, 1)
+    mre = memcfg.add_empty_range(6, 1, name="empty")
+    assert mre[0] == MemoryRange(6, 1, MEM_EMPTY, opts=0xffffffff, name="empty")
     # mirror
-    memcfg.add_mirror_range(7, 1, 0)
+    mrm = memcfg.add_mirror_range(7, 1, 0, name="mirror")
+    assert mrm[0] == MemoryRange(7, 1, MEM_MIRROR, opts=0, name="mirror")
