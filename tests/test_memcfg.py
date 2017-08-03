@@ -50,6 +50,15 @@ def test_ram_ranges():
         memcfg.add_ram_range(2, 4)
 
 
+def test_ram_check():
+    memcfg = MemoryConfig()
+    memcfg.add_ram_range(0, 4)
+    # check range
+    memcfg.check()
+    with pytest.raises(ConfigError):
+        memcfg.check(max_pages=2)
+
+
 def test_ram_not_sparse():
     memcfg = MemoryConfig()
     memcfg.add_reserve_range(1, 1)

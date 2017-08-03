@@ -248,14 +248,13 @@ class MemoryConfig(object):
 
     def check(self, ram_at_zero=True, max_pages=256):
         """check if gurrent layout is valid"""
-        rl = self.range_list
-        n = len(rl)
+        n = self.get_num_pages()
         if n == 0:
             raise ConfigError("no memory entries found!")
         elif n > max_pages:
             raise ConfigError("too many pages: want=%d max=%d" %
                               (n, max_pages))
         if ram_at_zero:
-            r = rl[0]
+            r = self.range_list[0]
             if r.start_page > 0 or r.mem_type != MEM_RAM:
                 raise ConfigError("no RAM at page 0!")
